@@ -66,13 +66,30 @@ def run_seed():
         {"name": "Hawraman Region (Byara & Tawela)", "description": "Stunning mountainous border villages known for their unique terraced architecture, where the roof of one house is the yard of another.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[3].id, "latitude": 35.2344, "longitude": 46.1264},
     ]
 
+        # Erbil City Food
+        {"name": "Iskan Street", "description": "The heart of Erbil's nightlife and street food scene, packed with stalls serving kebabs, grilled meats, and local snacks late into the night.", "category": "FOOD", "rating": 4.8, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1834, "longitude": 43.9912},
+        {"name": "Mam Khalil Chaikhana", "description": "A historic, deeply authentic teahouse hidden inside the Qaysari Bazaar. The perfect spot to experience traditional tea culture.", "category": "FOOD", "rating": 4.9, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1885, "longitude": 44.0090},
+        
+        # Sulaymaniyah City Food
+        {"name": "Sardar Restaurant", "description": "Highly rated authentic Kurdish cuisine known for its incredible roasted meats and welcoming hospitality.", "category": "FOOD", "rating": 4.7, "is_premium": True, "city_id": city_objects[1].id, "latitude": 35.5650, "longitude": 45.4300},
+        
+        # Duhok City Food
+        {"name": "Manqal Restaurant", "description": "A frequently recommended spot in Duhok offering beautifully grilled meats and sweeping views of the city.", "category": "FOOD", "rating": 4.6, "is_premium": True, "city_id": city_objects[2].id, "latitude": 36.8600, "longitude": 42.9900},
+    ]
+
+    place_objects = []
     for p in places_data:
         existing = db.query(models.Place).filter(models.Place.name == p["name"]).first()
         if not existing:
-            db.add(models.Place(**p))
+            obj = models.Place(**p)
+            db.add(obj)
+            db.flush()
+            place_objects.append(obj)
+        else:
+            place_objects.append(existing)
 
     db.commit()
-    print(f"✅ Places seeded: {len(places_data)} records")
+    print(f"✅ Places seeded: {len(place_objects)} records")
 
     # ── Seed Events ──────────────────────────────────────────────────────────────
     events_data = [
@@ -89,6 +106,54 @@ def run_seed():
 
     db.commit()
     print(f"✅ Events seeded: {len(events_data)} records")
+
+    # ── Mock Users, Trips, and Saved Places ──────────────────────────────────────
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    
+    mock_users = [
+        {"name": "Aland", "email": "aland@example.com", "password": pwd_context.hash("password123"), "level": 5},
+        {"name": "Zhya", "email": "zhya@example.com", "password": pwd_context.hash("password123"), "level": 12},
+    ]
+
+    user_objects = []
+    for u in mock_users:
+        existing = db.query(models.User).filter(models.User.email == u["email"]).first()
+        if not existing:
+            obj = models.User(**u)
+            db.add(obj)
+            db.flush()
+            user_objects.append(obj)
+        else:
+            user_objects.append(existing)
+
+    db.commit()
+    print(f"✅ Users seeded: {len(user_objects)} records")
+
+    if user_objects and place_objects:
+        # Mock Trips
+        trips = [
+            {"title": "Weekend at Shaqlawa", "start_date": "2024-05-10", "end_date": "2024-05-12", "user_id": user_objects[0].id, "status": "PLANNED"},
+            {"title": "Sulaymaniyah Culture Tour", "start_date": "2024-06-01", "end_date": "2024-06-05", "user_id": user_objects[1].id, "status": "COMPLETED"},
+        ]
+        for t in trips:
+            existing = db.query(models.Trip).filter(models.Trip.title == t["title"]).first()
+            if not existing:
+                db.add(models.Trip(**t))
+
+        # Mock Saved Places
+        saved_places = [
+            {"user_id": user_objects[0].id, "place_id": place_objects[0].id}, # Aland saved Erbil Citadel
+            {"user_id": user_objects[0].id, "place_id": place_objects[2].id}, # Aland saved Waterfall
+            {"user_id": user_objects[1].id, "place_id": place_objects[6].id}, # Zhya saved Amna Suraka
+        ]
+        for sp in saved_places:
+            existing = db.query(models.SavedPlace).filter(models.SavedPlace.user_id == sp["user_id"], models.SavedPlace.place_id == sp["place_id"]).first()
+            if not existing:
+                db.add(models.SavedPlace(**sp))
+
+        db.commit()
+        print("✅ Mock Trips and Saved Places seeded.")
 
     db.close()
     print("\n🌿 Database seeding complete! Kurdistan Go is ready.")
