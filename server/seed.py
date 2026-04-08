@@ -40,12 +40,30 @@ def run_seed():
 
     # ── Seed Places ──────────────────────────────────────────────────────────────
     places_data = [
-        {"name": "Erbil Citadel",   "description": "UNESCO World Heritage Site, one of the oldest continuously inhabited places on Earth.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1909, "longitude": 44.0092},
-        {"name": "Rawanduz Canyon",  "description": "Breathtaking geological wonder with winding roads and emerald rivers.", "category": "NATURE",  "rating": 4.8, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.6100, "longitude": 44.5200},
-        {"name": "Bekhal Falls",     "description": "Beautiful waterfall near Soran region — free access.", "category": "NATURE",  "rating": 4.7, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.6390, "longitude": 44.5453},
-        {"name": "Mount Korek",      "description": "Summer escape and winter skiing destination.", "category": "ADVENTURE", "rating": 4.8, "is_premium": True,  "city_id": city_objects[0].id, "latitude": 36.7000, "longitude": 44.3200},
-        {"name": "Shanidar Cave",    "description": "Historic archaeological site with Neanderthal findings.", "category": "CULTURE", "rating": 4.6, "is_premium": False, "city_id": city_objects[2].id, "latitude": 36.8300, "longitude": 44.2200},
-        {"name": "Dukan Lake",       "description": "Stunning lake popular for boat trips and picnics.", "category": "NATURE",  "rating": 4.7, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.9500, "longitude": 44.9500},
+        # Erbil City Places
+        {"name": "Erbil Citadel", "description": "A UNESCO World Heritage Site and one of the oldest continuously inhabited cities in the world. Enjoy panoramic views of Erbil from its ancient walls.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1909, "longitude": 44.0092},
+        {"name": "Qaysari Bazaar", "description": "Erbil's traditional covered market, perfect for experiencing local culture, buying Kurdish textiles, spices, and drinking traditional tea.", "category": "CULTURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1887, "longitude": 44.0086},
+        {"name": "Geli Ali Beg Waterfall", "description": "The highest waterfall in Kurdistan and the Middle East, so iconic it is featured on the 5,000 Iraqi dinar banknote.", "category": "NATURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.6340, "longitude": 44.4230},
+        {"name": "Mount Korek Resort", "description": "A spectacular mountain resort accessible by a 4km cable car. Ideal for summer retreats and winter skiing.", "category": "ADVENTURE", "rating": 4.8, "is_premium": True, "city_id": city_objects[0].id, "latitude": 36.5833, "longitude": 44.4667},
+        {"name": "Bekhal Waterfall", "description": "A beautiful and powerful natural waterfall near Soran where you can dine outdoors directly next to the rushing water.", "category": "NATURE", "rating": 4.7, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.6358, "longitude": 44.5381},
+        {"name": "Shaqlawa Resort", "description": "A beautiful town nestled at the base of Mount Safeen, known for its cooler climate, lush orchards, and local markets selling honey and dried fruits.", "category": "NATURE", "rating": 4.6, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.4022, "longitude": 44.3314},
+        
+        # Sulaymaniyah City Places
+        {"name": "Amna Suraka (Red House)", "description": "The former intelligence headquarters during Saddam Hussein's regime, now a sobering but essential museum documenting Kurdish history and resilience.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.5681, "longitude": 45.4328},
+        {"name": "Sulaymaniyah National Museum", "description": "The second-largest museum in Iraq, housing a massive collection of artifacts from the Paleolithic era, Sumerian, and Ottoman periods.", "category": "CULTURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.5583, "longitude": 45.4267},
+        {"name": "Dukan Lake", "description": "The largest lake in the Kurdistan Region, offering beautiful turquoise waters, boating, and scenic picnic spots.", "category": "NATURE", "rating": 4.7, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.9400, "longitude": 44.9575},
+        {"name": "Goyzha Mountain", "description": "The mountain defining the skyline of Sulaymaniyah. Drive to the top at sunset for breathtaking views and bustling food stalls.", "category": "ADVENTURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.5867, "longitude": 45.4294},
+        {"name": "Ahmad Awa Waterfall", "description": "A stunning, multi-tiered waterfall situated in a lush, green mountain valley near the Iran border.", "category": "NATURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.2917, "longitude": 46.1042},
+        
+        # Duhok City Places
+        {"name": "Amedi (Amadiya)", "description": "A fairy-tale like 5,000-year-old town built entirely on the flat top of a mountain, rich in ancient mosques, churches, and synagogues.", "category": "CULTURE", "rating": 5.0, "is_premium": False, "city_id": city_objects[2].id, "latitude": 37.0911, "longitude": 43.4864},
+        {"name": "Lalish Temple", "description": "The holiest spiritual site for the Yazidi faith, nestled in a beautiful green valley. Known for its cone-shaped domes and ancient sacred olive oil traditions. Must visit barefoot.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[2].id, "latitude": 36.7725, "longitude": 43.3006},
+        {"name": "Gara Mountain", "description": "A towering mountain range providing incredible hiking opportunities and panoramic views over the valleys of Duhok.", "category": "ADVENTURE", "rating": 4.7, "is_premium": False, "city_id": city_objects[2].id, "latitude": 36.9833, "longitude": 43.3667},
+        {"name": "Shanidar Cave", "description": "A vastly important prehistoric archaeological site where the remains of multiple Neanderthals were discovered, changing modern anthropology.", "category": "CULTURE", "rating": 4.7, "is_premium": False, "city_id": city_objects[2].id, "latitude": 36.8322, "longitude": 44.0322},
+        
+        # Halabja City Places
+        {"name": "Halabja Monument", "description": "A memorial monument and museum dedicated to the victims of the 1988 chemical attack. An important site for understanding the history of the region.", "category": "CULTURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[3].id, "latitude": 35.1837, "longitude": 45.9868},
+        {"name": "Hawraman Region (Byara & Tawela)", "description": "Stunning mountainous border villages known for their unique terraced architecture, where the roof of one house is the yard of another.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[3].id, "latitude": 35.2344, "longitude": 46.1264},
     ]
 
     for p in places_data:
