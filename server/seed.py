@@ -110,8 +110,8 @@ def run_seed():
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
     mock_users = [
-        {"name": "Aland", "email": "aland@example.com", "password": pwd_context.hash("password123"), "level": 5},
-        {"name": "Zhya", "email": "zhya@example.com", "password": pwd_context.hash("password123"), "level": 12},
+        {"name": "Aland", "email": "aland@example.com", "hashed_password": pwd_context.hash("password123"), "level": 5},
+        {"name": "Zhya", "email": "zhya@example.com", "hashed_password": pwd_context.hash("password123"), "level": 12},
     ]
 
     user_objects = []
