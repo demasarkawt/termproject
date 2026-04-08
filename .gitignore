@@ -1,0 +1,25 @@
+# Flutter / Dart
+client/.dart_tool/
+client/build/
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+client/.pub-cache/
+client/.pub/
+client/pubspec.lock
+
+# Python
+server/__pycache__/
+server/*.pyc
+server/.env
+server/venv/
+server/env/
+server/.pytest_cache/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
