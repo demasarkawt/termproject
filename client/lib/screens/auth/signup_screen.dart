@@ -158,7 +158,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 const SizedBox(height: 18),
                                 const Text('Name', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
-                                TextField(controller: _nameCtrl, decoration: _dec(hint: 'John Doe', icon: Icons.person_outline)),
+                                TextField(controller: _nameCtrl, decoration: _dec(hint: 'Full Name', icon: Icons.person_outline)),
                                 const SizedBox(height: 14),
                                 const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
