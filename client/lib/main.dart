@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
-import 'app_router.dart'; // <-- CHANGE to your router file name
+import 'app_router.dart';
 import 'data/favorites_store.dart';
 import 'data/favorites_scope.dart';
+import 'services/user_session.dart';
 
 final favoritesStore = FavoritesStore();
 
-void main() => runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserSession.load();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

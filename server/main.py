@@ -1,10 +1,9 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-import models
 from database import engine, get_db, Base
 from routers import cities, places, events, users, ai
 
@@ -34,7 +33,6 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -81,14 +79,18 @@ def db_check(db: Session = Depends(get_db)):
             "message": f"Database connection failed ❌: {str(e)}",
         }
 
-@app.get("/api/seed", tags=["Admin"])
-def seed_database():
+@app.post("/api/seed", tags=["Admin"])
+def seed_database(x_admin_key: str = Header(...)):
     """
     Populates the PostgreSQL database with initial data.
+    Requires X-Admin-Key header matching the ADMIN_KEY environment variable.
     """
+    admin_key = os.environ.get("ADMIN_KEY", "")
+    if not admin_key or x_admin_key != admin_key:
+        raise HTTPException(status_code=403, detail="Forbidden: invalid admin key")
     try:
         import seed
         seed.run_seed()
-        return {"status": "success", "message": "Database seeded successfully! 🌱"}
+        return {"status": "success", "message": "Database seeded successfully!"}
     except Exception as e:
-        return {"status": "error", "message": f"Failed to seed database ❌: {str(e)}"}
+        raise HTTPException(status_code=500, detail=f"Failed to seed: {str(e)}")

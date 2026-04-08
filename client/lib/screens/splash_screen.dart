@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../services/user_session.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // If user already has a saved session, skip onboarding
+    if (UserSession.isLoggedIn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/home');
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +31,8 @@ class SplashScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFF7FFFB), // softer modern mint-white
-              Color(0xFFD6F9FF), // light cyan/teal tint
+              Color(0xFFF7FFFB),
+              Color(0xFFD6F9FF),
             ],
           ),
         ),
@@ -25,50 +42,40 @@ class SplashScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
                 Image.asset(
                   'assets/images/KGO.png',
                   width: 270,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 2),
-
-                // Title
                 const Text(
                   'KURDISTAN GO',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F766E), // modern teal
+                    color: Color(0xFF0F766E),
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(height: 6),
-
-                // Subtitle
                 const Text(
                   'Explore the Heart of Kurdistan',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF475569), // modern slate gray
+                    color: Color(0xFF475569),
                   ),
                 ),
-
                 const SizedBox(height: 100),
-
-                // Start button
                 SizedBox(
                   width: 220,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {
-                      context.go('/onboarding1');
-                    },
+                    onPressed: () => context.go('/onboarding1'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F766E), // modern teal
+                      backgroundColor: const Color(0xFF0F766E),
                       foregroundColor: Colors.white,
                       elevation: 10,
                       shadowColor: Colors.black26,

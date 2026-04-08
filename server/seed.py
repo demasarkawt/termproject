@@ -3,7 +3,6 @@ seed.py — Populates the database with initial Kurdistan Go data.
 Run once after you have your DATABASE_URL set:
     python seed.py
 """
-import os
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
@@ -64,15 +63,14 @@ def run_seed():
         # Halabja City Places
         {"name": "Halabja Monument", "description": "A memorial monument and museum dedicated to the victims of the 1988 chemical attack. An important site for understanding the history of the region.", "category": "CULTURE", "rating": 4.8, "is_premium": False, "city_id": city_objects[3].id, "latitude": 35.1837, "longitude": 45.9868},
         {"name": "Hawraman Region (Byara & Tawela)", "description": "Stunning mountainous border villages known for their unique terraced architecture, where the roof of one house is the yard of another.", "category": "CULTURE", "rating": 4.9, "is_premium": False, "city_id": city_objects[3].id, "latitude": 35.2344, "longitude": 46.1264},
-    ]
 
         # Erbil City Food
         {"name": "Iskan Street", "description": "The heart of Erbil's nightlife and street food scene, packed with stalls serving kebabs, grilled meats, and local snacks late into the night.", "category": "FOOD", "rating": 4.8, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1834, "longitude": 43.9912},
         {"name": "Mam Khalil Chaikhana", "description": "A historic, deeply authentic teahouse hidden inside the Qaysari Bazaar. The perfect spot to experience traditional tea culture.", "category": "FOOD", "rating": 4.9, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.1885, "longitude": 44.0090},
-        
+
         # Sulaymaniyah City Food
         {"name": "Sardar Restaurant", "description": "Highly rated authentic Kurdish cuisine known for its incredible roasted meats and welcoming hospitality.", "category": "FOOD", "rating": 4.7, "is_premium": True, "city_id": city_objects[1].id, "latitude": 35.5650, "longitude": 45.4300},
-        
+
         # Duhok City Food
         {"name": "Manqal Restaurant", "description": "A frequently recommended spot in Duhok offering beautifully grilled meats and sweeping views of the city.", "category": "FOOD", "rating": 4.6, "is_premium": True, "city_id": city_objects[2].id, "latitude": 36.8600, "longitude": 42.9900},
     ]

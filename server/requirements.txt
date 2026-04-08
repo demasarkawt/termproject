@@ -8,3 +8,4 @@ email-validator==2.1.1
 pydantic[email]
 openai
 passlib[bcrypt]
+PyJWT==2.8.0

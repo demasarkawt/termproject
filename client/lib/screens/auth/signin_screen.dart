@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:termproject/config/api_config.dart';
+import 'package:termproject/services/user_session.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -39,14 +40,20 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('$kBaseUrl/api/users/login');
       final response = await http.post(
-        url,
+        Uri.parse('$kBaseUrl/api/users/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': pass}),
       );
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await UserSession.save(
+          id: data['user']['id'],
+          name: data['user']['name'],
+          level: data['user']['level'] ?? 1,
+          token: data['access_token'],
+        );
         if (mounted) context.go('/home');
       } else {
         final data = jsonDecode(response.body);
@@ -59,7 +66,7 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Network error: \$e')),
+          SnackBar(content: Text('Network error: $e')),
         );
       }
     } finally {
@@ -68,13 +75,11 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   InputDecoration _dec({
-    required String label,
     required String hint,
     required IconData icon,
     Widget? suffix,
   }) {
     return InputDecoration(
-      labelText: label.isEmpty ? null : label, // avoid weird empty label spacing
       hintText: hint,
       prefixIcon: Icon(icon, color: const Color(0xFF0F766E)),
       suffixIcon: suffix,
@@ -102,21 +107,11 @@ class _SignInScreenState extends State<SignInScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1) Background image
-          Image.asset(
-            'assets/images/qallat.JPEG',
-            fit: BoxFit.cover,
-          ),
-
-          // 2) Blur over the ENTIRE screen
+          Image.asset('assets/images/qallat.JPEG', fit: BoxFit.cover),
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-            child: Container(
-              color: Colors.black.withOpacity(0.20),
-            ),
+            child: Container(color: Colors.black.withOpacity(0.20)),
           ),
-
-          // 3) Content (CENTERED)
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -145,74 +140,41 @@ class _SignInScreenState extends State<SignInScreen> {
                                 const Text(
                                   'Welcome Back',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                  ),
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
                                   'Sign in to continue exploring Kurdistan',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFFD1FAE5),
-                                  ),
+                                  style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFFD1FAE5)),
                                 ),
                                 const SizedBox(height: 18),
-
-                                // Email
-                                const Text(
-                                  'Email',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                                const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: _emailCtrl,
                                   keyboardType: TextInputType.emailAddress,
-                                  decoration: _dec(
-                                    label: '',
-                                    hint: 'your.email@example.com',
-                                    icon: Icons.mail_outline,
-                                  ),
+                                  decoration: _dec(hint: 'your.email@example.com', icon: Icons.mail_outline),
                                 ),
                                 const SizedBox(height: 14),
-
-                                // Password
-                                const Text(
-                                  'Password',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
+                                const Text('Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: _passCtrl,
                                   obscureText: _obscure,
                                   decoration: _dec(
-                                    label: '',
                                     hint: 'Enter your password',
                                     icon: Icons.lock_outline,
                                     suffix: IconButton(
                                       onPressed: () => setState(() => _obscure = !_obscure),
                                       icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
+                                        _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                                         color: Colors.black87,
                                       ),
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 10),
-
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
@@ -222,17 +184,11 @@ class _SignInScreenState extends State<SignInScreen> {
                                     },
                                     child: const Text(
                                       'Forgot Password?',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w800,
-                                      ),
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
                                     ),
                                   ),
                                 ),
-
                                 const SizedBox(height: 2),
-
-                                // Sign In button
                                 SizedBox(
                                   height: 52,
                                   child: ElevatedButton(
@@ -245,70 +201,17 @@ class _SignInScreenState extends State<SignInScreen> {
                                     ),
                                     child: _isLoading
                                         ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                        : const Text(
-                                            'Sign In',
-                                            style: TextStyle(fontWeight: FontWeight.w900),
-                                          ),
+                                        : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.w900)),
                                   ),
                                 ),
-
-
-                                const SizedBox(height: 16),
-
-                                Row(
-                                  children: [
-                                    Expanded(child: Divider(color: Colors.white.withOpacity(0.25))),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 10),
-                                      child: Text(
-                                        'OR',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(child: Divider(color: Colors.white.withOpacity(0.25))),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 14),
-
-                                _SocialButton(
-                                  text: 'Continue with Google',
-                                  icon: Icons.g_mobiledata, // placeholder
-                                  onTap: () {},
-                                ),
-                                const SizedBox(height: 10),
-                                _SocialButton(
-                                  text: 'Continue with Facebook',
-                                  icon: Icons.facebook,
-                                  onTap: () {},
-                                ),
-
                                 const SizedBox(height: 18),
-
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Text(
-                                      "Don't have an account? ",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+                                    const Text("Don't have an account? ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                                     GestureDetector(
-                                      onTap: () {
-                                        context.go('/signup');
-                                      },
-                                      child: const Text(
-                                        'Sign Up',
-                                        style: TextStyle(
-                                          color: Color(0xFFD1FAE5),
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
+                                      onTap: () => context.go('/signup'),
+                                      child: const Text('Sign Up', style: TextStyle(color: Color(0xFFD1FAE5), fontWeight: FontWeight.w900)),
                                     ),
                                   ],
                                 ),
@@ -324,40 +227,6 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final String text;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _SocialButton({
-    required this.text,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.28),
-          side: BorderSide(color: Colors.white.withOpacity(0.35)),
-          shape: const StadiumBorder(),
-          foregroundColor: Colors.white,
-        ),
-        icon: Icon(icon, color: Colors.white),
-        label: Text(
-          text,
-          style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
-        ),
       ),
     );
   }

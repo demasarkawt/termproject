@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:termproject/services/user_session.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -62,8 +63,8 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Welcome Text
-                  const Text(
-                    'Welcome to\nKurdistan, Alex',
+                  Text(
+                    'Welcome to\nKurdistan, ${UserSession.userName ?? 'Explorer'}',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,

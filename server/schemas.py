@@ -71,6 +71,13 @@ class TripOut(TripCreate):
         from_attributes = True
 
 
+# ───────── Auth ─────────
+class LoginResponse(BaseModel):
+    user: UserOut
+    access_token: str
+    token_type: str = "bearer"
+
+
 # ───────── Event ─────────
 class EventOut(BaseModel):
     id: int

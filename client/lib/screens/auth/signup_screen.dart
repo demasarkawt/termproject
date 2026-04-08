@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:termproject/config/api_config.dart';
+import 'package:termproject/services/user_session.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -27,24 +28,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  InputDecoration _dec({
-    required String label,
-    required String hint,
-    required IconData icon,
-    Widget? suffix,
-  }) {
+  InputDecoration _dec({required String hint, required IconData icon, Widget? suffix}) {
     return InputDecoration(
-      labelText: label.isEmpty ? null : label,
       hintText: hint,
       prefixIcon: Icon(icon, color: const Color(0xFF0F766E)),
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white.withOpacity(0.82),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.white.withOpacity(0.35)),
@@ -71,24 +63,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('$kBaseUrl/api/users/register');
       final response = await http.post(
-        url,
+        Uri.parse('$kBaseUrl/api/users/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'password': pass,
-        }),
+        body: jsonEncode({'name': name, 'email': email, 'password': pass}),
       );
 
       if (response.statusCode == 201) {
-        // Success
-        if (mounted) {
-          context.go('/home');
-        }
+        final data = jsonDecode(response.body);
+        await UserSession.save(
+          id: data['user']['id'],
+          name: data['user']['name'],
+          level: data['user']['level'] ?? 1,
+          token: data['access_token'],
+        );
+        if (mounted) context.go('/home');
       } else {
-        // Error
         final data = jsonDecode(response.body);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -99,13 +89,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Network error: \$e')),
+          SnackBar(content: Text('Network error: $e')),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -149,13 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                                      onPressed: () {
-                                        if (context.canPop()) {
-                                          context.pop();
-                                        } else {
-                                          context.go('/signin');
-                                        }
-                                      },
+                                      onPressed: () => context.canPop() ? context.pop() : context.go('/signin'),
                                     ),
                                     const Expanded(
                                       child: Text(
@@ -164,7 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                                       ),
                                     ),
-                                    const SizedBox(width: 48), // balance
+                                    const SizedBox(width: 48),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
@@ -176,17 +158,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 const SizedBox(height: 18),
                                 const Text('Name', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
-                                TextField(
-                                  controller: _nameCtrl,
-                                  decoration: _dec(label: '', hint: 'John Doe', icon: Icons.person_outline),
-                                ),
+                                TextField(controller: _nameCtrl, decoration: _dec(hint: 'John Doe', icon: Icons.person_outline)),
                                 const SizedBox(height: 14),
                                 const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: _emailCtrl,
                                   keyboardType: TextInputType.emailAddress,
-                                  decoration: _dec(label: '', hint: 'your.email@example.com', icon: Icons.mail_outline),
+                                  decoration: _dec(hint: 'your.email@example.com', icon: Icons.mail_outline),
                                 ),
                                 const SizedBox(height: 14),
                                 const Text('Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
@@ -195,7 +174,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   controller: _passCtrl,
                                   obscureText: _obscure,
                                   decoration: _dec(
-                                    label: '',
                                     hint: 'Create a password',
                                     icon: Icons.lock_outline,
                                     suffix: IconButton(
@@ -215,7 +193,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       shape: const StadiumBorder(),
                                       elevation: 10,
                                     ),
-                                    child: _isLoading 
+                                    child: _isLoading
                                         ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                         : const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.w900)),
                                   ),
