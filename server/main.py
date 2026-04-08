@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 import models
 from database import engine, get_db, Base
-from routers import cities, places, events, users
+from routers import cities, places, events, users, ai
 
 # ─── Auto-create tables on startup if engine is available ────────────────────
 if engine:
@@ -23,6 +23,7 @@ app = FastAPI(
     - **Places** – Historical sites, nature spots, restaurants
     - **Events** – Upcoming festivals and cultural events
     - **Users** – Registration, trips, and saved places
+    - **AI Search** – Mood-based intelligent destination matching
     """,
     version="1.0.0",
     docs_url="/docs",          # Swagger UI at /docs
@@ -43,6 +44,7 @@ app.include_router(cities.router)
 app.include_router(places.router)
 app.include_router(events.router)
 app.include_router(users.router)
+app.include_router(ai.router)
 
 
 # ─── Health & DB Check Endpoints ──────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ai_search_bottom_sheet.dart';
 
 class ExploreScreen extends StatelessWidget {
   const ExploreScreen({super.key});
@@ -86,13 +87,29 @@ class ExploreScreen extends StatelessWidget {
                                           style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.2),
                                         ),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          color: primaryGreen,
-                                          borderRadius: BorderRadius.circular(20),
+                                      GestureDetector(
+                                        onTap: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            backgroundColor: Colors.transparent,
+                                            builder: (context) => const AiSearchBottomSheet(),
+                                          );
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Row(
+                                            children: const [
+                                              Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                                              SizedBox(width: 4),
+                                              Text('Ask AI', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                            ],
+                                          ),
                                         ),
-                                        child: const Text('Search', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
