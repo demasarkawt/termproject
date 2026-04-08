@@ -89,3 +89,13 @@ class Event(Base):
     start_date = Column(String(50), nullable=True)
     end_date = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class MediaItem(Base):
+    __tablename__ = "media_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    data_url = Column(Text, nullable=False)   # base64 data URL or https URL
+    folder = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

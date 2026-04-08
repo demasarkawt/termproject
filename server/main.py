@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database import engine, get_db, Base
-from routers import cities, places, events, users, ai
+from routers import cities, places, events, users, ai, media
 
 # ─── Auto-create tables on startup if engine is available ────────────────────
 if engine:
@@ -43,6 +43,7 @@ app.include_router(places.router)
 app.include_router(events.router)
 app.include_router(users.router)
 app.include_router(ai.router)
+app.include_router(media.router)
 
 
 # ─── Health & DB Check Endpoints ──────────────────────────────────────────────

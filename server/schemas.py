@@ -83,6 +83,21 @@ class TripOut(TripCreate):
 
 
 # ───────── Auth ─────────
+class MediaItemCreate(BaseModel):
+    name: str
+    data_url: str
+    folder: Optional[str] = None
+
+class MediaItemOut(BaseModel):
+    id: int
+    name: str
+    data_url: str
+    folder: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
 class LoginResponse(BaseModel):
     user: UserOut
     access_token: str
