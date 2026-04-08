@@ -27,3 +27,23 @@ def get_event(event_id: int, db: Session = Depends(get_db)):
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     return event
+
+
+@router.post("/", response_model=schemas.EventOut, status_code=201)
+def create_event(data: schemas.EventCreate, db: Session = Depends(get_db)):
+    """Create a new event."""
+    event = models.Event(**data.model_dump())
+    db.add(event)
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+@router.delete("/{event_id}", status_code=204)
+def delete_event(event_id: int, db: Session = Depends(get_db)):
+    """Delete an event by ID."""
+    event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    db.delete(event)
+    db.commit()

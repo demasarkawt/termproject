@@ -39,6 +39,17 @@ class CityOut(BaseModel):
 
 
 # ───────── Place ─────────
+class PlaceCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+    rating: Optional[float] = 0.0
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_premium: bool = False
+    city_id: int
+
 class PlaceOut(BaseModel):
     id: int
     name: str
@@ -79,6 +90,15 @@ class LoginResponse(BaseModel):
 
 
 # ───────── Event ─────────
+class EventCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    event_type: Optional[str] = None
+    location: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
 class EventOut(BaseModel):
     id: int
     title: str
