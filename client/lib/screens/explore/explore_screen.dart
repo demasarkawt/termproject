@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'ai_search_bottom_sheet.dart';
 
 class ExploreScreen extends StatelessWidget {
@@ -88,14 +89,7 @@ class ExploreScreen extends StatelessWidget {
                                         ),
                                       ),
                                       GestureDetector(
-                                        onTap: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            isScrollControlled: true,
-                                            backgroundColor: Colors.transparent,
-                                            builder: (context) => const AiSearchBottomSheet(),
-                                          );
-                                        },
+                                        onTap: () => context.go('/ai'),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                           decoration: BoxDecoration(

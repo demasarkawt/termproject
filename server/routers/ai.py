@@ -11,15 +11,25 @@ from database import get_db
 
 router = APIRouter(prefix="/api/ai", tags=["AI Search"])
 
+_api_key = os.environ.get("INCEPTION_API_KEY")
+if not _api_key:
+    raise RuntimeError("INCEPTION_API_KEY environment variable is not set")
+
 # Initialize the OpenAI client pointing to Inception Labs API
-# Using the fallback key provided by the user if the env variable isn't set
 client = OpenAI(
-    api_key=os.environ.get("INCEPTION_API_KEY", "sk_c80f70c85a6a048f6ba4dfdf59b15b0a"),
+    api_key=_api_key,
     base_url="https://api.inceptionlabs.ai/v1"
 )
 
+
 class MoodSearchRequest(BaseModel):
     prompt: str
+
+
+class TripPlannerRequest(BaseModel):
+    city: str
+    interests: str
+
 
 @router.post("/mood-search", response_model=list[schemas.PlaceOut])
 def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_db)):
@@ -37,7 +47,7 @@ def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_
         context_lines = []
         for p in all_places:
             context_lines.append(f"[ID: {p.id}] {p.name} - {p.category} - {p.description}")
-        
+
         places_context = "\n".join(context_lines)
 
         # 3. Create the prompt array
@@ -60,7 +70,7 @@ def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_
             }
         ]
 
-        # 4. Hit the Inception Labs API
+        # 4. Hit the Inception Labs Mercury-2 API
         response = client.chat.completions.create(
             model="mercury-2",
             messages=messages,
@@ -88,6 +98,46 @@ def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_
         return matched_places
 
     except Exception as e:
-        print(f"AI Search Error: {e}")
-        # fallback if AI fails: just return an empty list or top trending
+        print(f"AI Mood Search Error: {e}")
         return []
+
+
+@router.post("/trip-planner")
+def plan_trip(request: TripPlannerRequest):
+    """
+    Takes a city name and user interests, then uses Mercury-2 to generate
+    a personalized 1-day itinerary as a text response.
+    """
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are 'Kurdistan Go AI', a local expert travel planner for Kurdistan, Iraq. "
+                    "Create short, engaging 1-day itineraries that feel personal and exciting. "
+                    "Format your response as a clear, readable day plan with Morning, Afternoon, and Evening sections. "
+                    "Keep the total response under 300 words. Use friendly, enthusiastic language."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Plan a 1-day trip to {request.city}, Kurdistan. "
+                    f"My interests are: {request.interests}"
+                )
+            }
+        ]
+
+        response = client.chat.completions.create(
+            model="mercury-2",
+            messages=messages,
+            max_tokens=400,
+            temperature=0.7
+        )
+
+        itinerary = response.choices[0].message.content.strip()
+        return {"city": request.city, "itinerary": itinerary}
+
+    except Exception as e:
+        print(f"AI Trip Planner Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate trip plan. Please try again.")

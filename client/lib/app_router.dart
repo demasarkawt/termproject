@@ -30,6 +30,7 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/explore/explore_screen.dart';
 import 'screens/activities/activities_screen.dart';
 import 'screens/events/events_screen.dart';
+import 'screens/ai/ai_screen.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 final _shellKey = GlobalKey<NavigatorState>();
@@ -124,6 +125,13 @@ final appRouter = GoRouter(
           pageBuilder: (context, state) => _cupertinoPage(
             state: state,
             child: const ExploreScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/ai',
+          pageBuilder: (context, state) => _cupertinoPage(
+            state: state,
+            child: const AiScreen(),
           ),
         ),
         GoRoute(

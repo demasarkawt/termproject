@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../config/api_config.dart';
+
 class AiSearchBottomSheet extends StatefulWidget {
   const AiSearchBottomSheet({super.key});
 
@@ -26,10 +28,7 @@ class _AiSearchBottomSheetState extends State<AiSearchBottomSheet> {
     });
 
     try {
-      // For local testing, use 10.0.2.2. For production, switch to Railway URL.
-      // E.g., 'https://your-railway-app.up.railway.app/api/ai/mood-search'
-      // We will point to localhost/emu for now, or you can replace it later.
-      final url = Uri.parse('http://10.0.2.2:8000/api/ai/mood-search');
+      final url = Uri.parse('$kBaseUrl/api/ai/mood-search');
       
       final response = await http.post(
         url,

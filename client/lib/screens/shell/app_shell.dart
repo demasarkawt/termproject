@@ -18,7 +18,7 @@ class _AppShellState extends State<AppShell> {
   int _indexFromLocation(String loc) {
     if (loc.startsWith('/home')) return 0;
     if (loc.startsWith('/explore')) return 1;
-    if (loc.startsWith('/activities')) return 2;
+    if (loc.startsWith('/ai')) return 2;
     if (loc.startsWith('/events')) return 3;
     if (loc.startsWith('/profile')) return 4;
     return 0;
@@ -33,7 +33,7 @@ class _AppShellState extends State<AppShell> {
         context.go('/explore');
         break;
       case 2:
-        context.go('/activities');
+        context.go('/ai');
         break;
       case 3:
         context.go('/events');
@@ -78,7 +78,7 @@ class KurdistanBottomNav extends StatelessWidget {
   static const items = <_NavItem>[
     _NavItem(Icons.home_outlined, 'HOME'),
     _NavItem(Icons.explore_outlined, 'EXPLORE'),
-    _NavItem(Icons.castle_outlined, 'ACTIVITIES'),
+    _NavItem(Icons.auto_awesome_outlined, 'AI'),
     _NavItem(Icons.calendar_month_outlined, 'EVENTS'),
     _NavItem(Icons.person_outline, 'PROFILE'),
   ];
