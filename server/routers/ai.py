@@ -21,7 +21,7 @@ client = OpenAI(
 class MoodSearchRequest(BaseModel):
     prompt: str
 
-@router.post("/mood-search", response_model=list[schemas.PlaceResponse])
+@router.post("/mood-search", response_model=list[schemas.PlaceOut])
 def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_db)):
     """
     Takes a natural language prompt from the user (e.g., "I'm in the mood for something green and quiet")
