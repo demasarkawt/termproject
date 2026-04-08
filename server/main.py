@@ -78,3 +78,15 @@ def db_check(db: Session = Depends(get_db)):
             "status": "error",
             "message": f"Database connection failed ❌: {str(e)}",
         }
+
+@app.get("/api/seed", tags=["Admin"])
+def seed_database():
+    """
+    Populates the PostgreSQL database with initial data.
+    """
+    try:
+        import seed
+        seed.run_seed()
+        return {"status": "success", "message": "Database seeded successfully! 🌱"}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to seed database ❌: {str(e)}"}
