@@ -1,6 +1,8 @@
 import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -13,12 +15,55 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    final email = _emailCtrl.text.trim();
+    final pass = _passCtrl.text;
+
+    if (email.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final url = Uri.parse('http://10.0.2.2:8000/api/users/login');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': pass}),
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) context.go('/home');
+      } else {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['detail'] ?? 'Login failed')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Network error: \$e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   InputDecoration _dec({
@@ -190,19 +235,19 @@ class _SignInScreenState extends State<SignInScreen> {
                                 SizedBox(
                                   height: 52,
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      context.go('/home');
-                                    },
+                                    onPressed: _isLoading ? null : _signIn,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF0F766E),
                                       foregroundColor: Colors.white,
                                       shape: const StadiumBorder(),
                                       elevation: 10,
                                     ),
-                                    child: const Text(
-                                      'Sign In',
-                                      style: TextStyle(fontWeight: FontWeight.w900),
-                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : const Text(
+                                            'Sign In',
+                                            style: TextStyle(fontWeight: FontWeight.w900),
+                                          ),
                                   ),
                                 ),
 
@@ -254,7 +299,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        // later: context.go('/signup');
+                                        context.go('/signup');
                                       },
                                       child: const Text(
                                         'Sign Up',

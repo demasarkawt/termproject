@@ -9,9 +9,17 @@ from database import get_db
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
 
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 def _hash_password(password: str) -> str:
-    """Simple sha256 hash for demo purposes. Use bcrypt in production."""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash password using bcrypt."""
+    return pwd_context.hash(password)
+
+def _verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify plain password against hashed password."""
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 @router.post("/register", response_model=schemas.UserOut, status_code=201)
@@ -29,6 +37,18 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@router.post("/login", response_model=schemas.UserOut)
+def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    """Login a user and return the user profile. In a real app we would return a JWT."""
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if not _verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    return db_user
 
 
 @router.get("/{user_id}", response_model=schemas.UserOut)

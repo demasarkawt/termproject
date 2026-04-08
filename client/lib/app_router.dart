@@ -11,6 +11,7 @@ import 'screens/onboarding_1.dart';
 import 'screens/onboarding_2.dart';
 import 'screens/onboarding_3.dart';
 import 'screens/auth/signin_screen.dart';
+import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/code_sent_screen.dart';
 
@@ -79,6 +80,13 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => _cupertinoPage(
         state: state,
         child: const SignInScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/signup',
+      pageBuilder: (context, state) => _cupertinoPage(
+        state: state,
+        child: const SignUpScreen(),
       ),
     ),
     GoRoute(
