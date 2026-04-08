@@ -11,15 +11,23 @@ from database import get_db
 
 router = APIRouter(prefix="/api/ai", tags=["AI Search"])
 
-_api_key = os.environ.get("INCEPTION_API_KEY")
-if not _api_key:
-    raise RuntimeError("INCEPTION_API_KEY environment variable is not set")
 
-# Initialize the OpenAI client pointing to Inception Labs API
-client = OpenAI(
-    api_key=_api_key,
-    base_url="https://api.inceptionlabs.ai/v1"
-)
+def _get_ai_client() -> OpenAI:
+    """
+    Lazily create the Inception Labs AI client.
+    Raises HTTP 503 if INCEPTION_API_KEY is not configured,
+    instead of crashing the whole server at startup.
+    """
+    api_key = os.environ.get("INCEPTION_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="AI service is not configured. Please set INCEPTION_API_KEY."
+        )
+    return OpenAI(
+        api_key=api_key,
+        base_url="https://api.inceptionlabs.ai/v1"
+    )
 
 
 class MoodSearchRequest(BaseModel):
@@ -38,6 +46,9 @@ def search_places_by_mood(request: MoodSearchRequest, db: Session = Depends(get_
     and uses the Inception Labs 'mercury-2' model to map it to the best matching places in the database.
     """
     try:
+        # 0. Get AI client (raises 503 if key not set)
+        client = _get_ai_client()
+
         # 1. Fetch all places from the database
         all_places = db.query(models.Place).all()
         if not all_places:
@@ -109,6 +120,9 @@ def plan_trip(request: TripPlannerRequest):
     a personalized 1-day itinerary as a text response.
     """
     try:
+        # Get AI client (raises 503 if key not set)
+        client = _get_ai_client()
+
         messages = [
             {
                 "role": "system",

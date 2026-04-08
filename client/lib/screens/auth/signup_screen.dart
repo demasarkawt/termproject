@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:termproject/config/api_config.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -70,7 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final url = Uri.parse('http://10.0.2.2:8000/api/users/register');
+      final url = Uri.parse('$kBaseUrl/api/users/register');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
