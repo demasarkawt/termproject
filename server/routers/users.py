@@ -81,6 +81,12 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     return {"user": db_user, "access_token": _create_token(db_user.id), "token_type": "bearer"}
 
 
+@router.get("/", response_model=List[schemas.UserOut])
+def list_users(db: Session = Depends(get_db)):
+    """Return all registered users (admin use)."""
+    return db.query(models.User).order_by(models.User.created_at.desc()).all()
+
+
 @router.get("/{user_id}", response_model=schemas.UserOut)
 def get_user(
     user_id: int,
