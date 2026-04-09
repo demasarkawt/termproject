@@ -74,18 +74,49 @@ termproject/
 | POST | `/api/ai/mood-search` | Find places matching a mood/preference prompt |
 | POST | `/api/ai/trip-planner` | Generate a 1-day itinerary for a city |
 
-### Places & Cities
+### Cities
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/cities` | List all cities |
+| GET | `/api/cities/{city_id}` | Get a specific city by ID |
+| GET | `/api/cities/{city_id}/places` | List all places in a specific city |
+
+### Places
+| Method | Path | Description |
+|---|---|---|
 | GET | `/api/places` | List all places |
 | GET | `/api/places/trending` | Top trending places |
+| GET | `/api/places/{place_id}` | Get place by ID |
+| POST | `/api/places` | Create a new place (admin) |
+| DELETE | `/api/places/{place_id}` | Delete a place (admin) |
 
-### Users
+### Events
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/events` | List all events |
+| GET | `/api/events/{event_id}` | Get event by ID |
+| POST | `/api/events` | Create a new event (admin) |
+| DELETE | `/api/events/{event_id}` | Delete an event (admin) |
+
+### Media
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/media` | List all media items |
+| POST | `/api/media` | Upload a new media item (admin) |
+| DELETE | `/api/media/{item_id}` | Delete a media item (admin) |
+
+### Users & Authentication
 | Method | Path | Description |
 |---|---|---|
 | POST | `/api/users/register` | Register a new user |
 | POST | `/api/users/login` | Sign in |
+| GET | `/api/users` | List all users (admin) |
+| GET | `/api/users/{user_id}` | Get user profile |
+| GET | `/api/users/{user_id}/trips` | Get user's planned trips |
+| POST | `/api/users/{user_id}/trips` | Create a new trip |
+| POST | `/api/users/{user_id}/save/{place_id}` | Save a place to favorites |
+| DELETE | `/api/users/{user_id}/save/{place_id}` | Remove a place from favorites |
+| GET | `/api/users/{user_id}/saved` | List user's saved places |
 
 Full interactive docs available at `/docs` (Swagger UI).
 
