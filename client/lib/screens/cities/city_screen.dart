@@ -2,44 +2,83 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../widgets/glass.dart';
 
-// Top-level helper: pick the right image for each city × category
-String _catImage(String cityId, String catId) {
-  const imgs = {
-    'erbil': {
-      'historical': 'assets/images/place_citadel.png',
-      'nature':     'assets/images/place_shaqlawa.png',
-      'waterfalls': 'assets/images/place_bekhal.png',
-      'religious':  'assets/images/place_mosque.png',
-      'activities': 'assets/images/cha.JPEG',
-    },
-    'sulaymaniyah': {
-      'historical': 'assets/images/place_amna_suraka.jpg',
-      'nature':     'assets/images/hd_mountains.jpg',
-      'waterfalls': 'assets/images/place_ahmed_awa.jpg',
-      'religious':  'assets/images/hd_mosque.jpg',
-      'activities': 'assets/images/hd_park.jpg',
-    },
-    'duhok': {
-      'historical': 'assets/images/place_amedi.jpg',
-      'nature':     'assets/images/hd_valley.jpg',
-      'waterfalls': 'assets/images/hd_waterfall.jpg',
-      'religious':  'assets/images/place_lalish.jpg',
-      'activities': 'assets/images/hd_mountains.jpg',
-    },
-    'halabja': {
-      'historical': 'assets/images/place_halabja_monument.jpg',
-      'nature':     'assets/images/place_hawraman.jpg',
-      'waterfalls': 'assets/images/place_ahmed_awa.jpg',
-      'religious':  'assets/images/hd_mosque.jpg',
-      'activities': 'assets/images/hd_mountains.jpg',
-    },
-  };
-  return imgs[cityId]?[catId] ?? 'assets/images/hd_mountains.jpg';
+// ─────────────────────────────────────────────────────────────────────────────
+// Category data — real photos per category
+// ─────────────────────────────────────────────────────────────────────────────
+class _CatData {
+  final String id;
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final String imagePath;
+
+  const _CatData({
+    required this.id,
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.imagePath,
+  });
 }
 
+const List<_CatData> _categories = [
+  _CatData(
+    id: 'historical',
+    label: 'Historical',
+    subtitle: 'Citadels & Museums',
+    icon: Icons.account_balance_rounded,
+    accent: Color(0xFFFF8A3D),
+    imagePath: 'assets/images/place_citadel.png',
+  ),
+  _CatData(
+    id: 'nature',
+    label: 'Nature',
+    subtitle: 'Mountains & Parks',
+    icon: Icons.park_rounded,
+    accent: Color(0xFF16A34A),
+    imagePath: 'assets/images/hd_mountains.jpg',
+  ),
+  _CatData(
+    id: 'waterfalls',
+    label: 'Waterfalls',
+    subtitle: 'Rivers & Springs',
+    icon: Icons.water_drop_rounded,
+    accent: Color(0xFF2563EB),
+    imagePath: 'assets/images/hd_waterfall.jpg',
+  ),
+  _CatData(
+    id: 'religious',
+    label: 'Religious',
+    subtitle: 'Mosques & Heritage',
+    icon: Icons.mosque_rounded,
+    accent: Color(0xFFDB2777),
+    imagePath: 'assets/images/hd_mosque.jpg',
+  ),
+  _CatData(
+    id: 'activities',
+    label: 'Activities',
+    subtitle: 'Hiking & Adventure',
+    icon: Icons.hiking_rounded,
+    accent: Color(0xFF7C3AED),
+    imagePath: 'assets/images/hd_valley.jpg',
+  ),
+  _CatData(
+    id: 'food',
+    label: 'Food & Dining',
+    subtitle: 'Restaurants & Cafés',
+    icon: Icons.restaurant_rounded,
+    accent: Color(0xFFDC2626),
+    imagePath: 'assets/images/hd_bazaar.jpg',
+  ),
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen
+// ─────────────────────────────────────────────────────────────────────────────
 class CityScreen extends StatelessWidget {
   final String cityId;
   const CityScreen({super.key, required this.cityId});
@@ -49,72 +88,70 @@ class CityScreen extends StatelessWidget {
     final name = _cityName(cityId);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF1F5F9),
       body: Stack(
         children: [
           CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
+              // ── Hero ─────────────────────────────────────────────────────
               SliverToBoxAdapter(
-                child: _ModernCityHero(cityId: cityId, name: name),
+                child: _CityHero(cityId: cityId, name: name),
               ),
+
+              // ── Title ────────────────────────────────────────────────────
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 22, 20, 2),
+                  child: Text(
+                    'Explore Categories',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
+                  child: Text(
+                    'Choose what you want to discover today',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── 2-column photo grid ───────────────────────────────────────
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 120),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      _CategoryCard(
-                        emoji: '🏛️',
-                        title: 'Historical',
-                        subtitle: 'Citadels • bazaars • museums',
-                        accent: const Color(0xFFFF8A3D),
-                        image: _catImage(cityId, 'historical'),
-                        onTap: () => context.go('/city/$cityId/category/historical'),
-                      ),
-                      const SizedBox(height: 14),
-                      _CategoryCard(
-                        emoji: '🌿',
-                        title: 'Nature',
-                        subtitle: 'Mountains • parks • viewpoints',
-                        accent: const Color(0xFF22C55E),
-                        image: _catImage(cityId, 'nature'),
-                        onTap: () => context.go('/city/$cityId/category/nature'),
-                      ),
-                      const SizedBox(height: 14),
-                      _CategoryCard(
-                        emoji: '💧',
-                        title: 'Waterfalls',
-                        subtitle: 'Rivers • springs • falls',
-                        accent: const Color(0xFF2563EB),
-                        image: _catImage(cityId, 'waterfalls'),
-                        onTap: () => context.go('/city/$cityId/category/waterfalls'),
-                      ),
-                      const SizedBox(height: 14),
-                      _CategoryCard(
-                        emoji: '🕌',
-                        title: 'Religious',
-                        subtitle: 'Mosques • churches • heritage',
-                        accent: const Color(0xFFEC4899),
-                        image: _catImage(cityId, 'religious'),
-                        onTap: () => context.go('/city/$cityId/category/religious'),
-                      ),
-                      const SizedBox(height: 14),
-                      _CategoryCard(
-                        emoji: '⚡️',
-                        title: 'Activities',
-                        subtitle: 'Hiking • adventure • weekend',
-                        accent: const Color(0xFF8B5CF6),
-                        image: _catImage(cityId, 'activities'),
-                        onTap: () => context.go('/city/$cityId/category/activities'),
-                      ),
-                    ],
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                    childAspectRatio: 0.82,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => _CategoryPhotoCard(
+                      data: _categories[i],
+                      onTap: () => context
+                          .go('/city/$cityId/category/${_categories[i].id}'),
+                    ),
+                    childCount: _categories.length,
                   ),
                 ),
               ),
             ],
           ),
 
-          // ✅ Top floating buttons (iOS style)
+          // ── Top nav ───────────────────────────────────────────────────────
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
@@ -140,33 +177,27 @@ class CityScreen extends StatelessWidget {
             ),
           ),
 
-          // ✅ Soft fade behind bottom actions (always readable)
+          // ── Bottom fade + pills ───────────────────────────────────────────
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 0, right: 0, bottom: 0,
             child: IgnorePointer(
               child: Container(
-                height: 130,
+                height: 120,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.12),
+                      Colors.black.withOpacity(0.10),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-
-          // ✅ Floating bottom quick actions (NOW visible: dark text/icons)
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: 14,
+            left: 16, right: 16, bottom: 14,
             child: SafeArea(
               top: false,
               child: Row(
@@ -197,70 +228,53 @@ class CityScreen extends StatelessWidget {
 
   String _cityName(String id) {
     switch (id) {
-      case 'erbil':
-        return 'Erbil';
-      case 'sulaymaniyah':
-        return 'Sulaymaniyah';
-      case 'duhok':
-        return 'Duhok';
-      case 'halabja':
-        return 'Halabja';
-      default:
-        return 'City';
+      case 'erbil':         return 'Erbil';
+      case 'sulaymaniyah':  return 'Sulaymaniyah';
+      case 'duhok':         return 'Duhok';
+      case 'halabja':       return 'Halabja';
+      default:              return 'City';
     }
   }
 }
 
-/// ✅ Hero header using ASSET image (not network)
-class _ModernCityHero extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+// City hero header
+// ─────────────────────────────────────────────────────────────────────────────
+class _CityHero extends StatelessWidget {
   final String cityId;
   final String name;
-  const _ModernCityHero({required this.cityId, required this.name});
+  const _CityHero({required this.cityId, required this.name});
 
-  String _assetForCity(String id) {
-    // Put your hero images here
+  String _asset(String id) {
     switch (id) {
-      case 'erbil':
-        return 'assets/images/erbil.jpg';
-      case 'sulaymaniyah':
-        return 'assets/images/sulaymaniyah.jpg';
-      case 'duhok':
-        return 'assets/images/duhok.jpg';
-      case 'halabja':
-        return 'assets/images/halabja.jpg';
-      default:
-        return 'assets/images/erbil.jpg';
+      case 'erbil':         return 'assets/images/erbil.jpg';
+      case 'sulaymaniyah':  return 'assets/images/sulaymaniyah.jpg';
+      case 'duhok':         return 'assets/images/duhok.jpg';
+      case 'halabja':       return 'assets/images/halabja.jpg';
+      default:              return 'assets/images/erbil.jpg';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final hero = _assetForCity(cityId);
-
     return SizedBox(
-      height: 320,
+      height: 260,
       child: Stack(
         children: [
           Positioned.fill(
             child: Hero(
               tag: 'cityHero-$cityId',
               child: Image.asset(
-                hero,
+                _asset(cityId),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFFEFF2F6),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.image_not_supported_rounded,
-                    size: 46,
-                    color: Color(0xFF0F766E),
-                  ),
+                  color: const Color(0xFF0F766E),
+                  child: const Icon(Icons.image_not_supported_rounded,
+                      size: 46, color: Colors.white30),
                 ),
               ),
             ),
           ),
-
-          // modern dark gradient
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -268,73 +282,48 @@ class _ModernCityHero extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.50),
+                    Colors.black.withOpacity(0.30),
                     Colors.transparent,
-                    Colors.black.withOpacity(0.78),
+                    Colors.black.withOpacity(0.70),
                   ],
-                  stops: const [0.0, 0.55, 1.0],
+                  stops: const [0.0, 0.4, 1.0],
                 ),
               ),
             ),
           ),
-
-          // city title + mini info card
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: 18,
-            child: Glass(
-              radius: 26,
-              blur: 18,
-              opacity: 0.14,
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F766E),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: const [
-                        BoxShadow(
-                          blurRadius: 20,
-                          offset: Offset(0, 12),
-                          color: Color(0x22000000),
-                        )
-                      ],
-                    ),
-                    child: const Icon(Icons.location_on_rounded, color: Colors.white),
+            left: 20, right: 20, bottom: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 36,
+                    height: 1.0,
+                    letterSpacing: -1,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 20,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Choose a category to explore',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.80),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_rounded,
+                        size: 13, color: Colors.white60),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Kurdistan Region, Iraq',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.70),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.arrow_forward_rounded, color: Colors.white),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -343,140 +332,136 @@ class _ModernCityHero extends StatelessWidget {
   }
 }
 
-/// Photo-backed category card — shows a real image for each city+category
-class _CategoryCard extends StatelessWidget {
-  final String emoji;
-  final String title;
-  final String subtitle;
-  final Color accent;
-  final String image;       // asset path
+// ─────────────────────────────────────────────────────────────────────────────
+// Category card — REAL PHOTO background + small icon badge
+// ─────────────────────────────────────────────────────────────────────────────
+class _CategoryPhotoCard extends StatelessWidget {
+  final _CatData data;
   final VoidCallback onTap;
-
-  const _CategoryCard({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    required this.accent,
-    required this.image,
-    required this.onTap,
-  });
+  const _CategoryPhotoCard({required this.data, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: SizedBox(
-          height: 150,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // ── Background photo ─────────────────────────────────────
+              // ── Real photo background ─────────────────────────────────
               Image.asset(
-                image,
+                data.imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: accent.withOpacity(0.18),
-                  alignment: Alignment.center,
-                  child: Text(emoji,
-                      style: const TextStyle(fontSize: 48)),
+                  color: data.accent.withOpacity(0.15),
+                  child: Icon(data.icon, color: data.accent, size: 40),
                 ),
               ),
 
-              // ── Gradient overlay ─────────────────────────────────────
+              // ── Dark gradient so text is always readable ──────────────
               DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                     colors: [
-                      accent.withOpacity(0.82),
-                      Colors.black.withOpacity(0.55),
+                      Colors.black.withOpacity(0.08),
+                      Colors.black.withOpacity(0.62),
                     ],
+                    stops: const [0.3, 1.0],
                   ),
                 ),
               ),
 
-              // ── Content ───────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 0, 14, 0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+              // ── Small icon badge (top-left) ───────────────────────────
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: data.accent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: data.accent.withOpacity(0.45),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(data.icon, color: Colors.white, size: 18),
+                ),
+              ),
+
+              // ── Text content (bottom) ─────────────────────────────────
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Emoji icon box
+                    Text(
+                      data.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      data.subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.78),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Explore pill
                     Container(
-                      width: 60,
-                      height: 60,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: Colors.white.withOpacity(0.35),
+                          width: 1,
                         ),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(emoji,
-                          style: const TextStyle(fontSize: 26)),
-                    ),
-                    const SizedBox(width: 16),
-
-                    // Title + subtitle
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
                           Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 6,
-                                  color: Colors.black38,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            subtitle,
+                            'Explore',
                             style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 10,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          // Mini chips
-                          Row(
-                            children: [
-                              _MiniChip(text: 'Top spots', color: Colors.white),
-                              const SizedBox(width: 6),
-                              _MiniChip(text: 'Photos', color: Colors.white),
-                            ],
-                          ),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_rounded,
+                              color: Colors.white, size: 11),
                         ],
-                      ),
-                    ),
-
-                    // Arrow button
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.22),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.35),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -490,32 +475,9 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _MiniChip extends StatelessWidget {
-  final String text;
-  final Color color;
-  const _MiniChip({required this.text, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w900,
-          fontSize: 11,
-        ),
-      ),
-    );
-  }
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Round glass button
+// ─────────────────────────────────────────────────────────────────────────────
 class _RoundGlassBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -545,12 +507,15 @@ class _RoundGlassBtn extends StatelessWidget {
   }
 }
 
-/// ✅ UPDATED: Bottom buttons
+// ─────────────────────────────────────────────────────────────────────────────
+// Bottom pill action
+// ─────────────────────────────────────────────────────────────────────────────
 class _PillAction extends StatelessWidget {
   final IconData icon;
   final String text;
   final VoidCallback onTap;
-  const _PillAction({required this.icon, required this.text, required this.onTap});
+  const _PillAction(
+      {required this.icon, required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -559,29 +524,22 @@ class _PillAction extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Material(
-          color: Colors.white.withOpacity(0.68),
+          color: Colors.white.withOpacity(0.72),
           child: InkWell(
             borderRadius: BorderRadius.circular(999),
             onTap: onTap,
             child: Container(
-              height: 54,
+              height: 52,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: Colors.black.withOpacity(0.06)),
-                boxShadow: const [
-                  BoxShadow(
-                    blurRadius: 18,
-                    offset: Offset(0, 12),
-                    color: Color(0x14000000),
-                  ),
-                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: const Color(0xFF0F766E)),
-                  const SizedBox(width: 10),
+                  Icon(icon, color: const Color(0xFF0F766E), size: 20),
+                  const SizedBox(width: 8),
                   Text(
                     text,
                     style: const TextStyle(

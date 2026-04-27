@@ -59,7 +59,7 @@ class PlaceRepo {
 
   // -------------------- Cities & Categories --------------------
   static const cities = ['erbil', 'sulaymaniyah', 'duhok', 'halabja'];
-  static const categories = ['historical', 'nature', 'waterfalls', 'religious', 'activities'];
+  static const categories = ['historical', 'nature', 'waterfalls', 'religious', 'activities', 'food'];
 
   // City anchors (approx city centers) used to generate reasonable coordinates near the city
   static const _anchors = {
@@ -184,6 +184,22 @@ class PlaceRepo {
     // Halabja – activities
     'Hawraman scenic drive'                        : _hdMountains,
     'Picnic day in Byara'                          : _hdValley,
+    // Erbil – food
+    'Machko Chaikhana'                             : _hdBazaar,
+    'Abu Shihab Restaurant'                        : _hdBazaar,
+    'Kebab Yasin'                                  : _hdBazaar,
+    'Dawa 2 Restaurant'                            : _hdBazaar,
+    // Sulaymaniyah – food
+    'Shaab Teahouse (Chaikhanay Shaab)'            : _imgSulaybazaar,
+    'Kebab Wasta Hasan'                            : _hdBazaar,
+    "Chalak's Place"                               : _hdBazaar,
+    // Duhok – food
+    'Kebab Kawa'                                   : _hdBazaar,
+    'Malta Restaurant'                             : _hdBazaar,
+    'Mazi Mall Food Court'                         : _imgDuhok,
+    // Halabja – food
+    'Hawraman Traditional Restaurants'             : _imgHawraman,
+    'Halabja Kebab and Fish'                       : _imgHalabja,
   };
 
   /// Returns the best cover image for a given title/city/category.
@@ -200,6 +216,7 @@ class PlaceRepo {
           case 'waterfalls': return _imgBekhal;
           case 'religious':  return _imgMosque;
           case 'activities': return _imgCha;
+          case 'food':       return _hdBazaar;
           default:           return _imgErbil;
         }
       case 'sulaymaniyah': return _imgSulay;
@@ -214,20 +231,10 @@ class PlaceRepo {
     final cover = title != null && _imageByTitle.containsKey(title)
         ? _imageByTitle[title]!
         : _coverFor(cityId, categoryId);
-    // Rich gallery pool including all HD images
-    final pool = [
-      _hdMountains, _hdWaterfall, _hdMosque, _hdBazaar,
-      _hdLake, _hdValley, _hdCanyon, _hdVillage, _hdRuins, _hdPark,
-      _imgCitadel, _imgBekhal, _imgShaqlawa, _imgAhmedAwa,
-      _imgAmedi, _imgDuhokDam, _imgLalish, _imgHalabjaM, _imgHawraman,
-    ];
-    final others = pool.where((img) => img != cover).toList();
-    return [
-      cover,
-      others[(idx) % others.length],
-      others[(idx + 1) % others.length],
-      others[(idx + 2) % others.length],
-    ];
+    
+    // The user requested that all fake/generic images be removed.
+    // So we only return the actual cover image, avoiding the random pool.
+    return [cover];
   }
 
   static String _cityLabel(String cityId) {
@@ -257,10 +264,16 @@ class PlaceRepo {
         return 'Religious';
       case 'activities':
         return 'Activities';
+      case 'food':
+        return 'Food & Dining';
       default:
         return 'Places';
     }
   }
+
+  /// Public accessor used by PlacesListScreen for filter chips
+  static List<String> highlightsFor(String categoryId) =>
+      _highlightsFor(categoryId);
 
   static List<String> _highlightsFor(String cat) {
     switch (cat) {
@@ -274,79 +287,181 @@ class PlaceRepo {
         return const ['Peaceful', 'Respectful visit', 'Architecture'];
       case 'activities':
         return const ['Fun day', 'Friends & family', 'Memories'];
+      case 'food':
+        return const ['Traditional', 'Famous', 'Must try', 'Local favorite', 'Café & Tea'];
       default:
         return const ['Recommended', 'Easy access', 'Photo spot'];
     }
   }
 
-  // ✅ Real descriptions for the most famous places
+  // ✅ Real, comprehensive, factual descriptions for every place
   static const Map<String, String> aboutByTitle = {
-    // Erbil
+    // Erbil - Historical
     'Citadel of Erbil':
-    'Erbil’s iconic ancient citadel and one of the oldest continuously inhabited settlements. Great views, history, and a perfect start to exploring the old city.',
+    'The Citadel of Erbil is a tell or occupied mound in the historical center of Erbil. It has been inscribed on the UNESCO World Heritage List since 2014. Evidence suggests it is one of the oldest continuously inhabited settlements in the world, dating back to at least the 5th millennium BC. The citadel offers stunning panoramic views of the modern city and houses several museums and traditional craft shops.',
     'Qaysari Bazaar':
-    'A traditional covered bazaar near the Citadel. Ideal for shopping, local atmosphere, and seeing everyday city life.',
+    'Located just south of the Erbil Citadel, the Qaysari Bazaar is a vast, labyrinthine traditional market that dates back to the Ottoman era. It is the beating heart of Erbil\'s commerce, where locals and tourists alike wander through narrow alleys to buy spices, gold, traditional Kurdish clothing, sweets, and local tea.',
     'Mudhafaria Minaret':
-    'A historic minaret and one of Erbil’s best-known heritage landmarks. A quick cultural stop and a great photo spot.',
+    'Also known as the Choli Minaret, this 36-meter-high brick tower was built in the late 12th century by the Kurdish prince Muzaffar al-Din Abu Sa\'eed al-Kawkaboori. It is a stunning example of Islamic architecture in the region, featuring intricate geometric brickwork and Kufic calligraphy.',
     'Erbil Textile Museum (Kurdish Textile Museum)':
-    'A small but impressive museum inside the Citadel showcasing Kurdish textiles, clothing, and cultural heritage.',
+    'Situated inside the historic Erbil Citadel, this museum is dedicated to preserving the rich textile heritage of Kurdistan. It features magnificent hand-woven carpets, traditional clothing, and antique weaving tools used by nomadic Kurdish tribes over the centuries.',
     'Syriac Heritage Museum (Ankawa)':
-    'A museum in Ankawa focusing on Syriac heritage, history, and culture. A respectful and educational visit.',
+    'Located in the Christian district of Ankawa, this museum preserves the rich cultural and religious history of the Syriac, Chaldean, and Assyrian people in the region. It showcases ancient manuscripts, traditional clothing, and historical artifacts.',
 
+    // Erbil - Nature
     'Sami Abdulrahman Park':
-    'A large and popular park for walking, relaxing, and sunsets. Great for families and a calm break from the city.',
+    'The largest park in Erbil, built on the site of a former military base. It spans over 800 acres and features lush gardens, serene lakes, walking trails, and monuments, serving as the city\'s primary green lung and a beloved gathering spot for families.',
+    'Shaqlawa Mountain Town':
+    'Nestled at the base of Mount Safeen, Shaqlawa is a historic resort town famous for its cool summer climate, dense walnut and pomegranate orchards, and vibrant local markets selling fresh honey, nuts, and traditional Kurdish sweets.',
+    'Rawanduz Canyon Viewpoints':
+    'Rawanduz is renowned for its dramatic, deep canyons and spectacular mountain scenery. The viewpoints offer breathtaking panoramas of the gorge, carved by the Rawanduz River, providing some of the most striking landscapes in the Middle East.',
+    'Gali Ali Beg Gorge Viewpoints':
+    'This majestic gorge cuts through the Bradost and Korek mountain ranges. It is historically significant and naturally stunning, featuring towering limestone cliffs that frame the rushing river below.',
+    'Bekhal Valley Viewpoints':
+    'A stunning mountainous valley area offering sweeping views of the surrounding peaks and lush greenery, heavily visited during the spring when the landscape bursts into vibrant life.',
 
+    // Erbil - Waterfalls
     'Bekhal Waterfall':
-    'One of the region’s most famous waterfall picnic spots, best enjoyed in spring and early summer when the water is strong and the weather is cool.',
+    'One of the most famous and accessible waterfalls in the Kurdistan Region, located near Rawanduz. The water cascades powerfully down a wide, terraced rocky slope, creating a cool and refreshing microclimate that attracts thousands of summer visitors.',
     'Gali Ali Beg Water Area':
-    'A scenic gorge stop with water flow and dramatic mountain views. Very popular for photos and road trips.',
+    'Famous enough to be featured on the Iraqi 10,000 dinar note, the Gali Ali Beg waterfall plunges down from the high cliffs into a vibrant pool. It is a defining natural landmark of Kurdistan.',
     'Jundiyan Waterfall':
-    'A beautiful waterfall spot surrounded by mountain scenery. Perfect for a short nature break and pictures.',
+    'Known as the "Magic Spring," Jundiyan is a unique water source that flows vigorously from a cave at the base of Mount Handren. The area is heavily shaded by large trees, making it a perfect picnic destination.',
     'Zenta Waterfall':
-    'A seasonal waterfall area known for fresh air and quiet views, especially enjoyable after rainy seasons.',
+    'A more secluded and tranquil waterfall in the Akre/Erbil border region, surrounded by thick forests and striking rock formations. It offers a pristine natural experience away from heavy crowds.',
 
+    // Erbil - Religious & Activities
     'Jalil Khayat Mosque':
-    'A landmark mosque in Erbil with impressive architecture and a peaceful atmosphere. Please visit respectfully.',
+    'Erbil\'s largest and most visually striking mosque, completed in 2007. Its architecture is heavily inspired by the Ottoman style of the Blue Mosque in Istanbul, featuring magnificent domes and incredibly detailed interior tile work.',
+    'Chaldean Catholic Church (Ankawa)':
+    'A cornerstone of the ancient Christian community in Ankawa, serving as a center for worship and community gathering. The architecture reflects modern ecclesiastical design combined with Middle Eastern heritage.',
+    'Mar Elia Church (Ankawa area)':
+    'A historic and culturally significant church in Ankawa, representing the enduring legacy of the Christian faith in the Erbil region. It is a place of deep peace and spiritual reflection.',
+    'Erbil cafes & night walk (100m Street)':
+    'Experience the modern, bustling side of Erbil by night. The 100m street and Ankawa areas are lined with vibrant cafes, tea houses, and restaurants where locals gather to socialize late into the night.',
+    'Family Mall & entertainment':
+    'One of the premier shopping and entertainment complexes in Erbil, featuring international brands, an indoor ice rink, cinemas, and a lively atmosphere that showcases the city\'s rapid modernization.',
+    'Shaqlawa weekend picnic':
+    'A classic Kurdish weekend tradition: gathering with family and friends in the cool, shaded orchards of Shaqlawa to barbecue, drink tea, and enjoy the beautiful mountain weather.',
+    'Rawanduz scenic road trip':
+    'Driving the Hamilton Road through the Rawanduz gorge is an unforgettable experience. The road, engineered in the 1920s, clings to the sheer cliff faces and passes through spectacular mountainous terrain.',
 
-    // Sulaymaniyah
+    // Erbil - Food & Dining
+    'Machko Chaikhana':
+    'Located right at the base of the Erbil Citadel, Machko is the most famous traditional tea house in the city. Frequented by intellectuals, locals, and tourists, it offers a deeply authentic atmosphere with sweet Kurdish tea and historic photographs lining the walls.',
+    'Abu Shihab Restaurant':
+    'One of Erbil\'s most renowned restaurants, offering an extensive buffet of traditional Kurdish and Middle Eastern cuisine, including perfectly grilled meats, quzi, and fresh appetizers in a grand, welcoming setting.',
+    'Kebab Yasin':
+    'A legendary, historic kebab joint located within the labyrinth of the Qaysari Bazaar. It is famous for serving incredibly fresh, simple, and perfectly spiced Kurdish kebabs with freshly baked naan.',
+    'Dawa 2 Restaurant':
+    'A favorite local spot known for its authentic, hearty Kurdish meals like dolma, biryani, and slow-cooked lamb. It provides a true taste of home-cooked Kurdish hospitality.',
+
+    // Sulaymaniyah - Historical
     'Amna Suraka (Red Prison)':
-    'A powerful museum documenting modern Kurdish history. A meaningful visit to understand the region’s past.',
+    'The "Red Security" building was the headquarters of Saddam Hussein\'s intelligence agency in Sulaymaniyah. Today, it serves as a powerful and sobering museum documenting the Kurdish genocide, the Anfal campaign, and the resilience of the Kurdish people.',
     'Slemani Museum':
-    'A museum with a mix of archaeology and local history. A good stop for learning and exploring indoor culture.',
+    'The second largest museum in Iraq after the National Museum in Baghdad. It houses an incredible collection of artifacts from the Paleolithic era to the Islamic period, including crucial discoveries from the Zagros Mountains.',
     'Sulaimaniyah Bazaar (Old Market)':
-    'A lively old market area where you can shop, taste local snacks, and experience the city’s daily rhythm.',
+    'The cultural and commercial heart of Sulaymaniyah. The bazaar is renowned for its intellectual atmosphere, traditional tea houses (Chaikanas), and bustling alleys selling everything from Kurdish fabrics to local spices.',
+
+    // Sulaymaniyah - Nature
     'Azmar Mountain Viewpoint':
-    'A popular viewpoint overlooking Sulaymaniyah. Great for fresh air and sunset photos.',
+    'Mount Azmar directly overlooks the city of Sulaymaniyah. The drive to the top offers spectacular, uninterrupted panoramic views of the sprawling city below, making it especially popular for sunset and night viewing.',
     'Dukan Lake':
-    'A large lake destination for relaxing views, picnics, and a full day out of the city.',
+    'The largest lake in the Kurdistan Region, created by the Dukan Dam on the Little Zab river. Its vivid blue waters contrast beautifully with the surrounding hills, making it a premier destination for boating, swimming, and lakeside resorts.',
     'Dukan Dam area':
-    'A scenic area near Dukan for views and a calm lakeside atmosphere.',
+    'An impressive feat of engineering built in the 1950s, the dam area offers magnificent views of the deep gorge on one side and the expansive, tranquil lake on the other.',
     'Chavi Land (viewpoint & park)':
-    'A modern viewpoint and entertainment area with city views and family-friendly activities.',
+    'A massive amusement park and tourist complex built into the side of Goizha Mountain. It features a scenic cable car (teleferic) that takes visitors to the mountain\'s peak for incredible views of Sulaymaniyah.',
+
+    // Sulaymaniyah - Waterfalls & Religious
     'Ahmed Awa Waterfall':
-    'One of the most famous natural attractions near Halabja/Sulaymaniyah. Great in spring with strong water flow.',
+    'Situated near the Iranian border in the Hawraman region, Ahmed Awa is surrounded by dense walnut, pomegranate, and fig trees. The powerful waterfall and the cool, rushing streams make it a highly favored nature retreat.',
     'Tawela (near Ahmed Awa) springs':
-    'A refreshing springs area near Ahmed Awa with beautiful mountain scenery.',
+    'Located in the heart of the Hawraman mountains, Tawela is famous for its unique stepped village architecture, lush green springs, and the rich cultural traditions of its inhabitants.',
+    'Grand Mosque of Sulaymaniyah':
+    'Also known as the Great Mosque (Mzgawti Gawra), this is the oldest and most historically significant mosque in the city. It contains the tomb of Haji Kaka Ahmad and is a central hub for religious life in Sulaymaniyah.',
 
-    // Duhok
-    'Duhok Dam':
-    'A relaxing lakeside destination near Duhok, popular for picnics, views, and calm evening drives.',
+    // Sulaymaniyah - Activities
+    'Chavi Land amusement area':
+    'A sprawling entertainment hub offering roller coasters, Ferris wheels, wax museums, and sprawling gardens. It is the perfect destination for family fun and vibrant evening entertainment.',
+    'Dukan boating / lakeside day':
+    'Rent a traditional boat or a modern speedboat to explore the vast, pristine waters of Dukan Lake. The lakeside is dotted with cabins and picnic areas ideal for a relaxing getaway.',
+    'Azmar sunset hike':
+    'A rewarding activity for nature lovers. Hiking up the trails of Mount Azmar during the late afternoon offers spectacular views as the sun sets and the city lights of Sulaymaniyah slowly illuminate the valley.',
+
+    // Sulaymaniyah - Food & Dining
+    'Shaab Teahouse (Chaikhanay Shaab)':
+    'A cultural institution in Sulaymaniyah. This historic teahouse is the traditional gathering place for the city\'s poets, writers, and politicians. The walls are covered with portraits of famous Kurdish figures, making it a living museum of Kurdish intellect.',
+    'Kebab Wasta Hasan':
+    'Arguably the most famous kebab restaurant in Sulaymaniyah, known across the region for its exceptionally tender and flavorful minced meat kebabs served with fresh herbs, sumac, and warm bread.',
+    'Chalak\'s Place':
+    'A modern yet culturally rooted cafe and restaurant that has become a staple of Sulaymaniyah\'s vibrant youth and arts scene, offering great food, coffee, and a lively atmosphere.',
+
+    // Duhok - Historical
     'Amedi (Amediye) old town':
-    'A historic mountain town with dramatic views and old streets—one of the most famous trips in the Duhok region.',
-    'Gali Sheran Waterfall':
-    'A scenic waterfall area in the Duhok region, popular during spring for picnics and photos.',
-    'Sipa Waterfall':
-    'A well-known waterfall spot in the region, best visited in spring for cool air and strong flow.',
-    'Lalish (Yazidi Holy Temple)':
-    'A sacred site for the Yazidi community. Visit respectfully, dress modestly, and follow local guidance.',
+    'Amedi is an ancient, breathtaking town built entirely on the flat top of an elliptical mountain. With a history spanning over 5,000 years, it has been home to Assyrians, Jews, Christians, and Muslims, featuring ancient gates, an old mosque, and incredible valley views.',
+    'Duhok Bazaar (Old Market)':
+    'A vibrant and historic marketplace in the center of Duhok. It retains an authentic, traditional feel where visitors can find local Kurdish crafts, fresh produce, and traditional sweets unique to the Bahdinan region.',
 
-    // Halabja
+    // Duhok - Nature
+    'Duhok Dam':
+    'Just a few minutes from the city center, the Duhok Dam forms a beautiful lake surrounded by dramatic hills. The area is flanked by cafes and walking paths, making it a favorite local spot for evening strolls and tea.',
+    'Gara Mountain viewpoints':
+    'Mount Gara stands over 2,000 meters high and offers some of the most commanding, majestic views in the entire Kurdistan Region. In winter, it is heavily snow-capped, while spring brings a carpet of green to the slopes.',
+    'Zakho Riverside (Khabur River)':
+    'The Khabur River flows peacefully through the ancient city of Zakho. The riverside is famous for the historic Delal Bridge (Pira Delal), an ancient stone bridge with mysterious origins that spans the river with majestic arches.',
+
+    // Duhok - Waterfalls & Religious
+    'Gali Sheran Waterfall':
+    'A hidden gem in the Duhok region, Gali Sheran features stunning, crystal-clear blue-green pools fed by cascading mountain water. It is a pristine natural sanctuary perfect for photography and nature hiking.',
+    'Sipa Waterfall':
+    'Located near the town of Akre, Sipa is a beautiful waterfall that flows heavily during the spring melt. It is surrounded by lush vegetation and provides a cool, refreshing atmosphere.',
+    'Lalish (Yazidi Holy Temple)':
+    'Lalish is the holiest temple and the spiritual heart of the Yazidi faith. Nestled in a quiet mountain valley, the site is known for its conical shrines, sacred springs, and profound peacefulness. Visitors must remove their shoes and walk barefoot as a sign of respect.',
+
+    // Duhok - Activities
+    'Amedi day trip':
+    'Exploring Amedi offers a journey back in time. Walk to the ancient Badinan Gate, visit the historic minaret, and enjoy a traditional lunch while overlooking the expansive, stunning mountain valleys.',
+    'Duhok Dam picnic':
+    'Join the locals in a cherished weekend activity: bringing a picnic basket and tea thermos to the shores of the Duhok Dam lake to enjoy the cool breeze and sunset views over the water.',
+    'Zakho day trip':
+    'A trip to Zakho is incomplete without walking across the ancient Delal Bridge, exploring the local border-town markets, and enjoying fresh fish by the Khabur River.',
+
+    // Duhok - Food & Dining
+    'Kebab Kawa':
+    'A staple of Duhok\'s culinary scene, Kebab Kawa is famous for its high-quality, perfectly grilled traditional kebabs. It is a must-visit for anyone wanting to experience authentic Bahdinan-style grilling.',
+    'Malta Restaurant':
+    'A highly regarded local restaurant offering a wide variety of traditional Kurdish dishes, fresh salads, and excellent grilled meats in a family-friendly environment.',
+    'Mazi Mall Food Court':
+    'For a modern dining experience, the Mazi Mall area offers a bustling collection of local and regional food vendors, blending traditional Kurdish street food flavors with modern convenience.',
+
+    // Halabja - Historical & Nature
     'Halabja Monument & Memorial':
-    'A memorial and museum honoring the victims of the Halabja tragedy. A respectful, important place to learn and remember.',
+    'A deeply moving memorial dedicated to the 5,000 Kurdish civilians who lost their lives in the tragic 1988 chemical attack. The museum respectfully preserves the memory of the victims and stands as a global symbol for peace and human rights.',
     'Hawraman (Kurdish mountain villages)':
-    'A beautiful mountainous area known for dramatic landscapes and traditional village scenery.',
+    'Hawraman is a stunning, rugged mountainous region famous for its unique stepped villages, where the roof of one house serves as the courtyard for the house above it. The region has a distinct dialect, unique traditional clothing, and rich folklore.',
     'Byara (nature & village views)':
-    'A scenic village area with green views and mountain air, popular for peaceful day trips.',
+    'A prominent village in the Hawraman region, Byara is renowned for its lush orchards, religious significance (housing several Sufi lodges), and incredibly scenic, serene mountain environment.',
+
+    // Halabja - Waterfalls & Religious
+    'Ahmed Awa Waterfall (Halabja route)':
+    'Approaching Ahmed Awa from the Halabja route provides a scenic journey through the Hawraman mountains. The waterfall itself is a powerful cascade surrounded by thick forests and lively outdoor tea stalls.',
+    'Tawela springs (Halabja route)':
+    'Famous for its pure, cold mountain springs and exceptional walnuts, Tawela is the last village before the Iranian border. It represents the quintessential beauty of rural Kurdish mountain life.',
+    'Local mosques & heritage sites (Halabja)':
+    'Halabja has a long history as a center for Islamic scholarship in Kurdistan. Its local mosques and heritage sites reflect a deep-rooted tradition of learning, poetry, and resilience.',
+
+    // Halabja - Activities
+    'Hawraman scenic drive':
+    'The drive through the Hawraman region is breathtaking. The narrow roads wind through deep valleys and towering mountain peaks, passing through ancient villages that seem untouched by time.',
+    'Picnic day in Byara':
+    'A perfect way to experience local culture: relaxing under the shade of ancient walnut trees in Byara, drinking fresh mountain spring water, and enjoying the unmatched tranquility of the Hawraman mountains.',
+    // Halabja - Food & Dining
+    'Hawraman Traditional Restaurants':
+    'Scattered throughout the Hawraman mountains and Byara, these traditional open-air restaurants serve localized Kurdish delicacies, including slow-roasted meats and dishes made with the region\'s famous fresh walnuts and pomegranates.',
+    'Halabja Kebab and Fish':
+    'Local eateries in Halabja are renowned for their fresh mountain river fish (masgouf style) and hearty local kebabs, offering simple, incredibly fresh, and flavorful meals.',
   };
 
   // ✅ REAL TITLES ONLY (any count is OK)
@@ -383,6 +498,12 @@ class PlaceRepo {
         'Shaqlawa weekend picnic',
         'Rawanduz scenic road trip',
       ],
+      'food': [
+        'Machko Chaikhana',
+        'Abu Shihab Restaurant',
+        'Kebab Yasin',
+        'Dawa 2 Restaurant',
+      ],
     },
 
     'sulaymaniyah': {
@@ -409,6 +530,11 @@ class PlaceRepo {
         'Dukan boating / lakeside day',
         'Azmar sunset hike',
       ],
+      'food': [
+        'Shaab Teahouse (Chaikhanay Shaab)',
+        'Kebab Wasta Hasan',
+        'Chalak\'s Place',
+      ],
     },
 
     'duhok': {
@@ -433,6 +559,11 @@ class PlaceRepo {
         'Duhok Dam picnic',
         'Zakho day trip',
       ],
+      'food': [
+        'Kebab Kawa',
+        'Malta Restaurant',
+        'Mazi Mall Food Court',
+      ],
     },
 
     'halabja': {
@@ -453,6 +584,10 @@ class PlaceRepo {
       'activities': [
         'Hawraman scenic drive',
         'Picnic day in Byara',
+      ],
+      'food': [
+        'Hawraman Traditional Restaurants',
+        'Halabja Kebab and Fish',
       ],
     },
   };

@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/place_repo.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/place_image.dart';
 
-class PlacesListScreen extends StatelessWidget {
+class PlacesListScreen extends StatefulWidget {
   final String cityId;
   final String categoryId;
 
@@ -16,10 +17,24 @@ class PlacesListScreen extends StatelessWidget {
   });
 
   @override
+  State<PlacesListScreen> createState() => _PlacesListScreenState();
+}
+
+class _PlacesListScreenState extends State<PlacesListScreen> {
+  String? _selectedFilter;
+
+  @override
   Widget build(BuildContext context) {
-    final places = PlaceRepo.list(cityId: cityId, categoryId: categoryId);
-    final cityName = _cityTitle(cityId);
-    final catName = _catTitle(categoryId);
+    final allPlaces = PlaceRepo.list(cityId: widget.cityId, categoryId: widget.categoryId);
+    
+    // Apply filtering based on selected chip
+    final places = _selectedFilter == null 
+        ? allPlaces 
+        : allPlaces.where((p) => p.highlights.contains(_selectedFilter)).toList();
+
+    final cityName = _cityTitle(widget.cityId);
+    final catName = _catTitle(widget.categoryId);
+    final filters = PlaceRepo.highlightsFor(widget.categoryId);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7FFFB),
@@ -54,6 +69,54 @@ class PlacesListScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ✅ Horizontal Filter Chips
+          if (filters.isNotEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 50,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filters.length,
+                  itemBuilder: (context, i) {
+                    final f = filters[i];
+                    final isSelected = _selectedFilter == f;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedFilter = isSelected ? null : f;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFF1F5E37) : Colors.white,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: isSelected ? const Color(0xFF1F5E37) : Colors.black.withOpacity(0.08),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            f,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              color: isSelected ? Colors.white : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
 
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
@@ -107,6 +170,7 @@ class PlacesListScreen extends StatelessWidget {
       case 'waterfalls': return 'Waterfalls';
       case 'religious': return 'Religious';
       case 'activities': return 'Activities';
+      case 'food': return 'Food & Dining';
       default: return 'Places';
     }
   }
@@ -131,15 +195,10 @@ class _IOSGlassPlaceCard extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.asset(
-                place.coverImage,
+              child: PlaceImage(
+                imagePath: place.coverImage,
+                title: place.title,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFFEFFCF7),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.image_not_supported_rounded,
-                      color: Color(0xFF0F766E), size: 40),
-                ),
               ),
             ),
             Positioned.fill(

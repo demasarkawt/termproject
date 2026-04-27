@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/place_repo.dart';
-import '../../data/favorites_scope.dart'; // ✅ NEW
+import '../../data/favorites_scope.dart';
 import '../../widgets/glass.dart';
+import '../../widgets/place_image.dart';
 
 class PlaceDetailScreen extends StatefulWidget {
   final String placeId;
@@ -73,6 +74,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
                   imagesCtrl: _imagesCtrl,
                   heroTag: 'placeHero-${place.id}',
                   images: place.images,
+                  title: place.title,
                   category: _categoryTitle(place.categoryId),
                   pageIndex: _pageIndex,
                   onPageChanged: (i) => setState(() => _pageIndex = i),
@@ -380,6 +382,7 @@ class _TopGallery extends StatelessWidget {
   final PageController imagesCtrl;
   final String heroTag;
   final List<String> images;
+  final String title;
   final String category;
 
   final int pageIndex;
@@ -394,6 +397,7 @@ class _TopGallery extends StatelessWidget {
     required this.imagesCtrl,
     required this.heroTag,
     required this.images,
+    required this.title,
     required this.category,
     required this.pageIndex,
     required this.onPageChanged,
@@ -426,16 +430,10 @@ class _TopGallery extends StatelessWidget {
                         size: 44, color: Color(0xFF0F766E)),
                   );
                 }
-                return Image.asset(
-                  safeImages[i],
+                return PlaceImage(
+                  imagePath: safeImages[i],
+                  title: title,
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: const Color(0xFFEFF2F6),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.image_not_supported_rounded,
-                        size: 44, color: Color(0xFF0F766E)),
-                  ),
                 );
               },
             ),

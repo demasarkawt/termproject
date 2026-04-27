@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:termproject/services/user_session.dart';
+import '../../services/weather_service.dart';
+import '../../widgets/place_image.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,7 +12,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedInterest = 1; // CULTURE default (index 1)
+  int _selectedInterest = 1;
+  Map<String, CityWeather> _weatherMap = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    try {
+      final list = await WeatherService.fetchAll();
+      if (mounted) {
+        setState(() {
+          _weatherMap = {for (final w in list) w.city: w};
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,17 +115,62 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Weather Cards Stack
-                  Column(
+                  // ── Explore Cities (weather embedded in cards)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildWeatherCard('ERBIL', Icons.wb_sunny, '28°C'),
-                      const SizedBox(height: 8),
-                      _buildWeatherCard('SULAYMANIYAH', Icons.cloud_outlined, '24°C'), // Cloud/sun icon approx
-                      const SizedBox(height: 8),
-                      _buildWeatherCard('DUHOK', Icons.wb_sunny, '26°C'),
+                      const Text(
+                        'Explore Cities',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'serif',
+                          color: textDark,
+                        ),
+                      ),
+                      if (_weatherMap.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E).withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: const Color(0xFF22C55E).withOpacity(0.2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 5, height: 5,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF22C55E),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Live weather',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF16A34A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        const SizedBox(
+                          width: 14, height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF1F5E37)),
+                          ),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 14),
 
                   // Top Locations Horizontal Scroll
                   SizedBox(
@@ -117,18 +182,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         GestureDetector(
                           onTap: () => context.go('/city/erbil'),
                           child: _buildMainLocationCard(
-                            'Erbil\nCitadel',
-                            'The world\'s oldest continuously\ninhabited settlement,\noverlooking the heart of the\ncapital.',
-                            'assets/images/qallat.JPEG',
+                            'Erbil',
+                            'The ancient heart of Kurdistan,\nhome to the Citadel and vibrant bazaars.',
+                            'assets/images/erbil.jpg',
+                            _weatherMap['Erbil'],
                           ),
                         ),
                         const SizedBox(width: 16),
                         GestureDetector(
-                          onTap: () => context.go('/city/erbil'),
+                          onTap: () => context.go('/city/sulaymaniyah'),
                           child: _buildMainLocationCard(
-                            'Shanadar\nCave',
-                            'A beautiful and historic\narchaeological site.',
-                            'assets/images/shanadar.JPEG',
+                            'Sulaymaniyah',
+                            'The cultural capital, surrounded by beautiful mountains.',
+                            'assets/images/sulaymaniyah.jpg',
+                            _weatherMap['Sulaymaniyah'],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () => context.go('/city/duhok'),
+                          child: _buildMainLocationCard(
+                            'Duhok',
+                            'Stunning valleys, ancient temples, and lakeside views.',
+                            'assets/images/duhok.jpg',
+                            _weatherMap['Duhok'],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        GestureDetector(
+                          onTap: () => context.go('/city/halabja'),
+                          child: _buildMainLocationCard(
+                            'Halabja',
+                            'A city of resilience, nature, and the Hawraman mountains.',
+                            'assets/images/halabja.jpg',
+                            _weatherMap['Halabja'],
                           ),
                         ),
                       ],
@@ -292,51 +379,184 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMainLocationCard(String title, String subtitle, String img) {
+  Widget _buildMainLocationCard(
+      String title, String subtitle, String img, [CityWeather? weather]) {
+    final weatherColor = weather != null
+        ? WeatherService.colorFromCode(weather.weatherCode)
+        : const Color(0xFF1F5E37);
+    final weatherIcon = weather != null
+        ? WeatherService.iconFromCode(weather.weatherCode)
+        : Icons.wb_sunny_rounded;
+
     return Container(
       width: 240,
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: DecorationImage(
-          image: AssetImage(img),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                fontFamily: 'serif',
-                color: Colors.white,
-                height: 1.1,
+        ],
+      ),
+      child: Stack(
+        children: [
+          // City photo
+          Positioned.fill(
+            child: PlaceImage(
+              imagePath: img,
+              title: title,
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // Dark gradient overlay (bottom)
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.75),
+                    Colors.black.withOpacity(0.10),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  stops: const [0.0, 0.55, 1.0],
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white70,
-                height: 1.3,
+          ),
+
+          // ── TOP-RIGHT: Live weather badge ─────────────────────────────
+          Positioned(
+            top: 12,
+            right: 12,
+            child: AnimatedOpacity(
+              opacity: weather != null ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  // white frosted glass look
+                  color: Colors.white.withOpacity(0.22),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.40),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Weather icon — large and coloured
+                    Icon(
+                      weatherIcon,
+                      size: 22,
+                      color: weatherColor,
+                    ),
+                    const SizedBox(width: 5),
+                    // Temperature — big white bold
+                    Text(
+                      weather != null && !weather.tempC.isNaN
+                          ? '${weather.tempC.round()}°'
+                          : '—',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // ── BOTTOM: City name + description ───────────────────────────
+          Positioned(
+            left: 16, right: 16, bottom: 16,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (weather != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      weather.description,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: weatherColor,
+                      ),
+                    ),
+                  ),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'serif',
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.75),
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                // Explore pill
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text(
+                        'Explore',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white, size: 14),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
