@@ -72,17 +72,55 @@ class PlaceRepo {
   // small offset to avoid every place having the same lat/lng
   static double _off(int i) => (i % 5) * 0.01 - 0.02;
 
+  // ─── Real images available in assets/images/ ───────────────────────────
+  static const _imgErbil       = 'assets/images/erbil.jpg';
+  static const _imgCitadel     = 'assets/images/qallat.JPEG';
+  static const _imgShanadar    = 'assets/images/shanadar.JPEG';
+  static const _imgCha         = 'assets/images/cha.JPEG';
+  static const _imgSulay       = 'assets/images/sulaymaniyah.jpg';
+  static const _imgDuhok       = 'assets/images/duhok.jpg';
+  static const _imgHalabja     = 'assets/images/halabja.jpg';
+
+  /// Returns the best cover image for a given city + category.
   static String _asset(String cityId, String categoryId, int idx, int photo) {
-    final n = idx.toString().padLeft(2, '0');
-    return 'assets/images/$cityId/${categoryId}_${n}_$photo.jpg';
+    return _coverFor(cityId, categoryId);
   }
 
-  static List<String> _gallery(String cityId, String categoryId, int idx) => [
-    _asset(cityId, categoryId, idx, 1),
-    _asset(cityId, categoryId, idx, 2),
-    _asset(cityId, categoryId, idx, 3),
-    _asset(cityId, categoryId, idx, 4),
-  ];
+  static String _coverFor(String cityId, String categoryId) {
+    switch (cityId) {
+      case 'erbil':
+        switch (categoryId) {
+          case 'historical': return _imgCitadel;
+          case 'nature':     return _imgShanadar;
+          case 'waterfalls': return _imgShanadar;
+          case 'religious':  return _imgCitadel;
+          case 'activities': return _imgCha;
+          default:           return _imgErbil;
+        }
+      case 'sulaymaniyah': return _imgSulay;
+      case 'duhok':        return _imgDuhok;
+      case 'halabja':      return _imgHalabja;
+      default:             return _imgErbil;
+    }
+  }
+
+  /// Returns 4 varied gallery images for a place.
+  static List<String> _gallery(String cityId, String categoryId, int idx) {
+    final cover = _coverFor(cityId, categoryId);
+    // Pick 3 other images to fill the gallery
+    final pool = [
+      _imgErbil, _imgCitadel, _imgShanadar, _imgCha,
+      _imgSulay, _imgDuhok, _imgHalabja,
+    ];
+    // Rotate through pool based on idx so each place gets different photos
+    final others = pool.where((img) => img != cover).toList();
+    return [
+      cover,
+      others[(idx) % others.length],
+      others[(idx + 1) % others.length],
+      others[(idx + 2) % others.length],
+    ];
+  }
 
   static String _cityLabel(String cityId) {
     switch (cityId) {

@@ -27,14 +27,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/KGO.png
-    - assets/images/qallat.JPEG
-    - assets/images/shanadar.JPEG
-    - assets/images/cha.JPEG
-    - assets/images/sulaymaniyah.jpg
-    - assets/images/duhok.jpg
-    - assets/images/halabja.jpg
-    - assets/images/erbil.jpg
+    - assets/images/
 
 
 
