@@ -74,14 +74,106 @@ class PlaceRepo {
 
   // ─── Real images available in assets/images/ ───────────────────────────
   static const _imgErbil       = 'assets/images/erbil.jpg';
-  static const _imgCitadel     = 'assets/images/qallat.JPEG';
-  static const _imgShanadar    = 'assets/images/shanadar.JPEG';
+  static const _imgCitadel     = 'assets/images/place_citadel.png';
+  static const _imgBazaar      = 'assets/images/place_bazaar.png';
+  static const _imgBekhal      = 'assets/images/place_bekhal.png';
+  static const _imgShaqlawa    = 'assets/images/place_shaqlawa.png';
+  static const _imgRawanduz    = 'assets/images/place_rawanduz.png';
+  static const _imgMosque      = 'assets/images/place_mosque.png';
   static const _imgCha         = 'assets/images/cha.JPEG';
+  static const _imgShanadar    = 'assets/images/shanadar.JPEG';
   static const _imgSulay       = 'assets/images/sulaymaniyah.jpg';
+  static const _imgAmnaSuraka  = 'assets/images/place_amna_suraka.jpg';
+  static const _imgDukanLake   = 'assets/images/place_dukan_lake.jpg';
+  static const _imgAhmedAwa    = 'assets/images/place_ahmed_awa.jpg';
+  static const _imgSulaybazaar = 'assets/images/place_sulaymaniyah_bazaar.jpg';
   static const _imgDuhok       = 'assets/images/duhok.jpg';
+  static const _imgAmedi       = 'assets/images/place_amedi.jpg';
+  static const _imgDuhokDam    = 'assets/images/place_duhok_dam.jpg';
+  static const _imgLalish      = 'assets/images/place_lalish.jpg';
+  static const _imgGaliAliBeg  = 'assets/images/place_gali_ali_beg.jpg';
   static const _imgHalabja     = 'assets/images/halabja.jpg';
+  static const _imgHalabjaM    = 'assets/images/place_halabja_monument.jpg';
+  static const _imgHawraman    = 'assets/images/place_hawraman.jpg';
 
-  /// Returns the best cover image for a given city + category.
+  /// Per-place image overrides (title → asset path)
+  static const Map<String, String> _imageByTitle = {
+    // Erbil – historical
+    'Citadel of Erbil'                        : _imgCitadel,
+    'Qaysari Bazaar'                           : _imgBazaar,
+    'Mudhafaria Minaret'                       : _imgCitadel,
+    'Erbil Textile Museum (Kurdish Textile Museum)' : _imgCitadel,
+    'Syriac Heritage Museum (Ankawa)'          : _imgCitadel,
+    // Erbil – nature
+    'Sami Abdulrahman Park'                    : _imgErbil,
+    'Shaqlawa Mountain Town'                   : _imgShaqlawa,
+    'Rawanduz Canyon Viewpoints'               : _imgRawanduz,
+    'Gali Ali Beg Gorge Viewpoints'            : _imgGaliAliBeg,
+    'Bekhal Valley Viewpoints'                 : _imgBekhal,
+    // Erbil – waterfalls
+    'Bekhal Waterfall'                         : _imgBekhal,
+    'Gali Ali Beg Water Area'                  : _imgGaliAliBeg,
+    'Jundiyan Waterfall'                       : _imgBekhal,
+    'Zenta Waterfall'                          : _imgBekhal,
+    // Erbil – religious
+    'Jalil Khayat Mosque'                      : _imgMosque,
+    'Chaldean Catholic Church (Ankawa)'        : _imgMosque,
+    'Mar Elia Church (Ankawa area)'            : _imgMosque,
+    // Erbil – activities
+    'Erbil cafes & night walk (100m Street)'   : _imgCha,
+    'Family Mall & entertainment'              : _imgErbil,
+    'Shaqlawa weekend picnic'                  : _imgShaqlawa,
+    'Rawanduz scenic road trip'                : _imgRawanduz,
+    // Sulaymaniyah – historical
+    'Amna Suraka (Red Prison)'                 : _imgAmnaSuraka,
+    'Slemani Museum'                           : _imgAmnaSuraka,
+    'Sulaimaniyah Bazaar (Old Market)'         : _imgSulaybazaar,
+    // Sulaymaniyah – nature
+    'Azmar Mountain Viewpoint'                 : _imgSulay,
+    'Dukan Lake'                               : _imgDukanLake,
+    'Dukan Dam area'                           : _imgDukanLake,
+    'Chavi Land (viewpoint & park)'            : _imgSulay,
+    // Sulaymaniyah – waterfalls
+    'Ahmed Awa Waterfall'                      : _imgAhmedAwa,
+    'Tawela (near Ahmed Awa) springs'          : _imgAhmedAwa,
+    // Sulaymaniyah – religious
+    'Grand Mosque of Sulaymaniyah'             : _imgMosque,
+    // Sulaymaniyah – activities
+    'Chavi Land amusement area'                : _imgSulay,
+    'Dukan boating / lakeside day'             : _imgDukanLake,
+    'Azmar sunset hike'                        : _imgSulay,
+    // Duhok – historical
+    'Amedi (Amediye) old town'                 : _imgAmedi,
+    'Duhok Bazaar (Old Market)'                : _imgSulaybazaar,
+    // Duhok – nature
+    'Duhok Dam'                                : _imgDuhokDam,
+    'Gara Mountain viewpoints'                 : _imgDuhok,
+    'Zakho Riverside (Khabur River)'           : _imgDuhok,
+    // Duhok – waterfalls
+    'Gali Sheran Waterfall'                    : _imgBekhal,
+    'Sipa Waterfall'                           : _imgBekhal,
+    // Duhok – religious
+    'Lalish (Yazidi Holy Temple)'              : _imgLalish,
+    // Duhok – activities
+    'Amedi day trip'                           : _imgAmedi,
+    'Duhok Dam picnic'                         : _imgDuhokDam,
+    'Zakho day trip'                           : _imgDuhok,
+    // Halabja – historical
+    'Halabja Monument & Memorial'              : _imgHalabjaM,
+    // Halabja – nature
+    'Hawraman (Kurdish mountain villages)'     : _imgHawraman,
+    'Byara (nature & village views)'           : _imgHawraman,
+    // Halabja – waterfalls
+    'Ahmed Awa Waterfall (Halabja route)'      : _imgAhmedAwa,
+    'Tawela springs (Halabja route)'           : _imgAhmedAwa,
+    // Halabja – religious
+    'Local mosques & heritage sites (Halabja)' : _imgMosque,
+    // Halabja – activities
+    'Hawraman scenic drive'                    : _imgHawraman,
+    'Picnic day in Byara'                      : _imgHawraman,
+  };
+
+  /// Returns the best cover image for a given title/city/category.
   static String _asset(String cityId, String categoryId, int idx, int photo) {
     return _coverFor(cityId, categoryId);
   }
@@ -92,8 +184,8 @@ class PlaceRepo {
         switch (categoryId) {
           case 'historical': return _imgCitadel;
           case 'nature':     return _imgShanadar;
-          case 'waterfalls': return _imgShanadar;
-          case 'religious':  return _imgCitadel;
+          case 'waterfalls': return _imgBekhal;
+          case 'religious':  return _imgMosque;
           case 'activities': return _imgCha;
           default:           return _imgErbil;
         }
@@ -105,14 +197,17 @@ class PlaceRepo {
   }
 
   /// Returns 4 varied gallery images for a place.
-  static List<String> _gallery(String cityId, String categoryId, int idx) {
-    final cover = _coverFor(cityId, categoryId);
-    // Pick 3 other images to fill the gallery
+  static List<String> _gallery(String cityId, String categoryId, int idx, {String? title}) {
+    final cover = title != null && _imageByTitle.containsKey(title)
+        ? _imageByTitle[title]!
+        : _coverFor(cityId, categoryId);
     final pool = [
-      _imgErbil, _imgCitadel, _imgShanadar, _imgCha,
-      _imgSulay, _imgDuhok, _imgHalabja,
+      _imgErbil, _imgCitadel, _imgBekhal, _imgShaqlawa,
+      _imgRawanduz, _imgMosque, _imgCha, _imgShanadar,
+      _imgSulay, _imgAmnaSuraka, _imgDukanLake, _imgAhmedAwa,
+      _imgAmedi, _imgDuhokDam, _imgLalish, _imgGaliAliBeg,
+      _imgHalabjaM, _imgHawraman,
     ];
-    // Rotate through pool based on idx so each place gets different photos
     final others = pool.where((img) => img != cover).toList();
     return [
       cover,
@@ -372,8 +467,8 @@ class PlaceRepo {
     String altitude = '—',
     String phone = '+964 000 000 000',
   }) {
-    final cover = _asset(cityId, categoryId, idx, 1);
-    final images = _gallery(cityId, categoryId, idx);
+    final cover = _imageByTitle[title] ?? _asset(cityId, categoryId, idx, 1);
+    final images = _gallery(cityId, categoryId, idx, title: title);
 
     return PlaceData(
       id: id,
