@@ -73,6 +73,19 @@ class PlaceRepo {
   static double _off(int i) => (i % 5) * 0.01 - 0.02;
 
   // ─── Real images available in assets/images/ ───────────────────────────
+  // ─── HD Unsplash images (500 KB – 1 MB each) ─────────────────────
+  static const _hdMountains  = 'assets/images/hd_mountains.jpg';   // mountain peaks
+  static const _hdWaterfall  = 'assets/images/hd_waterfall.jpg';   // waterfall
+  static const _hdMosque     = 'assets/images/hd_mosque.jpg';      // mosque
+  static const _hdBazaar     = 'assets/images/hd_bazaar.jpg';      // bazaar/market
+  static const _hdLake       = 'assets/images/hd_lake.jpg';        // lake
+  static const _hdValley     = 'assets/images/hd_valley.jpg';      // green valley
+  static const _hdCanyon     = 'assets/images/hd_canyon.jpg';      // canyon gorge
+  static const _hdVillage    = 'assets/images/hd_village.jpg';     // mountain village
+  static const _hdRuins      = 'assets/images/hd_ruins.jpg';       // ancient ruins
+  static const _hdPark       = 'assets/images/hd_park.jpg';        // park / nature
+
+  // ─── Place-specific images (AI-generated + Wikimedia) ────────────
   static const _imgErbil       = 'assets/images/erbil.jpg';
   static const _imgCitadel     = 'assets/images/place_citadel.png';
   static const _imgBazaar      = 'assets/images/place_bazaar.png';
@@ -96,81 +109,81 @@ class PlaceRepo {
   static const _imgHalabjaM    = 'assets/images/place_halabja_monument.jpg';
   static const _imgHawraman    = 'assets/images/place_hawraman.jpg';
 
-  /// Per-place image overrides (title → asset path)
+  /// Per-place image overrides — HD first, then specific, then fallback
   static const Map<String, String> _imageByTitle = {
     // Erbil – historical
-    'Citadel of Erbil'                        : _imgCitadel,
-    'Qaysari Bazaar'                           : _imgBazaar,
-    'Mudhafaria Minaret'                       : _imgCitadel,
-    'Erbil Textile Museum (Kurdish Textile Museum)' : _imgCitadel,
-    'Syriac Heritage Museum (Ankawa)'          : _imgCitadel,
+    'Citadel of Erbil'                             : _imgCitadel,
+    'Qaysari Bazaar'                               : _hdBazaar,
+    'Mudhafaria Minaret'                           : _hdRuins,
+    'Erbil Textile Museum (Kurdish Textile Museum)': _imgCitadel,
+    'Syriac Heritage Museum (Ankawa)'              : _hdRuins,
     // Erbil – nature
-    'Sami Abdulrahman Park'                    : _imgErbil,
-    'Shaqlawa Mountain Town'                   : _imgShaqlawa,
-    'Rawanduz Canyon Viewpoints'               : _imgRawanduz,
-    'Gali Ali Beg Gorge Viewpoints'            : _imgGaliAliBeg,
-    'Bekhal Valley Viewpoints'                 : _imgBekhal,
+    'Sami Abdulrahman Park'                        : _hdPark,
+    'Shaqlawa Mountain Town'                       : _hdVillage,
+    'Rawanduz Canyon Viewpoints'                   : _hdCanyon,
+    'Gali Ali Beg Gorge Viewpoints'                : _hdCanyon,
+    'Bekhal Valley Viewpoints'                     : _hdValley,
     // Erbil – waterfalls
-    'Bekhal Waterfall'                         : _imgBekhal,
-    'Gali Ali Beg Water Area'                  : _imgGaliAliBeg,
-    'Jundiyan Waterfall'                       : _imgBekhal,
-    'Zenta Waterfall'                          : _imgBekhal,
+    'Bekhal Waterfall'                             : _hdWaterfall,
+    'Gali Ali Beg Water Area'                      : _hdWaterfall,
+    'Jundiyan Waterfall'                           : _hdWaterfall,
+    'Zenta Waterfall'                              : _hdWaterfall,
     // Erbil – religious
-    'Jalil Khayat Mosque'                      : _imgMosque,
-    'Chaldean Catholic Church (Ankawa)'        : _imgMosque,
-    'Mar Elia Church (Ankawa area)'            : _imgMosque,
+    'Jalil Khayat Mosque'                          : _hdMosque,
+    'Chaldean Catholic Church (Ankawa)'            : _hdMosque,
+    'Mar Elia Church (Ankawa area)'                : _hdMosque,
     // Erbil – activities
-    'Erbil cafes & night walk (100m Street)'   : _imgCha,
-    'Family Mall & entertainment'              : _imgErbil,
-    'Shaqlawa weekend picnic'                  : _imgShaqlawa,
-    'Rawanduz scenic road trip'                : _imgRawanduz,
+    'Erbil cafes & night walk (100m Street)'       : _imgCha,
+    'Family Mall & entertainment'                  : _imgErbil,
+    'Shaqlawa weekend picnic'                      : _hdMountains,
+    'Rawanduz scenic road trip'                    : _hdCanyon,
     // Sulaymaniyah – historical
-    'Amna Suraka (Red Prison)'                 : _imgAmnaSuraka,
-    'Slemani Museum'                           : _imgAmnaSuraka,
-    'Sulaimaniyah Bazaar (Old Market)'         : _imgSulaybazaar,
+    'Amna Suraka (Red Prison)'                     : _imgAmnaSuraka,
+    'Slemani Museum'                               : _hdRuins,
+    'Sulaimaniyah Bazaar (Old Market)'             : _hdBazaar,
     // Sulaymaniyah – nature
-    'Azmar Mountain Viewpoint'                 : _imgSulay,
-    'Dukan Lake'                               : _imgDukanLake,
-    'Dukan Dam area'                           : _imgDukanLake,
-    'Chavi Land (viewpoint & park)'            : _imgSulay,
+    'Azmar Mountain Viewpoint'                     : _hdMountains,
+    'Dukan Lake'                                   : _hdLake,
+    'Dukan Dam area'                               : _hdLake,
+    'Chavi Land (viewpoint & park)'                : _hdPark,
     // Sulaymaniyah – waterfalls
-    'Ahmed Awa Waterfall'                      : _imgAhmedAwa,
-    'Tawela (near Ahmed Awa) springs'          : _imgAhmedAwa,
+    'Ahmed Awa Waterfall'                          : _hdWaterfall,
+    'Tawela (near Ahmed Awa) springs'              : _hdValley,
     // Sulaymaniyah – religious
-    'Grand Mosque of Sulaymaniyah'             : _imgMosque,
+    'Grand Mosque of Sulaymaniyah'                 : _hdMosque,
     // Sulaymaniyah – activities
-    'Chavi Land amusement area'                : _imgSulay,
-    'Dukan boating / lakeside day'             : _imgDukanLake,
-    'Azmar sunset hike'                        : _imgSulay,
+    'Chavi Land amusement area'                    : _hdPark,
+    'Dukan boating / lakeside day'                 : _hdLake,
+    'Azmar sunset hike'                            : _hdMountains,
     // Duhok – historical
-    'Amedi (Amediye) old town'                 : _imgAmedi,
-    'Duhok Bazaar (Old Market)'                : _imgSulaybazaar,
+    'Amedi (Amediye) old town'                     : _imgAmedi,
+    'Duhok Bazaar (Old Market)'                    : _hdBazaar,
     // Duhok – nature
-    'Duhok Dam'                                : _imgDuhokDam,
-    'Gara Mountain viewpoints'                 : _imgDuhok,
-    'Zakho Riverside (Khabur River)'           : _imgDuhok,
+    'Duhok Dam'                                    : _hdLake,
+    'Gara Mountain viewpoints'                     : _hdMountains,
+    'Zakho Riverside (Khabur River)'               : _hdValley,
     // Duhok – waterfalls
-    'Gali Sheran Waterfall'                    : _imgBekhal,
-    'Sipa Waterfall'                           : _imgBekhal,
+    'Gali Sheran Waterfall'                        : _hdWaterfall,
+    'Sipa Waterfall'                               : _hdWaterfall,
     // Duhok – religious
-    'Lalish (Yazidi Holy Temple)'              : _imgLalish,
+    'Lalish (Yazidi Holy Temple)'                  : _imgLalish,
     // Duhok – activities
-    'Amedi day trip'                           : _imgAmedi,
-    'Duhok Dam picnic'                         : _imgDuhokDam,
-    'Zakho day trip'                           : _imgDuhok,
+    'Amedi day trip'                               : _hdVillage,
+    'Duhok Dam picnic'                             : _hdLake,
+    'Zakho day trip'                               : _hdValley,
     // Halabja – historical
-    'Halabja Monument & Memorial'              : _imgHalabjaM,
+    'Halabja Monument & Memorial'                  : _imgHalabjaM,
     // Halabja – nature
-    'Hawraman (Kurdish mountain villages)'     : _imgHawraman,
-    'Byara (nature & village views)'           : _imgHawraman,
+    'Hawraman (Kurdish mountain villages)'         : _hdVillage,
+    'Byara (nature & village views)'               : _hdValley,
     // Halabja – waterfalls
-    'Ahmed Awa Waterfall (Halabja route)'      : _imgAhmedAwa,
-    'Tawela springs (Halabja route)'           : _imgAhmedAwa,
+    'Ahmed Awa Waterfall (Halabja route)'          : _hdWaterfall,
+    'Tawela springs (Halabja route)'               : _hdValley,
     // Halabja – religious
-    'Local mosques & heritage sites (Halabja)' : _imgMosque,
+    'Local mosques & heritage sites (Halabja)'     : _hdMosque,
     // Halabja – activities
-    'Hawraman scenic drive'                    : _imgHawraman,
-    'Picnic day in Byara'                      : _imgHawraman,
+    'Hawraman scenic drive'                        : _hdMountains,
+    'Picnic day in Byara'                          : _hdValley,
   };
 
   /// Returns the best cover image for a given title/city/category.
@@ -201,12 +214,12 @@ class PlaceRepo {
     final cover = title != null && _imageByTitle.containsKey(title)
         ? _imageByTitle[title]!
         : _coverFor(cityId, categoryId);
+    // Rich gallery pool including all HD images
     final pool = [
-      _imgErbil, _imgCitadel, _imgBekhal, _imgShaqlawa,
-      _imgRawanduz, _imgMosque, _imgCha, _imgShanadar,
-      _imgSulay, _imgAmnaSuraka, _imgDukanLake, _imgAhmedAwa,
-      _imgAmedi, _imgDuhokDam, _imgLalish, _imgGaliAliBeg,
-      _imgHalabjaM, _imgHawraman,
+      _hdMountains, _hdWaterfall, _hdMosque, _hdBazaar,
+      _hdLake, _hdValley, _hdCanyon, _hdVillage, _hdRuins, _hdPark,
+      _imgCitadel, _imgBekhal, _imgShaqlawa, _imgAhmedAwa,
+      _imgAmedi, _imgDuhokDam, _imgLalish, _imgHalabjaM, _imgHawraman,
     ];
     final others = pool.where((img) => img != cover).toList();
     return [
