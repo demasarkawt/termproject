@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:termproject/services/user_session.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedInterest = 1; // CULTURE default (index 1)
 
   @override
   Widget build(BuildContext context) {
@@ -11,6 +19,7 @@ class HomeScreen extends StatelessWidget {
     const textDark = Color(0xFF1E1E1E);
 
     return Scaffold(
+
       backgroundColor: backgroundLight,
       body: Stack(
         children: [
@@ -57,7 +66,10 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const Icon(Icons.wb_sunny_outlined, color: Colors.green),
+                      GestureDetector(
+                        onTap: () => context.go('/map'),
+                        child: const Icon(Icons.wb_sunny_outlined, color: Colors.green),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -102,16 +114,22 @@ class HomeScreen extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.none,
                       children: [
-                        _buildMainLocationCard(
-                          'Erbil\nCitadel',
-                          'The world\'s oldest continuously\ninhabited settlement,\noverlooking the heart of the\ncapital.',
-                          'assets/images/qallat.JPEG',
+                        GestureDetector(
+                          onTap: () => context.go('/city/erbil'),
+                          child: _buildMainLocationCard(
+                            'Erbil\nCitadel',
+                            'The world\'s oldest continuously\ninhabited settlement,\noverlooking the heart of the\ncapital.',
+                            'assets/images/qallat.JPEG',
+                          ),
                         ),
                         const SizedBox(width: 16),
-                        _buildMainLocationCard(
-                          'Shanadar\nCave',
-                          'A beautiful and historic\narchaeological site.',
-                          'assets/images/shanadar.JPEG',
+                        GestureDetector(
+                          onTap: () => context.go('/city/erbil'),
+                          child: _buildMainLocationCard(
+                            'Shanadar\nCave',
+                            'A beautiful and historic\narchaeological site.',
+                            'assets/images/shanadar.JPEG',
+                          ),
                         ),
                       ],
                     ),
@@ -132,10 +150,10 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildInterestIcon('NATURE', Icons.landscape_outlined, false),
-                      _buildInterestIcon('CULTURE', Icons.castle_outlined, true),
-                      _buildInterestIcon('FOOD', Icons.restaurant_outlined, false),
-                      _buildInterestIcon('ADVENTURE', Icons.directions_walk_outlined, false),
+                      _buildInterestIcon(context, 'NATURE',    Icons.landscape_outlined,      0),
+                      _buildInterestIcon(context, 'CULTURE',   Icons.castle_outlined,         1),
+                      _buildInterestIcon(context, 'FOOD',      Icons.restaurant_outlined,     2),
+                      _buildInterestIcon(context, 'ADVENTURE', Icons.directions_walk_outlined, 3),
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -164,15 +182,18 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const Text(
-                        'SEE\nALL',
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: primaryGreen,
+                      GestureDetector(
+                        onTap: () => context.go('/explore'),
+                        child: const Text(
+                          'SEE\nALL',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: primaryGreen,
+                          ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -184,20 +205,26 @@ class HomeScreen extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       clipBehavior: Clip.none,
                       children: [
-                        _buildExperienceCard(
-                          'assets/images/duhok.jpg',
-                          'Hiking in Barzan',
-                          'Full Day',
-                          '\$120',
-                          '4.9',
+                        GestureDetector(
+                          onTap: () => context.go('/activities'),
+                          child: _buildExperienceCard(
+                            'assets/images/duhok.jpg',
+                            'Hiking in Barzan',
+                            'Full Day',
+                            '\$120',
+                            '4.9',
+                          ),
                         ),
                         const SizedBox(width: 16),
-                        _buildExperienceCard(
-                          'assets/images/cha.JPEG', // placeholder
-                          'Traditional Food',
-                          'Evening',
-                          '\$65',
-                          '4.8',
+                        GestureDetector(
+                          onTap: () => context.go('/activities'),
+                          child: _buildExperienceCard(
+                            'assets/images/cha.JPEG',
+                            'Traditional Food',
+                            'Evening',
+                            '\$65',
+                            '4.8',
+                          ),
                         ),
                       ],
                     ),
@@ -212,28 +239,31 @@ class HomeScreen extends StatelessWidget {
           Positioned(
             bottom: 20,
             right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFA726),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(color: const Color(0xFFFFA726).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.auto_awesome, color: Color(0xFF422006), size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'PLAN MY TRIP',
-                    style: TextStyle(
-                      color: Color(0xFF422006),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+            child: GestureDetector(
+              onTap: () => context.go('/ai'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFA726),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFFFFA726).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.auto_awesome, color: Color(0xFF422006), size: 16),
+                    SizedBox(width: 8),
+                    Text(
+                      'PLAN MY TRIP',
+                      style: TextStyle(
+                        color: Color(0xFF422006),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -311,31 +341,40 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInterestIcon(String label, IconData icon, bool isSelected) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFFFA726) : Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(20),
+  Widget _buildInterestIcon(BuildContext context, String label, IconData icon, int index) {
+    final isSelected = _selectedInterest == index;
+    final destinations = ['/explore', '/explore', '/activities', '/activities'];
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedInterest = index);
+        context.go(destinations[index]);
+      },
+      child: Column(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFFFA726) : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? const Color(0xFF422006) : Colors.grey.shade800,
+              size: 28,
+            ),
           ),
-          child: Icon(
-            icon,
-            color: isSelected ? const Color(0xFF422006) : Colors.grey.shade800,
-            size: 28,
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

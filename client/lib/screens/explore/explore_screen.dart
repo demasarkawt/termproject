@@ -2,8 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'ai_search_bottom_sheet.dart';
 
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
+
+  @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  String? _selectedFilter;
+  final _scrollCtrl = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +37,7 @@ class ExploreScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+
                       Row(
                         children: const [
                           Icon(Icons.location_on_outlined, color: primaryGreen),
@@ -44,6 +59,7 @@ class ExploreScreen extends StatelessWidget {
 
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _scrollCtrl,
                     child: Column(
                       children: [
                         // Map Section
@@ -69,71 +85,86 @@ class ExploreScreen extends StatelessWidget {
                                 top: 20,
                                 left: 20,
                                 right: 20,
-                                child: Container(
-                                  padding: const EdgeInsets.fromLTRB(16, 6, 6, 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(30),
-                                    boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                                    ],
+                                child: GestureDetector(
+                                  onTap: () => showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (_) => const AiSearchBottomSheet(),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.search, color: Colors.grey, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          'Search heritage sites,\nwaterfalls, canyons...',
-                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.2),
-                                        ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () => context.go('/ai'),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                          decoration: BoxDecoration(
-                                            gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          child: Row(
-                                            children: const [
-                                              Icon(Icons.auto_awesome, color: Colors.white, size: 14),
-                                              SizedBox(width: 4),
-                                              Text('Ask AI', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                            ],
+                                  child: Container(
+                                    padding: const EdgeInsets.fromLTRB(16, 6, 6, 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(30),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.search, color: Colors.grey, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Search heritage sites, waterfalls, canyons...',
+                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.2),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                        GestureDetector(
+                                          onTap: () => context.go('/ai'),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Row(
+                                              children: const [
+                                                Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                                                SizedBox(width: 4),
+                                                Text('Ask AI', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
 
-                              // Pins
-                              _buildMapPin(context, 100, 150, 'Duhok'),
-                              _buildMapPin(context, 160, 220, 'Erbil Citadel'),
-                              _buildMapPin(context, 200, 240, 'Sulaymaniyah'),
+                              // Pins (tappable)
+                              _buildMapPin(context, 100, 150, 'Duhok', 'duhok'),
+                              _buildMapPin(context, 160, 220, 'Erbil Citadel', 'erbil'),
+                              _buildMapPin(context, 200, 240, 'Sulaymaniyah', 'sulaymaniyah'),
 
                               // List View Toggle
                               Positioned(
                                 bottom: 20,
                                 right: 20,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                                    ],
+                                child: GestureDetector(
+                                  onTap: () => _scrollCtrl.animateTo(
+                                    320,
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.easeOut,
                                   ),
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.list, size: 16, color: primaryGreen),
-                                      SizedBox(width: 6),
-                                      Text('LIST VIEW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: primaryGreen)),
-                                    ],
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.list, size: 16, color: primaryGreen),
+                                        SizedBox(width: 6),
+                                        Text('LIST VIEW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: primaryGreen)),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -146,15 +177,18 @@ class ExploreScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                           child: Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(20)),
-                                child: Row(
-                                  children: const [
-                                    Icon(Icons.tune, size: 14, color: Color(0xFF422006)),
-                                    SizedBox(width: 4),
-                                    Text('Filters', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF422006))),
-                                  ],
+                              GestureDetector(
+                                onTap: () => setState(() => _selectedFilter = null),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(20)),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.tune, size: 14, color: Color(0xFF422006)),
+                                      SizedBox(width: 4),
+                                      Text('Filters', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF422006))),
+                                    ],
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -170,13 +204,13 @@ class ExploreScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Column(
                             children: [
-                              _buildCanyonCard(),
+                              GestureDetector(onTap: () => context.go('/place/rawanduz-canyon'), child: _buildCanyonCard()),
                               const SizedBox(height: 20),
-                              _buildCitadelCard(),
+                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildCitadelCard()),
                               const SizedBox(height: 20),
-                              _buildBekhalCard(),
+                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildBekhalCard()),
                               const SizedBox(height: 20),
-                              _buildMountCard(),
+                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildMountCard()),
                               const SizedBox(height: 100), // FAB padding
                             ],
                           ),
@@ -192,17 +226,25 @@ class ExploreScreen extends StatelessWidget {
             Positioned(
               bottom: 20,
               right: 20,
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFA726),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: const Color(0xFFFFA726).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
+              child: GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const AiSearchBottomSheet(),
                 ),
-                child: const Icon(Icons.qr_code_scanner, color: Color(0xFF422006)),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFA726),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFFFFA726).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: const Icon(Icons.qr_code_scanner, color: Color(0xFF422006)),
+                ),
               ),
             ),
           ],
@@ -211,35 +253,50 @@ class ExploreScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMapPin(BuildContext context, double top, double left, String name) {
+  Widget _buildMapPin(BuildContext context, double top, double left, String name, String cityId) {
     return Positioned(
       top: top,
       left: left,
-      child: Column(
-        children: [
-          const Icon(Icons.location_on, color: Color(0xFF1F5E37), size: 30),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
+      child: GestureDetector(
+        onTap: () => context.go('/city/$cityId'),
+        child: Column(
+          children: [
+            const Icon(Icons.location_on, color: Color(0xFF1F5E37), size: 30),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
+              ),
+              child: Text(name, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF1F5E37))),
             ),
-            child: Text(name, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF1F5E37))),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFilterChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
+    final isSelected = _selectedFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = isSelected ? null : label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF1F5E37) : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isSelected ? Colors.white : Colors.black87,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.black87)),
     );
   }
 

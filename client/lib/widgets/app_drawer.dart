@@ -2,6 +2,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/user_session.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -481,10 +482,10 @@ class _BottomBar extends StatelessWidget {
           const SizedBox(width: 10),
           _CircleGlassBtn(
             icon: Icons.logout_rounded,
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logout coming soon')),
-              );
+            onTap: () async {
+              Navigator.of(context).pop();
+              await UserSession.clear();
+              if (context.mounted) context.go('/signin');
             },
           ),
         ],

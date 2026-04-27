@@ -71,15 +71,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Top Bar
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
+                        children: [
                           Row(
-                            children: [
+                            children: const [
                               Icon(Icons.location_on_outlined, color: _primaryGreen),
                               SizedBox(width: 4),
                               Text('Kurdistan Go', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _primaryGreen)),
                             ],
                           ),
-                          Icon(Icons.settings_outlined, color: Colors.black54),
+                          GestureDetector(
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Settings'),
+                                content: const Text('App settings coming soon.'),
+                                actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+                              ),
+                            ),
+                            child: const Icon(Icons.settings_outlined, color: Colors.black54),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 30),
@@ -176,11 +186,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
 
                       // Menu items
-                      _buildMenuItem(Icons.person_outline, 'Personal Information'),
+                      _buildMenuItem(Icons.person_outline, 'Personal Information', onTap: () => _showInfoDialog(context, 'Personal Information', 'Update your name, email and profile photo in the next release.')),
                       const SizedBox(height: 12),
-                      _buildMenuItem(Icons.payment_outlined, 'Payment Methods'),
+                      _buildMenuItem(Icons.payment_outlined, 'Payment Methods', onTap: () => _showInfoDialog(context, 'Payment Methods', 'Add or manage your payment methods here.')),
                       const SizedBox(height: 12),
-                      _buildMenuItem(Icons.security_outlined, 'Privacy & Security'),
+                      _buildMenuItem(Icons.security_outlined, 'Privacy & Security', onTap: () => _showInfoDialog(context, 'Privacy & Security', 'Manage your password, 2FA, and privacy settings.')),
                       const SizedBox(height: 12),
 
                       // Logout
@@ -272,7 +282,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title) {
+  void _showInfoDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(IconData icon, String title, {VoidCallback? onTap}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -283,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Icon(icon, color: Colors.black87),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
         trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
-        onTap: () {},
+        onTap: onTap ?? () {},
       ),
     );
   }

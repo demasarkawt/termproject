@@ -32,6 +32,9 @@ import 'screens/activities/activities_screen.dart';
 import 'screens/events/events_screen.dart';
 import 'screens/ai/ai_screen.dart';
 
+// Favorites & Map (saved screen alias)
+import 'screens/saved_places/favorate_screen.dart' as saved;
+
 final _rootKey = GlobalKey<NavigatorState>();
 final _shellKey = GlobalKey<NavigatorState>();
 
@@ -153,6 +156,24 @@ final appRouter = GoRouter(
           pageBuilder: (context, state) => _cupertinoPage(
             state: state,
             child: const ProfileScreen(),
+          ),
+        ),
+
+        // Favorites
+        GoRoute(
+          path: '/favorites',
+          pageBuilder: (context, state) => _cupertinoPage(
+            state: state,
+            child: const saved.FavoritesScreen(),
+          ),
+        ),
+
+        // Map tab
+        GoRoute(
+          path: '/map',
+          pageBuilder: (context, state) => _cupertinoPage(
+            state: state,
+            child: const MapTabScreen(),
           ),
         ),
 

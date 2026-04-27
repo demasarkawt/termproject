@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class ActivitiesScreen extends StatelessWidget {
+class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
+
+  @override
+  State<ActivitiesScreen> createState() => _ActivitiesScreenState();
+}
+
+class _ActivitiesScreenState extends State<ActivitiesScreen> {
+  String _activeFilter = 'Open Now';
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +39,13 @@ class ActivitiesScreen extends StatelessWidget {
                           ],
                         ),
                         Row(
-                          children: const [
-                            Icon(Icons.search, color: Colors.black54),
-                            SizedBox(width: 16),
-                            Icon(Icons.wb_sunny_outlined, color: Colors.green),
+                          children: [
+                            GestureDetector(
+                              onTap: () => context.go('/explore'),
+                              child: const Icon(Icons.search, color: Colors.black54),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(Icons.wb_sunny_outlined, color: Colors.green),
                           ],
                         ),
                       ],
@@ -79,16 +90,19 @@ class ActivitiesScreen extends StatelessWidget {
                               style: TextStyle(color: Colors.white70, fontSize: 10, height: 1.3),
                             ),
                             const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(20)),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Text('Where to try it', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward, color: Colors.white, size: 16),
-                                ],
+                            GestureDetector(
+                              onTap: () => context.go('/explore'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(20)),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Text('Where to try it', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward, color: Colors.white, size: 16),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -154,11 +168,11 @@ class ActivitiesScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        _buildFilterPill('Open Now', true),
+                        _buildFilterPill('Open Now'),
                         const SizedBox(width: 8),
-                        _buildFilterPill('Erbil', false),
+                        _buildFilterPill('Erbil'),
                         const SizedBox(width: 8),
-                        _buildFilterPill('Sulaymaniyah', false),
+                        _buildFilterPill('Sulaymaniyah'),
                       ],
                     ),
                   ),
@@ -167,12 +181,15 @@ class ActivitiesScreen extends StatelessWidget {
                   // Switch to Map Button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.map_outlined, color: primaryGreen, size: 16),
-                        SizedBox(width: 4),
-                        Text('Switch to Map', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12)),
-                      ],
+                    child: GestureDetector(
+                      onTap: () => context.go('/map'),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.map_outlined, color: primaryGreen, size: 16),
+                          SizedBox(width: 4),
+                          Text('Switch to Map', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -182,22 +199,28 @@ class ActivitiesScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
-                        _buildRestaurantCard(
-                          'Citadel View\nDining',
-                          'Fine Dining • Erbil',
-                          'Traditional Oven',
-                          '\$\$\$',
-                          '4.9',
-                          'assets/images/qallat.JPEG',
+                        GestureDetector(
+                          onTap: () => context.go('/city/erbil'),
+                          child: _buildRestaurantCard(
+                            'Citadel View\nDining',
+                            'Fine Dining • Erbil',
+                            'Traditional Oven',
+                            '\$\$\$',
+                            '4.9',
+                            'assets/images/qallat.JPEG',
+                          ),
                         ),
                         const SizedBox(height: 16),
-                        _buildRestaurantCard(
-                          'Lali Tea House',
-                          'Tea & Snacks • Sulaymaniyah',
-                          'Outdoor Seating',
-                          '\$\$',
-                          '4.7',
-                          'assets/images/cha.JPEG',
+                        GestureDetector(
+                          onTap: () => context.go('/city/sulaymaniyah'),
+                          child: _buildRestaurantCard(
+                            'Lali Tea House',
+                            'Tea & Snacks • Sulaymaniyah',
+                            'Outdoor Seating',
+                            '\$\$',
+                            '4.7',
+                            'assets/images/cha.JPEG',
+                          ),
                         ),
                       ],
                     ),
@@ -231,14 +254,47 @@ class ActivitiesScreen extends StatelessWidget {
             Positioned(
               bottom: 20,
               right: 20,
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: primaryGreen,
-                  shape: BoxShape.circle,
+              child: GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (_) => Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Filter Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          children: ['Open Now', 'Erbil', 'Sulaymaniyah', 'Duhok', 'Budget', 'Premium']
+                              .map((f) => FilterChip(
+                                    label: Text(f),
+                                    selected: _activeFilter == f,
+                                    onSelected: (_) {
+                                      setState(() => _activeFilter = f);
+                                      Navigator.pop(context);
+                                    },
+                                  ))
+                              .toList(),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.filter_list, color: Colors.white),
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: const BoxDecoration(
+                    color: primaryGreen,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.filter_list, color: Colors.white),
+                ),
               ),
             ),
           ],
@@ -276,19 +332,24 @@ class ActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterPill(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFFFA726) : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? const Color(0xFF422006) : Colors.black87,
+  Widget _buildFilterPill(String label) {
+    final isSelected = _activeFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _activeFilter = label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFFFA726) : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? const Color(0xFF422006) : Colors.black87,
+          ),
         ),
       ),
     );
