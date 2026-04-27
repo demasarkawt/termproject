@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../theme/kurdish_theme.dart';
 import '../../widgets/glass.dart';
 
 class CityScreen extends StatelessWidget {
@@ -32,7 +33,7 @@ class CityScreen extends StatelessWidget {
                         emoji: '🏛️',
                         title: 'Historical',
                         subtitle: 'Citadels • bazaars • museums',
-                        accent: const Color(0xFFFF8A3D),
+                        accent: KColors.kSaffron,
                         onTap: () => context.go('/city/$cityId/category/historical'),
                       ),
                       const SizedBox(height: 12),
@@ -40,7 +41,7 @@ class CityScreen extends StatelessWidget {
                         emoji: '🌿',
                         title: 'Nature',
                         subtitle: 'Mountains • parks • viewpoints',
-                        accent: const Color(0xFF22C55E),
+                        accent: KColors.kGreen,
                         onTap: () => context.go('/city/$cityId/category/nature'),
                       ),
                       const SizedBox(height: 12),
@@ -48,7 +49,7 @@ class CityScreen extends StatelessWidget {
                         emoji: '💧',
                         title: 'Waterfalls',
                         subtitle: 'Rivers • springs • falls',
-                        accent: const Color(0xFF2563EB),
+                        accent: const Color(0xFF0077B6),
                         onTap: () => context.go('/city/$cityId/category/waterfalls'),
                       ),
                       const SizedBox(height: 12),
@@ -56,7 +57,7 @@ class CityScreen extends StatelessWidget {
                         emoji: '🕌',
                         title: 'Religious',
                         subtitle: 'Mosques • churches • heritage',
-                        accent: const Color(0xFFEC4899),
+                        accent: KColors.kRed,
                         onTap: () => context.go('/city/$cityId/category/religious'),
                       ),
                       const SizedBox(height: 12),
@@ -64,7 +65,7 @@ class CityScreen extends StatelessWidget {
                         emoji: '⚡️',
                         title: 'Activities',
                         subtitle: 'Hiking • adventure • weekend',
-                        accent: const Color(0xFF8B5CF6),
+                        accent: KColors.kGold,
                         onTap: () => context.go('/city/$cityId/category/activities'),
                       ),
                     ],
@@ -462,7 +463,6 @@ class _RoundGlassBtn extends StatelessWidget {
   }
 }
 
-/// ✅ UPDATED: Bottom buttons
 class _PillAction extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -476,7 +476,7 @@ class _PillAction extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Material(
-          color: Colors.white.withOpacity(0.68),
+          color: KColors.kDarkGreen.withValues(alpha: 0.88),
           child: InkWell(
             borderRadius: BorderRadius.circular(999),
             onTap: onTap,
@@ -485,24 +485,17 @@ class _PillAction extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: Colors.black.withOpacity(0.06)),
-                boxShadow: const [
-                  BoxShadow(
-                    blurRadius: 18,
-                    offset: Offset(0, 12),
-                    color: Color(0x14000000),
-                  ),
-                ],
+                border: Border.all(color: KColors.kGold.withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: const Color(0xFF0F766E)),
+                  Icon(icon, color: KColors.kGold),
                   const SizedBox(width: 10),
                   Text(
                     text,
                     style: const TextStyle(
-                      color: Color(0xFF0B3D3B),
+                      color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
                     ),
