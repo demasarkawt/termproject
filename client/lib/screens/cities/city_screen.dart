@@ -5,6 +5,41 @@ import 'package:go_router/go_router.dart';
 
 import '../../widgets/glass.dart';
 
+// Top-level helper: pick the right image for each city × category
+String _catImage(String cityId, String catId) {
+  const imgs = {
+    'erbil': {
+      'historical': 'assets/images/place_citadel.png',
+      'nature':     'assets/images/place_shaqlawa.png',
+      'waterfalls': 'assets/images/place_bekhal.png',
+      'religious':  'assets/images/place_mosque.png',
+      'activities': 'assets/images/cha.JPEG',
+    },
+    'sulaymaniyah': {
+      'historical': 'assets/images/place_amna_suraka.jpg',
+      'nature':     'assets/images/hd_mountains.jpg',
+      'waterfalls': 'assets/images/place_ahmed_awa.jpg',
+      'religious':  'assets/images/hd_mosque.jpg',
+      'activities': 'assets/images/hd_park.jpg',
+    },
+    'duhok': {
+      'historical': 'assets/images/place_amedi.jpg',
+      'nature':     'assets/images/hd_valley.jpg',
+      'waterfalls': 'assets/images/hd_waterfall.jpg',
+      'religious':  'assets/images/place_lalish.jpg',
+      'activities': 'assets/images/hd_mountains.jpg',
+    },
+    'halabja': {
+      'historical': 'assets/images/place_halabja_monument.jpg',
+      'nature':     'assets/images/place_hawraman.jpg',
+      'waterfalls': 'assets/images/place_ahmed_awa.jpg',
+      'religious':  'assets/images/hd_mosque.jpg',
+      'activities': 'assets/images/hd_mountains.jpg',
+    },
+  };
+  return imgs[cityId]?[catId] ?? 'assets/images/hd_mountains.jpg';
+}
+
 class CityScreen extends StatelessWidget {
   final String cityId;
   const CityScreen({super.key, required this.cityId});
@@ -33,38 +68,43 @@ class CityScreen extends StatelessWidget {
                         title: 'Historical',
                         subtitle: 'Citadels • bazaars • museums',
                         accent: const Color(0xFFFF8A3D),
+                        image: _catImage(cityId, 'historical'),
                         onTap: () => context.go('/city/$cityId/category/historical'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       _CategoryCard(
                         emoji: '🌿',
                         title: 'Nature',
                         subtitle: 'Mountains • parks • viewpoints',
                         accent: const Color(0xFF22C55E),
+                        image: _catImage(cityId, 'nature'),
                         onTap: () => context.go('/city/$cityId/category/nature'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       _CategoryCard(
                         emoji: '💧',
                         title: 'Waterfalls',
                         subtitle: 'Rivers • springs • falls',
                         accent: const Color(0xFF2563EB),
+                        image: _catImage(cityId, 'waterfalls'),
                         onTap: () => context.go('/city/$cityId/category/waterfalls'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       _CategoryCard(
                         emoji: '🕌',
                         title: 'Religious',
                         subtitle: 'Mosques • churches • heritage',
                         accent: const Color(0xFFEC4899),
+                        image: _catImage(cityId, 'religious'),
                         onTap: () => context.go('/city/$cityId/category/religious'),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       _CategoryCard(
                         emoji: '⚡️',
                         title: 'Activities',
                         subtitle: 'Hiking • adventure • weekend',
                         accent: const Color(0xFF8B5CF6),
+                        image: _catImage(cityId, 'activities'),
                         onTap: () => context.go('/city/$cityId/category/activities'),
                       ),
                     ],
@@ -303,12 +343,13 @@ class _ModernCityHero extends StatelessWidget {
   }
 }
 
-/// ✅ Category card (glassy + modern)
+/// Photo-backed category card — shows a real image for each city+category
 class _CategoryCard extends StatelessWidget {
   final String emoji;
   final String title;
   final String subtitle;
   final Color accent;
+  final String image;       // asset path
   final VoidCallback onTap;
 
   const _CategoryCard({
@@ -316,90 +357,132 @@ class _CategoryCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.accent,
+    required this.image,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Glass(
-      radius: 24,
-      blur: 18,
-      opacity: 0.10,
-      padding: EdgeInsets.zero,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: accent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.black.withOpacity(0.04)),
-                  ),
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          height: 150,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Background photo ─────────────────────────────────────
+              Image.asset(
+                image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: accent.withOpacity(0.18),
                   alignment: Alignment.center,
-                  child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                  child: Text(emoji,
+                      style: const TextStyle(fontSize: 48)),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          color: Color(0xFF0B3D3B),
+              ),
+
+              // ── Gradient overlay ─────────────────────────────────────
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      accent.withOpacity(0.82),
+                      Colors.black.withOpacity(0.55),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Content ───────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 14, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Emoji icon box
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.35),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
+                      alignment: Alignment.center,
+                      child: Text(emoji,
+                          style: const TextStyle(fontSize: 26)),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Title + subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _MiniChip(text: 'Top spots', color: accent),
-                          const SizedBox(width: 8),
-                          _MiniChip(text: 'Photos', color: accent),
-                          const SizedBox(width: 8),
-                          _MiniChip(text: 'Easy', color: accent),
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 18,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 6,
+                                  color: Colors.black38,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: Colors.white.withOpacity(0.85),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          // Mini chips
+                          Row(
+                            children: [
+                              _MiniChip(text: 'Top spots', color: Colors.white),
+                              const SizedBox(width: 6),
+                              _MiniChip(text: 'Photos', color: Colors.white),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        blurRadius: 18,
-                        offset: Offset(0, 12),
-                        color: Color(0x22000000),
+                    ),
+
+                    // Arrow button
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.22),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.35),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
