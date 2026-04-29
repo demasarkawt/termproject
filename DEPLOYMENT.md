@@ -75,7 +75,7 @@ In [Vercel](https://vercel.com/) → Project **kurdistan-go** (or your project):
    | `VITE_API_URL` | `https://termproject-production.up.railway.app` (your Railway API, no trailing slash) |
    | `VITE_ADMIN_KEY` | Same secret as Railway **`ADMIN_KEY`** |
 
-4. Add your **Vercel production URL** to Railway **`CORS_ORIGINS`** (e.g. `https://kurdistan-xxxxx.vercel.app`) if browsers block cookies/fetch to Railway.
+4. Add your **Vercel production URL** to Railway **`CORS_ORIGINS`** only if you restrict origins and this host is missing. The API also whitelists **`https://kurdistan-go.vercel.app`** in `_default_origins` when `CORS_ORIGINS` is non-empty.
 
 ---
 

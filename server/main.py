@@ -103,6 +103,7 @@ _default_origins = [
     "http://localhost:5000",
     "http://127.0.0.1:5000",
     "http://localhost:5173",
+    "https://kurdistan-go.vercel.app",
 ]
 # Flutter web uses an ephemeral port (e.g. localhost:54112). When CORS_ORIGINS is set,
 # allow_origins is not "*", so we also match any localhost / 127.0.0.1 dev origin.
