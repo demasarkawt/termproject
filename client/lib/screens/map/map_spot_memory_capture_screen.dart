@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
@@ -9,6 +11,14 @@ import 'package:path_provider/path_provider.dart';
 import '../../models/map_spot_memory.dart';
 import '../../services/map_spot_memory_store.dart';
 import '../../services/theme_service.dart';
+
+/// One photo the user picked, held in memory until save (works with Android `content://` URIs).
+class _CapturedPhoto {
+  _CapturedPhoto({required this.bytes, required this.filenameHint});
+
+  final Uint8List bytes;
+  final String filenameHint;
+}
 
 /// Save a photo memory at the map center (lat/lng from route query).
 class MapSpotMemoryCaptureScreen extends StatefulWidget {
@@ -26,11 +36,15 @@ class MapSpotMemoryCaptureScreen extends StatefulWidget {
 }
 
 class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen> {
+  final ImagePicker _picker = ImagePicker();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _thoughtsCtrl = TextEditingController();
-  final List<XFile> _photos = [];
+  final List<_CapturedPhoto> _photos = [];
   bool _saving = false;
+  bool _picking = false;
+
+  static const int _maxPhotos = 12;
 
   @override
   void dispose() {
@@ -40,28 +54,104 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
     super.dispose();
   }
 
+  static String _guessExtension(String hint) {
+    final e = p.extension(hint).toLowerCase();
+    if (e == '.png' || e == '.webp' || e == '.heic' || e == '.jpg' || e == '.jpeg') {
+      return e == '.jpeg' ? '.jpg' : e;
+    }
+    return '.jpg';
+  }
+
+  Future<void> _ingestFiles(Iterable<XFile> files, {required String sourceLabel}) async {
+    for (final x in files) {
+      if (_photos.length >= _maxPhotos) break;
+      try {
+        final bytes = await x.readAsBytes();
+        if (bytes.isEmpty) continue;
+        if (!mounted) return;
+        setState(() => _photos.add(_CapturedPhoto(bytes: bytes, filenameHint: x.name.isNotEmpty ? x.name : x.path)));
+      } catch (e, st) {
+        debugPrint('[MapSpotMemoryCapture] read $sourceLabel bytes: $e\n$st');
+        if (!mounted) return;
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text('Could not read a photo (${x.name}). Try another.')),
+        );
+      }
+    }
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _pickCamera() async {
-    final x = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      maxWidth: 2400,
-      imageQuality: 90,
-    );
-    if (x == null || !mounted) return;
-    setState(() => _photos.add(x));
+    if (kIsWeb) {
+      _toast('Camera capture is best on iOS or Android.');
+      return;
+    }
+    setState(() => _picking = true);
+    try {
+      final x = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2400,
+        imageQuality: 90,
+      );
+      if (x == null || !mounted) return;
+      await _ingestFiles([x], sourceLabel: 'camera');
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _toast(e.message ?? 'Camera is not available. Check permissions in Settings.');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('Camera error: $e');
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
   }
 
   Future<void> _pickGallery() async {
-    final list = await ImagePicker().pickMultiImage(
-      maxWidth: 2400,
-      imageQuality: 90,
-    );
-    if (list.isEmpty || !mounted) return;
-    setState(() {
-      for (final x in list) {
-        if (_photos.length >= 12) break;
-        _photos.add(x);
+    if (kIsWeb) {
+      _toast('Gallery on web is limited—use the mobile app for full map memories.');
+      return;
+    }
+    setState(() => _picking = true);
+    try {
+      final remain = _maxPhotos - _photos.length;
+      if (remain <= 0) {
+        _toast('You can add up to $_maxPhotos photos.');
+        return;
       }
-    });
+
+      try {
+        final list = await _picker.pickMultiImage(
+          maxWidth: 2400,
+          imageQuality: 90,
+        );
+        if (list.isNotEmpty) {
+          await _ingestFiles(list.take(remain), sourceLabel: 'gallery');
+          return;
+        }
+      } on PlatformException catch (_) {
+        // Older devices / strict stores: fall back to one-at-a-time.
+      }
+
+      final x = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        imageQuality: 90,
+      );
+      if (x != null && mounted) {
+        await _ingestFiles([x], sourceLabel: 'gallery');
+      }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _toast(e.message ?? 'Photos need library access. Enable it in Settings.');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('Gallery error: $e');
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
   }
 
   void _removeAt(int i) {
@@ -69,17 +159,18 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
   }
 
   Future<void> _save() async {
+    if (kIsWeb) {
+      _toast('Saving map memories to this device works in the iOS or Android app.');
+      return;
+    }
+
     final title = _titleCtrl.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Give this spot a title.')),
-      );
+      _toast('Give this spot a title.');
       return;
     }
     if (_photos.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add at least one photo.')),
-      );
+      _toast('Add at least one photo.');
       return;
     }
 
@@ -92,10 +183,9 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
 
       final paths = <String>[];
       for (var i = 0; i < _photos.length; i++) {
-        final ext = p.extension(_photos[i].path);
-        final safeExt = ext.isEmpty ? '.jpg' : ext;
-        final destPath = p.join(folder.path, '$i$safeExt');
-        await File(_photos[i].path).copy(destPath);
+        final ext = _guessExtension(_photos[i].filenameHint);
+        final destPath = p.join(folder.path, '$i$ext');
+        await File(destPath).writeAsBytes(_photos[i].bytes, flush: true);
         paths.add(destPath);
       }
 
@@ -114,9 +204,7 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
       context.pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e')),
-      );
+      _toast('Could not save: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -145,12 +233,12 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
         ),
         actions: [
           TextButton(
-            onPressed: _saving ? null : _save,
+            onPressed: (_saving || _picking) ? null : _save,
             child: Text(
               'Save',
               style: TextStyle(
                 fontWeight: FontWeight.w900,
-                color: _saving ? Colors.grey : KurdishHeritageColors.zer,
+                color: (_saving || _picking) ? Colors.grey : KurdishHeritageColors.zer,
               ),
             ),
           ),
@@ -163,6 +251,35 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (kIsWeb)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: isDark ? 0.14 : 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.phone_android_rounded, color: Colors.amber.shade800),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Map memories save photos on your phone or tablet. Open Travelo on iOS/Android to add pictures.',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.35,
+                                  color: isDark ? Colors.amber.shade100 : KurdishHeritageColors.res,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -198,20 +315,39 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
                     color: isDark ? Colors.white : KurdishHeritageColors.res,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_photos.length}/$_maxPhotos · Camera or gallery; previews load before you save.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white54 : KurdishHeritageColors.res.withValues(alpha: 0.55),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 SizedBox(
                   height: 112,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
-                      _AddPhotoTile(icon: Icons.photo_camera_rounded, label: 'Camera', onTap: _pickCamera),
+                      _AddPhotoTile(
+                        icon: Icons.photo_camera_rounded,
+                        label: 'Camera',
+                        enabled: !_picking && !_saving && !kIsWeb,
+                        onTap: _pickCamera,
+                      ),
                       const SizedBox(width: 10),
-                      _AddPhotoTile(icon: Icons.photo_library_rounded, label: 'Gallery', onTap: _pickGallery),
+                      _AddPhotoTile(
+                        icon: Icons.photo_library_rounded,
+                        label: 'Gallery',
+                        enabled: !_picking && !_saving && !kIsWeb,
+                        onTap: _pickGallery,
+                      ),
                       ...List.generate(_photos.length, (i) {
                         return Padding(
                           padding: const EdgeInsets.only(left: 10),
-                          child: _PhotoThumb(
-                            file: File(_photos[i].path),
+                          child: _PhotoThumbMemory(
+                            bytes: _photos[i].bytes,
                             onRemove: () => _removeAt(i),
                           ),
                         );
@@ -281,19 +417,22 @@ class _MapSpotMemoryCaptureScreenState extends State<MapSpotMemoryCaptureScreen>
               ],
             ),
           ),
-          if (_saving)
+          if (_picking || _saving)
             Container(
               color: Colors.black26,
-              child: const Center(
+              child: Center(
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(color: KurdishHeritageColors.zer),
-                        SizedBox(height: 14),
-                        Text('Saving your memory…', style: TextStyle(fontWeight: FontWeight.w700)),
+                        const CircularProgressIndicator(color: KurdishHeritageColors.zer),
+                        const SizedBox(height: 14),
+                        Text(
+                          _saving ? 'Saving your memory…' : 'Loading photos…',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ],
                     ),
                   ),
@@ -311,11 +450,13 @@ class _AddPhotoTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.enabled,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -323,20 +464,34 @@ class _AddPhotoTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           width: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isDark ? Colors.white24 : Colors.black26, width: 1.5),
+            border: Border.all(
+              color: enabled
+                  ? (isDark ? Colors.white24 : Colors.black26)
+                  : Colors.grey.withValues(alpha: 0.35),
+              width: 1.5,
+            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 28, color: KurdishHeritageColors.zer),
+              Icon(icon, size: 28, color: enabled ? KurdishHeritageColors.zer : Colors.grey),
               const SizedBox(height: 6),
-              Text(label, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: isDark ? Colors.white70 : KurdishHeritageColors.res)),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  color: enabled
+                      ? (isDark ? Colors.white70 : KurdishHeritageColors.res)
+                      : Colors.grey,
+                ),
+              ),
             ],
           ),
         ),
@@ -345,10 +500,10 @@ class _AddPhotoTile extends StatelessWidget {
   }
 }
 
-class _PhotoThumb extends StatelessWidget {
-  const _PhotoThumb({required this.file, required this.onRemove});
+class _PhotoThumbMemory extends StatelessWidget {
+  const _PhotoThumbMemory({required this.bytes, required this.onRemove});
 
-  final File file;
+  final Uint8List bytes;
   final VoidCallback onRemove;
 
   @override
@@ -358,7 +513,13 @@ class _PhotoThumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: Image.file(file, width: 100, height: 100, fit: BoxFit.cover),
+          child: Image.memory(
+            bytes,
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+          ),
         ),
         Positioned(
           top: -6,

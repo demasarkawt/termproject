@@ -846,7 +846,17 @@ class _HomeMemoryCard extends StatelessWidget {
     if (!kIsWeb && memory.imagePaths.isNotEmpty) {
       final f = File(memory.imagePaths.first);
       if (f.existsSync()) {
-        return Image.file(f, fit: BoxFit.cover, width: double.infinity);
+        return Image.file(
+          f,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          errorBuilder: (_, __, ___) => ColoredBox(
+            color: KurdishHeritageColors.zer.withValues(alpha: 0.18),
+            child: const Center(
+              child: Icon(Icons.photo_rounded, color: KurdishHeritageColors.zer, size: 32),
+            ),
+          ),
+        );
       }
     }
     return ColoredBox(

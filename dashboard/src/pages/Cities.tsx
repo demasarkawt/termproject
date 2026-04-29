@@ -5,8 +5,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import {
-  apiFetch, apiPost, apiPatch, apiDelete, ApiError, placeCover,
-  type City, type CityCreate, type Place, type PlaceImage,
+  apiFetch, apiPost, apiPatch, apiDelete, ApiError, placeCover, fetchHealth,
+  ADMIN_KEY, attachGalleryFromMedia,
+  type City, type CityCreate, type Place, type PlaceImage, type HealthInfo, type LibraryImagePick,
 } from '@/src/lib/api';
 import { Modal, Drawer } from '@/src/components/Modal';
 import { ImageUploader, flushPendingFiles } from '@/src/components/ImageUploader';
@@ -40,8 +41,10 @@ export default function Cities() {
   const [form, setForm] = useState<FormState>(empty);
   const [images, setImages] = useState<PlaceImage[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingLibrary, setPendingLibrary] = useState<LibraryImagePick[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [health, setHealth] = useState<HealthInfo | null>(null);
 
   const [viewing, setViewing] = useState<City | null>(null);
 
@@ -63,6 +66,9 @@ export default function Cities() {
 
   useEffect(() => {
     refresh();
+    void fetchHealth()
+      .then(setHealth)
+      .catch(() => setHealth(null));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = useMemo(() => {
@@ -88,6 +94,7 @@ export default function Cities() {
     setForm(empty);
     setImages([]);
     setPendingFiles([]);
+    setPendingLibrary([]);
     setError('');
     setShowForm(true);
   };
@@ -102,6 +109,7 @@ export default function Cities() {
     });
     setImages(city.images ?? []);
     setPendingFiles([]);
+    setPendingLibrary([]);
     setError('');
     setShowForm(true);
   };
@@ -121,22 +129,44 @@ export default function Cities() {
         latitude: form.latitude,
         longitude: form.longitude,
       };
+      let resolvedId: number;
       if (editing) {
-        const updated = await apiPatch<City>(`/api/cities/${editing.id}`, payload);
+        await apiPatch<City>(`/api/cities/${editing.id}`, payload);
         if (pendingFiles.length) {
-          const created = await flushPendingFiles('cities', editing.id, pendingFiles);
-          updated.images = [...(updated.images ?? []), ...created];
+          await flushPendingFiles('cities', editing.id, pendingFiles);
         }
-        setCities((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-        toast.success(`"${updated.name}" updated.`);
+        if (pendingLibrary.length) {
+          await attachGalleryFromMedia(
+            'cities',
+            editing.id,
+            pendingLibrary.map((p) => p.id),
+          );
+        }
+        resolvedId = editing.id;
+        toast.success(`"${payload.name}" updated.`);
       } else {
         const created = await apiPost<City>('/api/cities/', payload);
         if (pendingFiles.length) {
-          created.images = await flushPendingFiles('cities', created.id, pendingFiles);
+          await flushPendingFiles('cities', created.id, pendingFiles);
         }
-        setCities((prev) => [...prev, created]);
+        if (pendingLibrary.length) {
+          await attachGalleryFromMedia(
+            'cities',
+            created.id,
+            pendingLibrary.map((p) => p.id),
+          );
+        }
+        resolvedId = created.id;
         toast.success(`"${created.name}" created.`);
       }
+
+      const fresh = await apiFetch<City>(`/api/cities/${resolvedId}`);
+      setCities((prev) =>
+        [...prev.filter((c) => c.id !== fresh.id), fresh].sort((a, b) => a.id - b.id),
+      );
+      setViewing((v) => (v?.id === fresh.id ? fresh : v));
+      setPendingFiles([]);
+      setPendingLibrary([]);
       setShowForm(false);
     } catch (err) {
       const msg = err instanceof ApiError ? err.detail ?? err.message : String(err);
@@ -179,6 +209,29 @@ export default function Cities() {
           <Plus className="w-5 h-5" /> Add City
         </button>
       </div>
+
+      {health && (!health.r2_configured || !health.admin_configured) && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
+          <p className="font-semibold">Image uploads need API configuration</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900/90">
+            {!health.admin_configured && (
+              <li>Set <code className="rounded bg-amber-100 px-1">ADMIN_KEY</code> on the server (Railway/Render env).</li>
+            )}
+            {!health.r2_configured && (
+              <li>
+                Configure Cloudflare <strong>R2</strong> env vars on the API (bucket + keys + public URL). Without R2,
+                uploads return 503.
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+      {!ADMIN_KEY && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <strong>Dashboard missing key.</strong> Create <code className="rounded bg-red-100 px-1">dashboard/.env</code> with{' '}
+          <code className="rounded bg-red-100 px-1">VITE_ADMIN_KEY=…</code> matching the API <code className="rounded bg-red-100 px-1">ADMIN_KEY</code>, then restart Vite—otherwise saves and uploads are rejected.
+        </div>
+      )}
 
       <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
         <div className="relative">
@@ -298,12 +351,14 @@ export default function Cities() {
         footer={
           <div className="flex justify-end gap-2">
             <button
+              type="button"
               onClick={() => setShowForm(false)}
               className="rounded-xl border border-stone-200 px-4 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={submit}
               disabled={saving}
               className={cn(
@@ -366,6 +421,8 @@ export default function Cities() {
               }}
               pendingFiles={pendingFiles}
               onPendingFilesChange={setPendingFiles}
+              pendingLibrary={pendingLibrary}
+              onPendingLibraryChange={setPendingLibrary}
             />
           </div>
         </form>
@@ -391,8 +448,11 @@ export default function Cities() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-dashed border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
-                No images uploaded yet.
+              <div className="space-y-3 rounded-xl border border-dashed border-stone-200 bg-stone-50 p-6 text-center text-sm text-stone-500">
+                <p>No images uploaded yet.</p>
+                <p className="text-xs text-stone-400">
+                  Tap <span className="font-semibold text-emerald-700">Edit</span> on the city card, then use the Images panel to upload. Photos are stored on the API (R2); the mobile app refreshes city art from the same API.
+                </p>
               </div>
             )}
             <p className="text-sm leading-relaxed text-stone-700">

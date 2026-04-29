@@ -123,6 +123,25 @@ export interface PlaceImage {
   created_at?: string | null;
 }
 
+/** Queued media library row (see `/api/media`) before a place/city exists. */
+export interface LibraryImagePick {
+  id: number;
+  url: string;
+  name: string;
+}
+
+export async function attachGalleryFromMedia(
+  kind: 'places' | 'cities',
+  ownerId: number,
+  mediaIds: number[],
+): Promise<PlaceImage[]> {
+  const unique = [...new Set(mediaIds)];
+  if (!unique.length) return [];
+  return apiPost<PlaceImage[]>(`/api/${kind}/${ownerId}/images/from-media`, {
+    media_ids: unique,
+  });
+}
+
 export interface Place {
   id: number;
   name: string;
@@ -185,7 +204,8 @@ export interface Event {
 export interface EventCreate {
   title: string;
   description?: string;
-  image_url?: string;
+  /** Use `null` on PATCH to clear the stored URL. */
+  image_url?: string | null;
   event_type?: string;
   location?: string;
   start_date?: string;
@@ -230,6 +250,32 @@ export interface HealthInfo {
   r2_public_url: boolean;
   admin_configured: boolean;
   database_configured?: boolean;
+}
+
+/** Public health check (no admin key required). Use for dashboards / banners. */
+export async function fetchHealth(): Promise<HealthInfo> {
+  return apiFetch<HealthInfo>('/api/health');
+}
+
+/** Map API errors to a short user-facing upload hint. */
+export function describeUploadError(err: unknown): string {
+  if (err instanceof ApiError) {
+    const d = err.detail ?? '';
+    if (err.status === 503) {
+      if (d.includes('R2')) {
+        return 'Image storage (R2) is not configured on the API. Configure R2 env vars on the server, then try again.';
+      }
+      if (d.includes('ADMIN_KEY')) {
+        return 'Server admin key is not configured. Set ADMIN_KEY on Railway/Render.';
+      }
+      return `Server unavailable (${d || err.message}).`;
+    }
+    if (err.status === 401) {
+      return 'Unauthorized: add VITE_ADMIN_KEY to dashboard/.env (must match the API ADMIN_KEY).';
+    }
+    return err.detail ?? err.message;
+  }
+  return err instanceof Error ? err.message : String(err);
 }
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────

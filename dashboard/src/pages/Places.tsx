@@ -7,8 +7,8 @@ import {
 import { cn } from '@/src/lib/utils';
 import {
   apiFetch, apiPost, apiPatch, apiDelete, ApiError,
-  PLACE_CATEGORIES, placeCover,
-  type Place, type City, type PlaceCreate, type PlaceImage,
+  PLACE_CATEGORIES, placeCover, attachGalleryFromMedia,
+  type Place, type City, type PlaceCreate, type PlaceImage, type LibraryImagePick,
 } from '@/src/lib/api';
 import { Modal, Drawer } from '@/src/components/Modal';
 import { ImageUploader, flushPendingFiles } from '@/src/components/ImageUploader';
@@ -67,6 +67,7 @@ export default function Places() {
   const [form, setForm] = useState<FormState>(emptyForm(0));
   const [images, setImages] = useState<PlaceImage[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingLibrary, setPendingLibrary] = useState<LibraryImagePick[]>([]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -117,6 +118,7 @@ export default function Places() {
     setForm(emptyForm(cities[0]?.id ?? 0));
     setImages([]);
     setPendingFiles([]);
+    setPendingLibrary([]);
     setFormError('');
     setShowCreate(true);
   };
@@ -135,6 +137,7 @@ export default function Places() {
     });
     setImages(place.images ?? []);
     setPendingFiles([]);
+    setPendingLibrary([]);
     setFormError('');
     setShowCreate(true);
   };
@@ -142,6 +145,7 @@ export default function Places() {
   const closeForm = () => {
     setShowCreate(false);
     setEditing(null);
+    setPendingLibrary([]);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -178,10 +182,20 @@ export default function Places() {
         toast.success(`"${updated.name}" updated.`);
       } else {
         const created = await apiPost<Place>('/api/places/', payload);
+        let merged: PlaceImage[] = [...(created.images ?? [])];
         if (pendingFiles.length) {
-          const newImgs = await flushPendingFiles('places', created.id, pendingFiles);
-          created.images = newImgs;
+          const uploaded = await flushPendingFiles('places', created.id, pendingFiles);
+          merged = [...merged, ...uploaded];
         }
+        if (pendingLibrary.length) {
+          const fromLib = await attachGalleryFromMedia(
+            'places',
+            created.id,
+            pendingLibrary.map((p) => p.id),
+          );
+          merged = [...merged, ...fromLib];
+        }
+        created.images = merged;
         setPlaces((prev) => [created, ...prev]);
         toast.success(`"${created.name}" created.`);
       }
@@ -677,11 +691,23 @@ export default function Places() {
               }}
               pendingFiles={pendingFiles}
               onPendingFilesChange={setPendingFiles}
+              pendingLibrary={pendingLibrary}
+              onPendingLibraryChange={setPendingLibrary}
             />
-            {!editing && pendingFiles.length > 0 && (
+            {!editing && (pendingFiles.length > 0 || pendingLibrary.length > 0) && (
               <p className="text-xs text-amber-700">
-                {pendingFiles.length} image{pendingFiles.length === 1 ? '' : 's'} will upload to
-                Cloudflare R2 right after the place is created.
+                {pendingFiles.length > 0 && (
+                  <>
+                    {pendingFiles.length} image{pendingFiles.length === 1 ? '' : 's'} will upload
+                    to Cloudflare R2 after save.{' '}
+                  </>
+                )}
+                {pendingLibrary.length > 0 && (
+                  <>
+                    {pendingLibrary.length} media library asset
+                    {pendingLibrary.length === 1 ? '' : 's'} will attach by ID after save.
+                  </>
+                )}
               </p>
             )}
           </div>

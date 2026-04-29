@@ -2,8 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Calendar, MapPin, Search, Plus, Eye, Trash2, ChevronLeft, ChevronRight, Pencil, ImagePlus, X, RefreshCw } from 'lucide-react';
 import {
-  apiFetch, apiPost, apiPatch, apiDelete, apiUpload, ApiError, API_URL, ADMIN_KEY,
-  type Event, type EventCreate, type MediaItem,
+  apiFetch,
+  apiPost,
+  apiPatch,
+  apiDelete,
+  apiUpload,
+  ApiError,
+  API_URL,
+  ADMIN_KEY,
+  describeUploadError,
+  type Event,
+  type EventCreate,
+  type MediaItem,
 } from '@/src/lib/api';
 import { Modal, Drawer } from '@/src/components/Modal';
 import { useToast } from '@/src/components/Toast';
@@ -77,6 +87,8 @@ export default function Events() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<EventCreate>(empty);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  /** When true, save sends `image_url: null` (clears stored cover). */
+  const [stripImage, setStripImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -133,6 +145,44 @@ export default function Events() {
     loadSyncStatus();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** Open create/edit from Dashboard (sessionStorage `kg_events_open`). */
+  useEffect(() => {
+    if (loading) return;
+    const raw = sessionStorage.getItem('kg_events_open');
+    if (!raw) return;
+    sessionStorage.removeItem('kg_events_open');
+    if (raw === 'create') {
+      setEditing(null);
+      setForm(empty);
+      setImageFile(null);
+      setStripImage(false);
+      setFormError('');
+      setShowModal(true);
+      return;
+    }
+    const id = parseInt(raw, 10);
+    if (Number.isNaN(id)) return;
+    const ev = events.find((e) => e.id === id);
+    if (!ev) {
+      toast.error('Event not found — it may have been deleted.');
+      return;
+    }
+    setEditing(ev);
+    setForm({
+      title: ev.title,
+      description: ev.description ?? '',
+      image_url: ev.image_url ?? '',
+      event_type: ev.event_type ?? 'CULTURE',
+      location: ev.location ?? '',
+      start_date: ev.start_date ?? '',
+      end_date: ev.end_date ?? '',
+    });
+    setImageFile(null);
+    setStripImage(false);
+    setFormError('');
+    setShowModal(true);
+  }, [loading, events]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const types = useMemo(
     () => ['All', ...Array.from(new Set(events.map((e) => e.event_type).filter(Boolean) as string[]))],
     [events],
@@ -157,6 +207,7 @@ export default function Events() {
     setEditing(null);
     setForm(empty);
     setImageFile(null);
+    setStripImage(false);
     setFormError('');
     setShowModal(true);
   };
@@ -173,6 +224,7 @@ export default function Events() {
       end_date: ev.end_date ?? '',
     });
     setImageFile(null);
+    setStripImage(false);
     setFormError('');
     setShowModal(true);
   };
@@ -186,15 +238,33 @@ export default function Events() {
     }
     setSaving(true);
     try {
-      let payload: EventCreate = { ...form };
-
+      let image_url: string | null | undefined = form.image_url?.trim() || undefined;
       if (imageFile) {
-        const fd = new FormData();
-        fd.append('file', imageFile, imageFile.name);
-        fd.append('folder', 'events');
-        const item = await apiUpload<MediaItem>('/api/media/upload', fd);
-        payload.image_url = item.data_url;
+        try {
+          const fd = new FormData();
+          fd.append('file', imageFile, imageFile.name);
+          fd.append('folder', 'events');
+          const item = await apiUpload<MediaItem>('/api/media/upload', fd);
+          image_url = item.data_url;
+        } catch (upErr) {
+          const uploadMsg = describeUploadError(upErr);
+          setFormError(uploadMsg);
+          toast.error(uploadMsg);
+          return;
+        }
+      } else if (stripImage) {
+        image_url = null;
       }
+
+      const payload: EventCreate = {
+        title: form.title.trim(),
+        description: form.description?.trim() || undefined,
+        event_type: form.event_type || undefined,
+        location: form.location?.trim() || undefined,
+        start_date: form.start_date || undefined,
+        end_date: form.end_date || undefined,
+        image_url,
+      };
 
       if (editing) {
         const updated = await apiPatch<Event>(`/api/events/${editing.id}`, payload);
@@ -442,8 +512,18 @@ export default function Events() {
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editing ? `Edit "${editing.title}"` : 'Add New Event'}
-        description="Image is uploaded to Cloudflare R2 if you pick a file."
+        title={
+          editing
+            ? form.title.trim()
+              ? `Edit: ${form.title.trim()}`
+              : 'Edit event'
+            : 'Add New Event'
+        }
+        description={
+          editing
+            ? 'Change title, dates, type, or replace the cover image. Remove image clears it on save.'
+            : 'Add a title and optional cover image (upload goes to R2 when configured).'
+        }
         footer={
           <div className="flex justify-end gap-2">
             <button
@@ -558,9 +638,12 @@ export default function Events() {
                     {imageFile ? 'Replace file' : 'Upload to R2'}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,.heic,.heif"
                       className="hidden"
-                      onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) => {
+                        setStripImage(false);
+                        setImageFile(e.target.files?.[0] ?? null);
+                      }}
                     />
                   </label>
                   {imageFile && (
@@ -570,6 +653,19 @@ export default function Events() {
                       className="ml-2 inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-700"
                     >
                       <X className="h-3 w-3" /> Cancel file
+                    </button>
+                  )}
+                  {(form.image_url || imageFile) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStripImage(true);
+                        setImageFile(null);
+                        setForm((f) => ({ ...f, image_url: '' }));
+                      }}
+                      className="mt-1 inline-flex text-xs font-semibold text-red-600 hover:text-red-800"
+                    >
+                      Remove image
                     </button>
                   )}
                   <input

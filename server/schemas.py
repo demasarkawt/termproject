@@ -63,6 +63,21 @@ class ImageUpdate(BaseModel):
     sort_order: Optional[int] = None
 
 
+class AttachGalleryFromMedia(BaseModel):
+    """Attach existing media library rows (`media_items`) to a place/city gallery by ID."""
+
+    media_ids: List[int]
+
+    @field_validator("media_ids")
+    @classmethod
+    def _media_ids_nonempty(cls, v: List[int]) -> List[int]:
+        if not v:
+            raise ValueError("media_ids must not be empty")
+        if len(v) > 48:
+            raise ValueError("at most 48 items per batch")
+        return v
+
+
 # ───────── City ─────────
 class CityCreate(BaseModel):
     name: str

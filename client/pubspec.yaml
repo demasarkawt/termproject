@@ -1,7 +1,7 @@
 name: termproject
 description: "Travelo — Flutter client for tours, maps, and trip planning."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Search, UploadCloud, Filter, Grid, List,
   Trash2, Download, FolderPlus,
-  X, Check, MapPin, Calendar, Folder, ArrowLeft, ArrowDownToLine,
+  X, Check, MapPin, Calendar, Folder, ArrowLeft, ArrowDownToLine, Copy,
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import {
@@ -48,6 +48,7 @@ export default function MediaLibrary() {
   const [urlName, setUrlName] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inlineUploadRef = useRef<HTMLInputElement>(null);
 
   // Folder modal
   const [showFolderModal, setShowFolderModal] = useState(false);
@@ -266,6 +267,15 @@ export default function MediaLibrary() {
     return <UploadCloud className="w-3 h-3 text-white" />;
   };
 
+  const copyMediaId = async (id: number) => {
+    try {
+      await navigator.clipboard.writeText(String(id));
+      toast.success(`Copied Media ID ${id}`);
+    } catch {
+      toast.info(`Media ID ${id}`);
+    }
+  };
+
   return (
     <div className="p-8 max-w-[1400px] mx-auto space-y-6">
       {/* Header */}
@@ -300,6 +310,65 @@ export default function MediaLibrary() {
           </button>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/80 via-white to-stone-50/40 p-6 shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="flex-1 space-y-2">
+            <h2 className="text-lg font-bold text-stone-900">Upload files (get a Media ID)</h2>
+            <p className="text-sm text-stone-600">
+              Stored uploads appear in{' '}
+              <code className="rounded bg-stone-100 px-1 py-0.5 text-xs font-mono">media_items</code>{' '}
+              with a stable numeric{' '}
+              <strong className="text-emerald-800">ID</strong>. In Places or Cities, use{' '}
+              <strong>Images → Media library</strong> and pick by ID — no duplicate upload needed.
+              {activeFolder && (
+                <span className="block pt-2 text-emerald-800">
+                  New files go folder <strong>{activeFolder}</strong>.
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex-1 min-w-[min(100%,260px)]">
+            <input
+              ref={inlineUploadRef}
+              type="file"
+              accept="image/*,.heic,.heif"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+            <div
+              role="presentation"
+              onClick={() => inlineUploadRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                handleFiles(e.dataTransfer.files);
+              }}
+              className={cn(
+                'cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition',
+                dragOver
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-emerald-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/50',
+              )}
+            >
+              <UploadCloud className="mx-auto mb-2 h-10 w-10 text-emerald-300" />
+              <p className="text-sm font-semibold text-stone-800">Drop files here or tap to browse</p>
+              <p className="mt-1 text-xs text-stone-500">
+                Same upload pipeline as the button above — PNG, JPG, WebP… up to 10 MB each.
+              </p>
+              {uploading && (
+                <p className="mt-3 text-xs font-semibold text-emerald-700">Uploading…</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Folders row (only on root view) */}
       {!activeFolder && folders.length > 0 && (
@@ -474,6 +543,17 @@ export default function MediaLibrary() {
               </div>
               <div className="p-3">
                 <p className="text-[11px] font-semibold text-stone-800 truncate mb-0.5">{item.name}</p>
+                {item.source === 'upload' && item.uploadedId != null && (
+                  <button
+                    type="button"
+                    onClick={() => void copyMediaId(item.uploadedId!)}
+                    className="mb-1 flex items-center gap-1 font-mono text-[11px] font-bold text-emerald-800 hover:underline"
+                    title="Copy Media ID"
+                  >
+                    #{item.uploadedId}
+                    <Copy className="h-3 w-3 shrink-0 text-emerald-600" />
+                  </button>
+                )}
                 <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{item.type}</p>
               </div>
             </div>
@@ -486,6 +566,7 @@ export default function MediaLibrary() {
               <tr className="bg-stone-50/50 border-b border-stone-200">
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400 w-8" />
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400">Name</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400">Media ID</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400">Source</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400">Type</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-stone-400 text-right">Actions</th>
@@ -509,6 +590,20 @@ export default function MediaLibrary() {
                         onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${item.id}/100/100`; }} />
                       <span className="text-sm font-medium text-stone-800">{item.name}</span>
                     </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    {item.source === 'upload' && item.uploadedId != null ? (
+                      <button
+                        type="button"
+                        onClick={() => void copyMediaId(item.uploadedId!)}
+                        className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-emerald-800 hover:underline"
+                      >
+                        {item.uploadedId}
+                        <Copy className="h-3 w-3 shrink-0" />
+                      </button>
+                    ) : (
+                      <span className="text-xs text-stone-300">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-1.5 text-xs text-stone-500 font-medium capitalize">

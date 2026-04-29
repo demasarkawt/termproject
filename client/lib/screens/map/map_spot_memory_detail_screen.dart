@@ -115,7 +115,16 @@ class _MapSpotMemoryDetailScreenState extends State<MapSpotMemoryDetailScreen> {
                       : PageView.builder(
                           controller: _pageCtrl,
                           itemCount: images.length,
-                          itemBuilder: (ctx, i) => Image.file(File(images[i]), fit: BoxFit.cover),
+                          itemBuilder: (ctx, i) => Image.file(
+                            File(images[i]),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => ColoredBox(
+                              color: KurdishHeritageColors.zer.withValues(alpha: 0.35),
+                              child: const Center(
+                                child: Icon(Icons.broken_image_outlined, size: 64, color: Colors.white54),
+                              ),
+                            ),
+                          ),
                         ),
                 ),
                 Positioned(

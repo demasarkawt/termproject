@@ -200,6 +200,77 @@ async def upload_place_images(
     return created
 
 
+@router.post(
+    "/{place_id}/images/from-media",
+    response_model=List[schemas.ImageOut],
+    status_code=201,
+    dependencies=[Depends(require_admin)],
+)
+def attach_place_images_from_media(
+    place_id: int,
+    data: schemas.AttachGalleryFromMedia,
+    db: Session = Depends(get_db),
+):
+    """Create gallery rows that reference existing `media_items` rows by numeric ID."""
+
+    place = db.query(models.Place).filter(models.Place.id == place_id).first()
+    if not place:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    uniq = list(dict.fromkeys(data.media_ids))
+
+    existing_max = max((img.sort_order for img in place.images), default=-1)
+    has_cover = any(img.is_cover for img in place.images)
+    existing_urls = {img.url for img in place.images}
+
+    created: List[models.PlaceImage] = []
+    seq = existing_max
+    for media_id in uniq:
+        row = db.query(models.MediaItem).filter(models.MediaItem.id == media_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Media item {media_id} not found")
+        url = (row.data_url or "").strip()
+        if not url:
+            raise HTTPException(status_code=400, detail=f"Media item {media_id} has empty URL")
+        if len(url) > 500:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Media item {media_id}: URL exceeds 500 characters.",
+            )
+        if url in existing_urls:
+            continue
+        existing_urls.add(url)
+        seq += 1
+        img = models.PlaceImage(
+            place_id=place.id,
+            url=url,
+            # Do not duplicate R2 deletes with media library ownership.
+            r2_key=None,
+            is_cover=(not has_cover),
+            sort_order=seq,
+            content_type=row.content_type,
+            size_bytes=row.size_bytes,
+        )
+        db.add(img)
+        created.append(img)
+        if img.is_cover:
+            has_cover = True
+
+    if not created:
+        return []
+
+    db.commit()
+    for img in created:
+        db.refresh(img)
+
+    cover = next((i for i in created if i.is_cover), None)
+    if cover and not place.image_url:
+        place.image_url = cover.url
+        db.commit()
+
+    return created
+
+
 @router.patch(
     "/{place_id}/images/{image_id}",
     response_model=schemas.ImageOut,

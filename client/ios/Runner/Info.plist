@@ -15,7 +15,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>termproject</string>
+	<string>Travelo</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -50,9 +52,9 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Travelo needs photo access so you can set your profile picture.</string>
+	<string>Travelo needs access to your photos for map memories, saved spots, and your profile picture.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Travelo needs camera access if you choose to take a new profile photo.</string>
+	<string>Travelo uses the camera to capture photos for map memories and optional profile pictures.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Travelo uses your location to center the map on you and show nearby places.</string>
 	<key>UILaunchStoryboardName</key>

@@ -1,32 +1,40 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent } from 'react';
-import { Upload, X, Star, ImagePlus, Loader2, GripVertical } from 'lucide-react';
+import { Upload, X, Star, ImagePlus, Loader2, GripVertical, Layers } from 'lucide-react';
 import {
   apiUpload,
   apiPatch,
   apiDelete,
-  ApiError,
+  attachGalleryFromMedia,
+  describeUploadError,
   type PlaceImage,
+  type LibraryImagePick,
 } from '../lib/api';
+import { MediaLibraryPicker } from './MediaLibraryPicker';
 
 interface ImageUploaderProps {
-  // Owner endpoint shape: 'places' | 'cities'. We POST to `/api/{kind}/{id}/images`.
+  /** Owner endpoint shape: 'places' | 'cities'. We POST to `/api/{kind}/{id}/images`. */
   kind: 'places' | 'cities';
-  // The owner ID. When undefined the uploader buffers files locally; once
-  // the owner is created the parent flushes them via `flushPending`.
+  /** When undefined we buffer uploads and media picks until parent creates the row. */
   ownerId?: number | null;
-  // Initial / current images (controlled).
   images: PlaceImage[];
   onChange: (images: PlaceImage[]) => void;
-  // Bubble locally-buffered files up so the parent (Place/City modal) can
-  // upload them after creating the owner row.
   pendingFiles?: File[];
   onPendingFilesChange?: (files: File[]) => void;
+  /** Media-library assets (by `/api/media` ID) to attach after save when `ownerId` is still null. */
+  pendingLibrary?: LibraryImagePick[];
+  onPendingLibraryChange?: (items: LibraryImagePick[]) => void;
   maxFiles?: number;
   className?: string;
 }
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+function isImageFile(file: File): boolean {
+  if (file.type.startsWith('image/')) return true;
+  const n = file.name.toLowerCase();
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg)$/i.test(n);
+}
 
 export function ImageUploader({
   kind,
@@ -35,6 +43,8 @@ export function ImageUploader({
   onChange,
   pendingFiles,
   onPendingFilesChange,
+  pendingLibrary,
+  onPendingLibraryChange,
   maxFiles,
   className,
 }: ImageUploaderProps) {
@@ -43,47 +53,67 @@ export function ImageUploader({
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [reorderId, setReorderId] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const localFiles = pendingFiles ?? [];
+  const libPicks = pendingLibrary ?? [];
+
+  const excludeQueuedMediaIds = useMemo(
+    () => (libPicks.length ? new Set(libPicks.map((p) => p.id)) : undefined),
+    [libPicks],
+  );
 
   const acceptFiles = useCallback(
     async (files: FileList | File[]) => {
       setError(null);
-      const arr = Array.from(files).filter((f) => f.type.startsWith('image/'));
-      if (arr.length === 0) return;
+      const arr = Array.from(files).filter(isImageFile);
+      if (arr.length === 0) {
+        setError('No usable images selected (JPEG, PNG, WebP, HEIC, GIF…).');
+        return;
+      }
       const oversize = arr.find((f) => f.size > MAX_FILE_BYTES);
       if (oversize) {
         setError(`"${oversize.name}" is over 10 MB.`);
         return;
       }
-      const total = arr.length + images.length + localFiles.length;
-      if (maxFiles && total > maxFiles) {
+      let addable = arr.length;
+      if (maxFiles) addable = Math.max(0, maxFiles - (images.length + localFiles.length + libPicks.length));
+      const slice = addable <= 0 ? [] : arr.slice(0, addable);
+      if (!slice.length) {
         setError(`Maximum ${maxFiles} image${maxFiles === 1 ? '' : 's'} allowed.`);
         return;
       }
 
       if (ownerId == null) {
-        // Buffer until parent gives us an ownerId.
-        onPendingFilesChange?.([...localFiles, ...arr]);
+        onPendingFilesChange?.([...localFiles, ...slice]);
         return;
       }
 
       setBusy(true);
       try {
         const fd = new FormData();
-        arr.forEach((f) => fd.append('files', f, f.name));
+        slice.forEach((f) => fd.append('files', f, f.name));
         const created = await apiUpload<PlaceImage[]>(
           `/api/${kind}/${ownerId}/images`,
           fd,
         );
         onChange([...images, ...created]);
       } catch (err) {
-        setError(err instanceof ApiError ? err.detail ?? err.message : String(err));
+        setError(describeUploadError(err));
       } finally {
         setBusy(false);
       }
     },
-    [images, localFiles, kind, ownerId, maxFiles, onChange, onPendingFilesChange],
+    [
+      images,
+      localFiles,
+      libPicks.length,
+      kind,
+      ownerId,
+      maxFiles,
+      onChange,
+      onPendingFilesChange,
+    ],
   );
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
@@ -102,6 +132,57 @@ export function ImageUploader({
     onPendingFilesChange?.(next);
   };
 
+  const removePendingLibrary = (idx: number) => {
+    const next = libPicks.filter((_, i) => i !== idx);
+    onPendingLibraryChange?.(next);
+  };
+
+  const onLibraryConfirmed = async (
+    items: { id: number; data_url: string; name: string }[],
+  ) => {
+    if (!items.length) return;
+    setError(null);
+
+    if (ownerId != null) {
+      setBusy(true);
+      try {
+        const existingUrls = new Set(images.map((img) => img.url.trim()));
+        const ids: number[] = [];
+        for (const it of items) {
+          if (existingUrls.has(it.data_url.trim())) continue;
+          ids.push(it.id);
+          if (maxFiles && images.length + ids.length >= maxFiles) break;
+        }
+        const unique = [...new Set(ids)];
+        if (!unique.length) {
+          setError('Nothing new to attach (same URLs as existing images).');
+          return;
+        }
+        const created = await attachGalleryFromMedia(kind, ownerId, unique);
+        onChange([...images, ...created]);
+      } catch (err) {
+        setError(describeUploadError(err));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    let next = [...libPicks];
+    for (const it of items) {
+      if (next.some((x) => x.id === it.id)) continue;
+      if (
+        maxFiles &&
+        images.length + localFiles.length + next.length >= maxFiles
+      ) {
+        setError(`Maximum ${maxFiles} images allowed.`);
+        break;
+      }
+      next.push({ id: it.id, url: it.data_url, name: it.name });
+    }
+    onPendingLibraryChange?.(next);
+  };
+
   const removeImage = async (img: PlaceImage) => {
     if (ownerId == null) return;
     setBusy(true);
@@ -110,7 +191,7 @@ export function ImageUploader({
       await apiDelete(`/api/${kind}/${ownerId}/images/${img.id}`);
       onChange(images.filter((i) => i.id !== img.id));
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail ?? err.message : String(err));
+      setError(describeUploadError(err));
     } finally {
       setBusy(false);
     }
@@ -125,11 +206,9 @@ export function ImageUploader({
         `/api/${kind}/${ownerId}/images/${img.id}`,
         { is_cover: true },
       );
-      onChange(
-        images.map((i) => ({ ...i, is_cover: i.id === img.id })),
-      );
+      onChange(images.map((i) => ({ ...i, is_cover: i.id === img.id })));
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail ?? err.message : String(err));
+      setError(describeUploadError(err));
     } finally {
       setBusy(false);
     }
@@ -155,13 +234,12 @@ export function ImageUploader({
         );
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail ?? err.message : String(err));
+      setError(describeUploadError(err));
     } finally {
       setBusy(false);
     }
   };
 
-  // Local previews for buffered files.
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   useEffect(() => {
     const urls = localFiles.map((f) => URL.createObjectURL(f));
@@ -170,7 +248,8 @@ export function ImageUploader({
   }, [localFiles.length]);
 
   const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
-  const empty = sorted.length === 0 && localFiles.length === 0;
+  const empty =
+    sorted.length === 0 && localFiles.length === 0 && libPicks.length === 0;
 
   return (
     <div className={className}>
@@ -181,8 +260,7 @@ export function ImageUploader({
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`group relative cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition ${
+        className={`rounded-xl border-2 border-dashed p-6 transition ${
           dragOver
             ? 'border-emerald-500 bg-emerald-50/50'
             : 'border-slate-300 hover:border-slate-400 hover:bg-slate-50'
@@ -191,12 +269,13 @@ export function ImageUploader({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.heic,.heif"
           multiple
           onChange={onPick}
           className="hidden"
         />
-        <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
+
+        <div className="flex flex-col items-center justify-center gap-3 text-center text-slate-600">
           {busy ? (
             <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
           ) : empty ? (
@@ -206,14 +285,41 @@ export function ImageUploader({
           )}
           <div className="text-sm font-medium">
             {empty
-              ? 'Drop images here or click to browse'
+              ? 'Drop images here or browse files'
               : 'Add more images'}
           </div>
-          <div className="text-xs text-slate-400">
-            JPG, PNG, WebP up to 10 MB each. First image becomes the cover automatically.
+          <div className="max-w-xs text-xs text-slate-400">
+            JPG, PNG, WebP, HEIC up to 10 MB. First resolved image becomes the cover automatically.
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
+            >
+              <Upload className="h-3.5 w-3.5" /> Browse files
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setPickerOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+              title="Use an existing `/api/media` upload"
+            >
+              <Layers className="h-3.5 w-3.5" /> Media library
+            </button>
           </div>
         </div>
       </div>
+
+      <MediaLibraryPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={onLibraryConfirmed}
+        excludeMediaIds={excludeQueuedMediaIds}
+        title="Attach from Media Library"
+      />
 
       {error && (
         <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -221,7 +327,7 @@ export function ImageUploader({
         </div>
       )}
 
-      {(sorted.length > 0 || localFiles.length > 0) && (
+      {(sorted.length > 0 || localFiles.length > 0 || libPicks.length > 0) && (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
           {sorted.map((img) => (
             <div
@@ -284,7 +390,7 @@ export function ImageUploader({
             >
               <img src={src} alt="" className="h-full w-full object-cover opacity-90" />
               <div className="absolute left-1.5 top-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                Pending
+                Pending upload
               </div>
               <button
                 type="button"
@@ -294,6 +400,29 @@ export function ImageUploader({
                 }}
                 className="absolute right-1.5 top-1.5 rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-700"
                 title="Remove"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+
+          {libPicks.map((p, idx) => (
+            <div
+              key={`lib-${p.id}-${idx}`}
+              className="group relative aspect-square overflow-hidden rounded-lg border border-emerald-200 bg-emerald-50"
+              title="Will attach Media Library ID after save"
+            >
+              <img src={p.url} alt="" className="h-full w-full object-cover opacity-95" />
+              <div className="absolute inset-x-0 bottom-0 bg-emerald-900/80 px-1 py-0.5 text-center font-mono text-[9px] font-bold uppercase text-emerald-100">
+                Media #{p.id}
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removePendingLibrary(idx);
+                }}
+                className="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-700"
               >
                 <X className="h-3.5 w-3.5" />
               </button>

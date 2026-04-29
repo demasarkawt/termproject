@@ -110,9 +110,9 @@ function Shell() {
             <Mountain className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-zer">Kurdistan Go</h1>
+            <h1 className="text-lg font-bold tracking-tight text-zer">Travelo</h1>
             <p className="text-[10px] uppercase tracking-widest text-subtle font-bold">
-              Admin Dashboard
+              Admin
             </p>
           </div>
         </div>
@@ -140,11 +140,11 @@ function Shell() {
             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
             style={{ backgroundColor: 'var(--color-kesk)' }}
           >
-            A
+            T
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-bold text-default truncate">Administrator</p>
-            <p className="text-[10px] text-subtle truncate">admin@kurdistango.app</p>
+            <p className="text-[10px] text-subtle truncate">admin@travelo.app</p>
           </div>
         </div>
       </aside>
@@ -179,9 +179,9 @@ function Shell() {
                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                 style={{ backgroundColor: 'var(--color-zer)' }}
               >
-                K
+                T
               </div>
-              <span className="text-sm font-medium text-muted">Kurdistan Go</span>
+              <span className="text-sm font-medium text-muted">Travelo</span>
             </div>
           </div>
         </header>

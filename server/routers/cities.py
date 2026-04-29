@@ -174,6 +174,73 @@ async def upload_city_images(
     return created
 
 
+@router.post(
+    "/{city_id}/images/from-media",
+    response_model=List[schemas.ImageOut],
+    status_code=201,
+    dependencies=[Depends(require_admin)],
+)
+def attach_city_images_from_media(
+    city_id: int,
+    data: schemas.AttachGalleryFromMedia,
+    db: Session = Depends(get_db),
+):
+    city = db.query(models.City).filter(models.City.id == city_id).first()
+    if not city:
+        raise HTTPException(status_code=404, detail="City not found")
+
+    uniq = list(dict.fromkeys(data.media_ids))
+    existing_max = max((img.sort_order for img in city.images), default=-1)
+    has_cover = any(img.is_cover for img in city.images)
+    existing_urls = {img.url for img in city.images}
+
+    created: List[models.CityImage] = []
+    seq = existing_max
+    for media_id in uniq:
+        row = db.query(models.MediaItem).filter(models.MediaItem.id == media_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Media item {media_id} not found")
+        url = (row.data_url or "").strip()
+        if not url:
+            raise HTTPException(status_code=400, detail=f"Media item {media_id} has empty URL")
+        if len(url) > 500:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Media item {media_id}: URL exceeds 500 characters.",
+            )
+        if url in existing_urls:
+            continue
+        existing_urls.add(url)
+        seq += 1
+        img = models.CityImage(
+            city_id=city.id,
+            url=url,
+            r2_key=None,
+            is_cover=(not has_cover),
+            sort_order=seq,
+            content_type=row.content_type,
+            size_bytes=row.size_bytes,
+        )
+        db.add(img)
+        created.append(img)
+        if img.is_cover:
+            has_cover = True
+
+    if not created:
+        return []
+
+    db.commit()
+    for img in created:
+        db.refresh(img)
+
+    cover = next((i for i in created if i.is_cover), None)
+    if cover and not city.image_url:
+        city.image_url = cover.url
+        db.commit()
+
+    return created
+
+
 @router.patch(
     "/{city_id}/images/{image_id}",
     response_model=schemas.ImageOut,

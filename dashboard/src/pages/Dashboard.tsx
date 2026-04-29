@@ -119,7 +119,10 @@ export default function Dashboard({
             <Plus className="w-5 h-5" /> Add Place
           </button>
           <button
-            onClick={() => onNavigate?.('events')}
+            onClick={() => {
+              sessionStorage.setItem('kg_events_open', 'create');
+              onNavigate?.('events');
+            }}
             className="bg-white text-emerald-800 border border-emerald-800/10 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-emerald-50 transition-all"
           >
             <Plus className="w-5 h-5" /> Add Event
@@ -300,11 +303,32 @@ export default function Dashboard({
           </div>
 
           <div className="bg-white p-8 rounded-xl border border-stone-200 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-lg font-semibold">Upcoming Events</h2>
-              <span className="text-xs font-medium bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full">
-                {events.length} Total
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">Upcoming Events</h2>
+                <span className="text-xs font-medium bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full">
+                  {events.length} Total
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sessionStorage.setItem('kg_events_open', 'create');
+                    onNavigate?.('events');
+                  }}
+                  className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+                >
+                  + Add event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate?.('events')}
+                  className="text-xs font-bold text-emerald-700 hover:underline"
+                >
+                  Manage all
+                </button>
+              </div>
             </div>
             {loading ? (
               <div className="space-y-4">
@@ -313,7 +337,19 @@ export default function Dashboard({
                 ))}
               </div>
             ) : events.length === 0 ? (
-              <p className="text-stone-400 text-sm">No events in the database yet.</p>
+              <>
+                <p className="text-stone-400 text-sm">No events in the database yet.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    sessionStorage.setItem('kg_events_open', 'create');
+                    onNavigate?.('events');
+                  }}
+                  className="mt-3 text-sm font-bold text-emerald-700 hover:underline"
+                >
+                  + Add your first event
+                </button>
+              </>
             ) : (
               <div className="divide-y divide-stone-100">
                 {events.map((event) => {
@@ -340,19 +376,33 @@ export default function Dashboard({
                       key={event.id}
                       className="py-4 flex items-center justify-between first:pt-0 last:pb-0 relative"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-stone-50 flex flex-col items-center justify-center border border-stone-200">
-                          <span className="text-[10px] font-bold text-stone-400 uppercase">
-                            {month}
-                          </span>
-                          <span className="text-sm font-bold text-stone-900 leading-none">
-                            {day}
-                          </span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold">{event.title}</h4>
-                          <p className="text-xs text-stone-500">
-                            {event.location ?? ''} • {event.event_type ?? ''}
+                      <div className="flex items-center gap-4 min-w-0">
+                        {event.image_url ? (
+                          <img
+                            src={event.image_url}
+                            alt=""
+                            className="h-12 w-12 shrink-0 rounded-lg object-cover border border-stone-200"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 shrink-0 rounded-lg bg-stone-50 flex flex-col items-center justify-center border border-stone-200">
+                            <span className="text-[10px] font-bold text-stone-400 uppercase">
+                              {month}
+                            </span>
+                            <span className="text-sm font-bold text-stone-900 leading-none">
+                              {day}
+                            </span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-semibold truncate">{event.title}</h4>
+                          <p className="text-xs text-stone-500 truncate">
+                            {[
+                              parts[1] ? `${month} ${day}` : null,
+                              event.location,
+                              event.event_type,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ') || '—'}
                           </p>
                         </div>
                       </div>
@@ -370,6 +420,7 @@ export default function Dashboard({
                             <button
                               onClick={() => {
                                 setOpenMenu(null);
+                                sessionStorage.setItem('kg_events_open', String(event.id));
                                 onNavigate?.('events');
                               }}
                               className="flex w-full items-center gap-2 rounded-t-xl px-3 py-2 text-left text-xs hover:bg-stone-50"
