@@ -1,5 +1,19 @@
 import { useEffect, useState } from 'react';
-import { MapPin, Calendar, Plus, UploadCloud, MoreVertical, Building2, Eye, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  UploadCloud,
+  MoreVertical,
+  Eye,
+  Trash2,
+  CreditCard,
+  Truck,
+  Wallet,
+  Sparkles,
+  Lock,
+  Compass,
+  Landmark,
+  Ticket,
+} from 'lucide-react';
 import {
   apiFetch, apiDelete, ApiError, type Place, type Event, type City,
 } from '@/src/lib/api';
@@ -46,7 +60,7 @@ export default function Dashboard({
       label: 'Total Places',
       value: loading ? '—' : places.length.toString(),
       change: 'Live',
-      icon: MapPin,
+      icon: Compass,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
     },
@@ -54,7 +68,7 @@ export default function Dashboard({
       label: 'Total Cities',
       value: loading ? '—' : cities.length.toString(),
       change: 'Live',
-      icon: Building2,
+      icon: Landmark,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
@@ -62,7 +76,7 @@ export default function Dashboard({
       label: 'Total Events',
       value: loading ? '—' : events.length.toString(),
       change: 'Live',
-      icon: Calendar,
+      icon: Ticket,
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
     },
@@ -70,7 +84,7 @@ export default function Dashboard({
       label: 'Premium Places',
       value: loading ? '—' : places.filter((p) => p.is_premium).length.toString(),
       change: 'Live',
-      icon: MapPin,
+      icon: Sparkles,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
@@ -146,6 +160,102 @@ export default function Dashboard({
             </p>
           </div>
         ))}
+      </div>
+
+      <div className="bg-white p-8 rounded-xl border border-stone-200 shadow-sm space-y-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-stone-900">Checkout preview</h2>
+            <p className="text-sm text-stone-500 mt-1">
+              Payment is collected before shipping details — same order as your live checkout.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-stone-500">
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 px-3 py-1">
+              <Lock className="w-3.5 h-3.5" /> PCI placeholder
+            </span>
+          </div>
+        </div>
+
+        {/* Payment comes first */}
+        <section className="rounded-2xl border border-stone-200 bg-stone-50/80 p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-800 text-white text-xs font-bold">
+              1
+            </span>
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-emerald-700" />
+              <h3 className="text-base font-semibold text-stone-900">Payment</h3>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600 pl-10">
+            Choose how guests pay before you collect a delivery or pickup address.
+          </p>
+          <div className="pl-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              className="flex items-center gap-3 rounded-xl border-2 border-emerald-600 bg-white p-4 text-left shadow-sm transition hover:bg-emerald-50/50"
+            >
+              <Wallet className="w-6 h-6 text-emerald-700 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-stone-900">Card</p>
+                <p className="text-xs text-stone-500">Visa ·••• 4242</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-4 text-left hover:border-stone-300 transition"
+            >
+              <CreditCard className="w-6 h-6 text-stone-500 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-stone-900">Business invoice</p>
+                <p className="text-xs text-stone-500">Net 30 · admin only</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* Shipping stage follows payment */}
+        <section className="rounded-2xl border border-dashed border-stone-300 bg-white p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 text-stone-700 text-xs font-bold">
+              2
+            </span>
+            <div className="flex items-center gap-2">
+              <Truck className="w-5 h-5 text-stone-600" />
+              <h3 className="text-base font-semibold text-stone-900">Shipping</h3>
+            </div>
+          </div>
+          <p className="text-sm text-stone-600 pl-10">
+            Shown after payment succeeds — address, courier, and delivery window.
+          </p>
+          <div className="pl-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                Recipient
+              </label>
+              <div className="h-10 rounded-lg border border-stone-200 bg-stone-50 px-3 text-sm text-stone-400 flex items-center">
+                Ava Yılmaz · Erbil
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                Courier
+              </label>
+              <div className="h-10 rounded-lg border border-stone-200 bg-stone-50 px-3 text-sm text-stone-400 flex items-center gap-2">
+                <Truck className="w-4 h-4" /> Express · 2–4 days
+              </div>
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                Street address
+              </label>
+              <div className="min-h-[2.5rem] rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-400">
+                120 m, Gulan St — Ankawa
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -199,6 +199,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				94689BC4E3FF4C9F42E8ACD7 /* [CP] Embed Pods Frameworks */,
+				F7A91D6E4B284C639D5E812E01 /* Strip app bundle xattrs */,
 			);
 			buildRules = (
 			);
@@ -361,6 +362,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+		};
+		F7A91D6E4B284C639D5E812E01 /* Strip app bundle xattrs */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Strip app bundle xattrs";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Copy resource forks / Finder/File Provider markers break codesign; ditto strips them (--norsrc --noqtn).\nif [ -z \"${TARGET_BUILD_DIR:-}\" ] || [ -z \"${FULL_PRODUCT_NAME:-}\" ]; then exit 0; fi\nAPP=\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\"\nif [ ! -e \"${APP}\" ]; then exit 0; fi\nTMP=\"${APP}.xattrstrip.$$\"\nrm -rf \"${TMP}\" && ditto --norsrc --noqtn \"${APP}\" \"${TMP}\" && rm -rf \"${APP}\" && mv \"${TMP}\" \"${APP}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:termproject/config/api_config.dart';
+import 'package:termproject/utils/fastapi_error.dart';
 import 'package:termproject/services/user_session.dart';
 import 'package:termproject/services/theme_service.dart';
 
@@ -37,6 +38,16 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
+    if (!email.contains('@') || !email.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a valid email address (e.g. name@domain.com)'),
+          backgroundColor: KurdishHeritageColors.sor,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -56,17 +67,24 @@ class _SignInScreenState extends State<SignInScreen> {
         );
         if (mounted) context.go('/home');
       } else {
-        final data = jsonDecode(response.body);
+        final msg = messageFromFastApiBody(response.body);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['detail'] ?? 'Login failed'), backgroundColor: KurdishHeritageColors.sor),
+            SnackBar(content: Text(msg), backgroundColor: KurdishHeritageColors.sor),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network error. Please try again.'), backgroundColor: KurdishHeritageColors.sor),
+          SnackBar(
+            content: Text(
+              kBaseUrl.startsWith('http://127.') || kBaseUrl.startsWith('http://localhost')
+                  ? 'Could not reach the API ($kBaseUrl). Is the server running?'
+                  : 'Network error. Please try again.',
+            ),
+            backgroundColor: KurdishHeritageColors.sor,
+          ),
         );
       }
     } finally {

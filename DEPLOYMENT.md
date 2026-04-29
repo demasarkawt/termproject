@@ -80,13 +80,39 @@ The admin UI reads `VITE_API_URL` and `VITE_ADMIN_KEY` at **build time**.
 
 5. **CORS:** If you set **`CORS_ORIGINS`** on Railway to a strict list, include your Vercel URL(s), e.g. `https://termproject-dashboard.vercel.app`. Alternatively, when `CORS_ORIGINS` is **non-empty**, the API also allows origins matching `*.vercel.app` via regex unless you set `CORS_DISABLE_VERCEL_REGEX=true`.
 
+### 3b. Vercel (repo root)
+
+Deploy the **dashboard** (`dashboard/`), not the Flutter `client/`. This repo includes a root **`vercel.json`** so Git deployments run `npm ci` / `npm run build` inside **`dashboard`** and publish **`dashboard/dist`**.
+
+In [Vercel](https://vercel.com/) → Project **kurdistan-go** (or your project):
+
+1. **Settings → Git → Root Directory:** use **empty / `.`** (repo root) so the root `vercel.json` runs the dashboard build — **or** set Root Directory to **`dashboard`** (then Vite builds from that folder; do **not** point at `client/`).
+2. **Settings → Environment Variables** (Production, and Preview if needed):
+
+   | Name | Value |
+   |------|--------|
+   | `VITE_API_URL` | `https://termproject-production.up.railway.app` (your Railway API, no trailing slash) |
+   | `VITE_ADMIN_KEY` | Same secret as Railway **`ADMIN_KEY`** |
+
+4. Add your **Vercel production URL** to Railway **`CORS_ORIGINS`** only if you restrict origins and this host is missing. The API also whitelists **`https://kurdistan-go.vercel.app`** in `_default_origins` when `CORS_ORIGINS` is non-empty.
+
 ---
 
 ## 4. Flutter app
 
 The app never opens PostgreSQL directly — it calls **HTTPS to your FastAPI URL on Railway**, and **Railway’s backend** uses `DATABASE_URL` for Postgres.
 
-**Defaults (`client/lib/config/api_config.dart`):**
+**Defaults (`client/lib/config/api_config.dart`):** release/profile use Railway; debug uses local FastAPI. To point **debug** at production or another host:
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://termproject-production.up.railway.app
+```
+
+For **local backend only** (debug):
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
 
 | Build mode | API URL when `API_BASE_URL` dart-define is **not** set |
 |------------|---------------------------------------------------------|

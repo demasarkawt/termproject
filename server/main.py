@@ -109,16 +109,23 @@ _default_origins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
+    "https://kurdistan-go.vercel.app",
 ]
 _disable_vercel_regex = os.getenv("CORS_DISABLE_VERCEL_REGEX", "").lower() in ("1", "true", "yes")
 _vercel_regex = os.getenv(
     "CORS_VERCEL_REGEX",
     r"https://([a-zA-Z0-9\-]+\.)*vercel\.app",
 )
+# Flutter web uses an ephemeral port (e.g. localhost:54112). When CORS_ORIGINS is set,
+# allow_origins is not "*", so we also match any localhost / 127.0.0.1 dev origin.
+_local_dev_origin_regex = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 if _extra_origins:
     _allow_origins = _extra_origins + _default_origins
-    _origin_regex = None if _disable_vercel_regex else _vercel_regex
+    if _disable_vercel_regex:
+        _origin_regex = _local_dev_origin_regex
+    else:
+        _origin_regex = f"(?:{_vercel_regex})|(?:{_local_dev_origin_regex})"
 else:
     _allow_origins = ["*"]
     _origin_regex = None

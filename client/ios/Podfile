@@ -44,10 +44,12 @@ post_install do |installer|
     # codesign to fail with "resource fork, Finder information, or similar detritus not allowed".
     strip_phase = target.new_shell_script_build_phase('Strip Extended Attributes')
     strip_phase.shell_script = <<~'SHELL'
-      find "${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}" \
-        -exec xattr -r -d com.apple.FinderInfo {} \; 2>/dev/null || true
-      find "${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}" \
-        -exec xattr -d com.apple.fileprovider.fpfs#P {} \; 2>/dev/null || true
+      # Xcode runs this with /bin/sh. Unquoted '#' starts a shell comment — the old fpfs#P line never ran.
+      # Clear all extended attributes so codesign accepts the product (FinderInfo, provenance, fileprovider, etc.).
+      if [ -n "${BUILT_PRODUCTS_DIR:-}" ] && [ -n "${FULL_PRODUCT_NAME:-}" ]; then
+        TARGET="${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}"
+        if [ -e "$TARGET" ]; then xattr -cr "$TARGET" 2>/dev/null || true; fi
+      fi
     SHELL
   end
 end

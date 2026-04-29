@@ -10,31 +10,31 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
 
-  /* Brand (constant in both modes) */
-  --color-sor: #7A1F1F;        /* Crimson */
-  --color-sor-soft: #B6444433;  /* tinted red */
-  --color-kesk: #3F4A2A;       /* Olive green */
-  --color-kesk-soft: #8FA86833;
-  --color-zer: #B8862F;        /* Aged gold */
-  --color-zer-soft: #B8862F1F;
-  --color-spi: #F5EFE2;        /* Bone paper */
-  --color-xweli: #5A3A22;      /* Earth umber */
-  --color-res: #1A1410;        /* Ink */
+  /* Brand (constant in both modes) — teal + violet + rose */
+  --color-sor: #BE185D;        /* Rose (alerts / emphasis) */
+  --color-sor-soft: #BE185D22;
+  --color-kesk: #0E7490;       /* Teal primary */
+  --color-kesk-soft: #0E749033;
+  --color-zer: #7C3AED;        /* Violet accent */
+  --color-zer-soft: #7C3AED1A;
+  --color-spi: #F1F5F9;        /* Cool paper */
+  --color-xweli: #475569;      /* Slate */
+  --color-res: #0F172A;        /* Ink */
 
   /* Semantic surface tokens — light defaults */
   --color-surface: #FFFFFF;
-  --color-surface-2: #F5EFE2;     /* spi - subtle paper */
-  --color-surface-3: #EDE6D6;     /* deeper paper */
+  --color-surface-2: #F1F5F9;
+  --color-surface-3: #E2E8F0;
   --color-card: #FFFFFF;
-  --color-border: #E7E0CF;
-  --color-text: #1A1410;
-  --color-text-muted: #6B6157;
-  --color-text-subtle: #948A7E;
+  --color-border: #CBD5E1;
+  --color-text: #0F172A;
+  --color-text-muted: #64748B;
+  --color-text-subtle: #94A3B8;
 
   /* Semantic state tokens */
-  --color-success: #3F4A2A;
-  --color-warning: #B8862F;
-  --color-danger: #7A1F1F;
+  --color-success: #0F766E;
+  --color-warning: #D97706;
+  --color-danger: #BE185D;
 
   --radius-card: 1.25rem;
   --radius-pill: 999px;
@@ -42,14 +42,14 @@
 
 /* Dark mode tokens — applied when html[data-theme="dark"] */
 [data-theme="dark"] {
-  --color-surface: #14110D;
-  --color-surface-2: #1A1410;
-  --color-surface-3: #221C16;
-  --color-card: #1F1A14;
-  --color-border: #3A322B;
-  --color-text: #F5EFE2;
-  --color-text-muted: #C8BFAF;
-  --color-text-subtle: #948A7E;
+  --color-surface: #0F172A;
+  --color-surface-2: #1E293B;
+  --color-surface-3: #334155;
+  --color-card: #1E293B;
+  --color-border: #475569;
+  --color-text: #F8FAFC;
+  --color-text-muted: #CBD5E1;
+  --color-text-subtle: #94A3B8;
 }
 
 @layer base {
