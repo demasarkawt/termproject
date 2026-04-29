@@ -1,16 +1,19 @@
 // Central API configuration for the Kurdistan Go backend.
 //
-// The dashboard and Flutter app share the same FastAPI backend.
+// Default matches production (same as dashboard `DEFAULT_API_URL`).
+// For a local FastAPI server, run with:
 //
-// Default is local development. Override without editing this file:
+//   flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000
 //
-//   flutter run --dart-define=API_BASE_URL=https://YOUR-RAILWAY-URL.up.railway.app
-//   flutter build apk --dart-define=API_BASE_URL=https://...
-//
-// Android emulator → host machine localhost:
+// Android emulator → host machine:
 //   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
+//
+// Other deploys:
+//   flutter build web --dart-define=API_BASE_URL=https://YOUR-API.up.railway.app
+
+const String kRailwayProdUrl = 'https://termproject-production.up.railway.app';
 
 const String kBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://127.0.0.1:8000',
+  defaultValue: kRailwayProdUrl,
 );

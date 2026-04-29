@@ -104,9 +104,13 @@ _default_origins = [
     "http://127.0.0.1:5000",
     "http://localhost:5173",
 ]
+# Flutter web uses an ephemeral port (e.g. localhost:54112). When CORS_ORIGINS is set,
+# allow_origins is not "*", so we also match any localhost / 127.0.0.1 dev origin.
+_LOCAL_DEV_ORIGIN_REGEX = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_extra_origins + _default_origins if _extra_origins else ["*"],
+    allow_origin_regex=_LOCAL_DEV_ORIGIN_REGEX if _extra_origins else None,
     allow_methods=["*"],
     allow_headers=["*"],
 )
