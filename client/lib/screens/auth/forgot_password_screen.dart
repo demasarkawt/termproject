@@ -92,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.canPop() ? context.pop() : context.go('/signin'),
                       icon: const Icon(Icons.arrow_back_ios_new),
                     ),
                   ],

@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../widgets/app_drawer.dart';
+import '../../services/theme_service.dart';
 
-// ✅ Used by Home (and any screen) to open drawer
 final GlobalKey<ScaffoldState> rootScaffoldKey = GlobalKey<ScaffoldState>();
 
 class AppShell extends StatefulWidget {
@@ -26,21 +27,11 @@ class _AppShellState extends State<AppShell> {
 
   void _goIndex(int i) {
     switch (i) {
-      case 0:
-        context.go('/home');
-        break;
-      case 1:
-        context.go('/explore');
-        break;
-      case 2:
-        context.go('/ai');
-        break;
-      case 3:
-        context.go('/events');
-        break;
-      case 4:
-        context.go('/profile');
-        break;
+      case 0: context.go('/home'); break;
+      case 1: context.go('/explore'); break;
+      case 2: context.go('/ai'); break;
+      case 3: context.go('/events'); break;
+      case 4: context.go('/profile'); break;
     }
   }
 
@@ -49,123 +40,325 @@ class _AppShellState extends State<AppShell> {
     final location = GoRouterState.of(context).uri.toString();
     final index = _indexFromLocation(location);
 
-    return Scaffold(
-      key: rootScaffoldKey,
-      drawer: const AppDrawer(),
-      body: SizedBox.expand(child: widget.child),
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, _) {
+        final isDark = ThemeService().isDark;
+        
+        return Scaffold(
+          key: rootScaffoldKey,
+          extendBody: true,
+          drawer: const AppDrawer(),
+          body: Stack(
+            children: [
+              widget.child,
 
-      // Custom 5-item bottom bar
-      bottomNavigationBar: KurdistanBottomNav(
-        index: index,
-        onChanged: _goIndex,
+              // ✅ GLOBAL ACTION OVERLAY (Theme & Map)
+              SafeArea(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10, right: 16),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _GlobalActionBtn(
+                          icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                          onTap: () => ThemeService().toggleTheme(),
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 10),
+                        _GlobalActionBtn(
+                          icon: Icons.map_rounded,
+                          onTap: () => context.go('/map'),
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: HeritageBottomNav(
+            index: index,
+            onChanged: _goIndex,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GlobalActionBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDark;
+
+  const _GlobalActionBtn({
+    required this.icon,
+    required this.onTap,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Material(
+          color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: KurdishHeritageColors.zer,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-// -------------------- Kurdistan custom Bottom Nav --------------------
-
-class KurdistanBottomNav extends StatelessWidget {
+class HeritageBottomNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
-  const KurdistanBottomNav({
+  const HeritageBottomNav({
     super.key,
     required this.index,
     required this.onChanged,
   });
 
-  static const items = <_NavItem>[
-    _NavItem(Icons.home_outlined, 'HOME'),
-    _NavItem(Icons.explore_outlined, 'EXPLORE'),
-    _NavItem(Icons.auto_awesome_outlined, 'AI'),
-    _NavItem(Icons.calendar_month_outlined, 'EVENTS'),
-    _NavItem(Icons.person_outline, 'PROFILE'),
+  static const items = <_HeritageItem>[
+    _HeritageItem(Icons.home_rounded, 'Home', KurdishHeritageColors.sor),
+    _HeritageItem(Icons.explore_rounded, 'Explore', KurdishHeritageColors.kesk),
+    _HeritageItem(Icons.auto_awesome_rounded, 'AI', KurdishHeritageColors.zer),
+    _HeritageItem(Icons.calendar_today_rounded, 'Events', Color(0xFF1E3A8A)),
+    _HeritageItem(Icons.person_rounded, 'Profile', KurdishHeritageColors.xweli),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).padding.bottom;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottom),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
+      height: 110 + bottomPadding,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Background Bar (The brown strip from the image)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                height: 64,
+                decoration: BoxDecoration(
+                  color: KurdishHeritageColors.xweli.withOpacity(isDark ? 0.8 : 0.9),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Connecting Line
+          Positioned(
+            left: 50,
+            right: 50,
+            child: Container(
+              height: 1.5,
+              color: KurdishHeritageColors.zer.withOpacity(0.4),
+            ),
+          ),
+
+          // Nav Items (Diamonds)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (i) {
+              final isSelected = i == index;
+              return GestureDetector(
+                onTap: () => onChanged(i),
+                behavior: HitTestBehavior.opaque,
+                child: _DiamondNavBtn(
+                  item: items[i],
+                  isSelected: isSelected,
+                ),
+              );
+            }),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(items.length, (i) {
-          final isSelected = i == index;
-          return _NavBtn(
-            item: items[i],
-            isSelected: isSelected,
-            onTap: () => onChanged(i),
-          );
-        }),
-      ),
     );
   }
 }
 
-class _NavBtn extends StatelessWidget {
-  final _NavItem item;
+class _DiamondNavBtn extends StatefulWidget {
+  final _HeritageItem item;
   final bool isSelected;
-  final VoidCallback onTap;
 
-  const _NavBtn({
+  const _DiamondNavBtn({
     required this.item,
     required this.isSelected,
-    required this.onTap,
   });
 
   @override
+  State<_DiamondNavBtn> createState() => _DiamondNavBtnState();
+}
+
+class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFA726) : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              item.icon,
-              size: 24,
-              color: isSelected ? const Color(0xFF422006) : Colors.grey.shade600,
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 400),
+      scale: widget.isSelected ? 1.1 : 1.0,
+      curve: Curves.elasticOut,
+      child: AnimatedBuilder(
+        animation: _pulseCtrl,
+        builder: (context, child) {
+          // Subtle Parallax/Tilt effect when selected
+          final pulseValue = widget.isSelected ? _pulseCtrl.value : 0.0;
+          final offset = Offset(0, -pulseValue * 4); // Breathe up effect
+
+          return Transform.translate(
+            offset: offset,
+            child: SizedBox(
+              width: 60, // Fixed width for each item to prevent horizontal shifts
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Outer Diamond (Parallax Glow)
+                    if (widget.isSelected)
+                      Transform.rotate(
+                        angle: 0.785,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: widget.item.color.withOpacity(0.3 * _pulseCtrl.value),
+                                blurRadius: 20 * _pulseCtrl.value,
+                                spreadRadius: 4 * _pulseCtrl.value,
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    
+                    // Main Diamond
+                    Transform.rotate(
+                      angle: 0.785398,
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: widget.item.color,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: widget.isSelected ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(4, 4),
+                            )
+                          ] : [],
+                        ),
+                      ),
+                    ),
+                    // Inner White Diamond
+                    Transform.rotate(
+                      angle: 0.785398,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    // Icon
+                    Icon(
+                      widget.item.icon,
+                      size: 20,
+                      color: widget.isSelected ? Colors.black87 : Colors.black45,
+                    ),
+                  ],
+                ),
+                // Fixed height label container to prevent overflow/layout shifts
+                SizedBox(
+                  height: 20,
+                  child: Center(
+                    child: widget.isSelected
+                        ? Text(
+                            widget.item.label,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? const Color(0xFF422006) : Colors.grey.shade600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
-        ),
+          ),
+          );
+        },
       ),
     );
   }
 }
 
-class _NavItem {
+class _HeritageItem {
   final IconData icon;
   final String label;
-  const _NavItem(this.icon, this.label);
+  final Color color;
+  const _HeritageItem(this.icon, this.label, this.color);
 }

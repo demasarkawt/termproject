@@ -1,285 +1,211 @@
-// lib/widgets/app_drawer.dart
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/user_session.dart';
+import '../services/theme_service.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Drawer(
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Stack(
         children: [
-          // ✅ Background blur (behind the drawer)
+          // Background blur
           Positioned.fill(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
               child: Container(
-                color: Colors.black.withOpacity(0.10),
+                color: isDark 
+                  ? KurdishHeritageColors.res.withOpacity(0.8) 
+                  : KurdishHeritageColors.spi.withOpacity(0.9),
               ),
             ),
           ),
 
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: _Glass(
-                radius: 30,
-                // a bit less blur INSIDE so text stays sharp
-                blur: 14,
-                // ✅ more visible panel
-                tint: Colors.white.withOpacity(0.30),
-                borderColor: Colors.white.withOpacity(0.35),
-                shadow: const [
-                  BoxShadow(
-                    blurRadius: 55,
-                    offset: Offset(0, 24),
-                    color: Color(0x26000000),
-                  ),
-                ],
-                // ✅ extra “readability” layer
-                readabilityFill: Colors.white.withOpacity(0.22),
-                child: Column(
-                  children: [
-                    _Header(onClose: () => Navigator.of(context).pop()),
-                    const SizedBox(height: 10),
+            child: Column(
+              children: [
+                _Header(isDark: isDark, onClose: () => Navigator.of(context).pop()),
+                
+                // Heritage Pattern Divider
+                const _HeritagePatternDivider(),
 
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(12, 6, 12, 14),
-                        children: [
-                          const _SectionTitle('Main'),
-                          const SizedBox(height: 10),
-
-                          _Tile(
-                            icon: Icons.home_rounded,
-                            title: 'Home',
-                            subtitle: 'Cities & categories',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.go('/home');
-                            },
-                          ),
-                          _Tile(
-                            icon: Icons.bookmark_rounded,
-                            title: 'Saved',
-                            subtitle: 'Your favorite places',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.go('/favorites');
-                            },
-                          ),
-                          _Tile(
-                            icon: Icons.map_rounded,
-                            title: 'Map',
-                            subtitle: 'Explore on the map',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.go('/map');
-                            },
-                          ),
-                          _Tile(
-                            icon: Icons.person_rounded,
-                            title: 'Profile',
-                            subtitle: 'Account & settings',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              context.go('/profile');
-                            },
-                          ),
-
-                          const SizedBox(height: 18),
-                          const _SectionTitle('Shortcuts'),
-                          const SizedBox(height: 10),
-
-                          _CityChips(
-                            onCityTap: (id) {
-                              Navigator.of(context).pop();
-                              context.go('/city/$id');
-                            },
-                          ),
-
-                          const SizedBox(height: 20),
-                          const _SectionTitle('Support'),
-                          const SizedBox(height: 10),
-
-                          _Tile(
-                            icon: Icons.info_rounded,
-                            title: 'About',
-                            subtitle: 'App information',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('About page coming soon')),
-                              );
-                            },
-                          ),
-                          _Tile(
-                            icon: Icons.help_rounded,
-                            title: 'Help',
-                            subtitle: 'FAQ & contact',
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Help page coming soon')),
-                              );
-                            },
-                          ),
-                        ],
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                    children: [
+                      _SectionTitle('Main Exploration', isDark),
+                      const SizedBox(height: 12),
+                      _Tile(
+                        icon: Icons.home_rounded,
+                        title: 'Home',
+                        subtitle: 'Kurdistan Cities',
+                        accent: KurdishHeritageColors.sor,
+                        isDark: isDark,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go('/home');
+                        },
                       ),
-                    ),
+                      _Tile(
+                        icon: Icons.bookmark_rounded,
+                        title: 'Saved Places',
+                        subtitle: 'Your heritage favorites',
+                        accent: KurdishHeritageColors.kesk,
+                        isDark: isDark,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go('/favorites');
+                        },
+                      ),
+                      _Tile(
+                        icon: Icons.map_rounded,
+                        title: 'Map View',
+                        subtitle: 'Interactive exploration',
+                        accent: KurdishHeritageColors.zer,
+                        isDark: isDark,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go('/explore');
+                        },
+                      ),
 
-                    const _BottomBar(),
-                  ],
+                      const SizedBox(height: 24),
+                      _SectionTitle('Cultural Services', isDark),
+                      const SizedBox(height: 12),
+                      _Tile(
+                        icon: Icons.auto_awesome_rounded,
+                        title: 'AI Travel Guide',
+                        subtitle: 'Your personal Kurdish assistant',
+                        accent: const Color(0xFF1E3A8A),
+                        isDark: isDark,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go('/ai');
+                        },
+                      ),
+                      _Tile(
+                        icon: Icons.event_note_rounded,
+                        title: 'Cultural Events',
+                        subtitle: 'Upcoming festivals',
+                        accent: KurdishHeritageColors.xweli,
+                        isDark: isDark,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go('/events');
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+                const _Footer(),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Glass extends StatelessWidget {
-  final Widget child;
-  final double radius;
-  final double blur;
-  final Color tint;
-  final Color borderColor;
-  final List<BoxShadow> shadow;
-
-  // ✅ makes text readable without killing the glass effect
-  final Color readabilityFill;
-
-  const _Glass({
-    required this.child,
-    required this.radius,
-    required this.blur,
-    required this.tint,
-    required this.borderColor,
-    required this.shadow,
-    required this.readabilityFill,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tint,
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(color: borderColor),
-            boxShadow: shadow,
-          ),
-          child: Stack(
-            children: [
-              // readability layer
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: readabilityFill),
-                  ),
-                ),
-              ),
-              // subtle highlight
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.20),
-                          Colors.white.withOpacity(0.06),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              child,
-            ],
-          ),
-        ),
       ),
     );
   }
 }
 
 class _Header extends StatelessWidget {
+  final bool isDark;
   final VoidCallback onClose;
-  const _Header({required this.onClose});
+  const _Header({required this.isDark, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      padding: const EdgeInsets.all(24),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              'assets/images/KGO.png',
-              width: 44,
-              height: 44,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.35),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black.withOpacity(0.05)),
-                ),
-                child: const Icon(Icons.image, color: Color(0xFF0F766E)),
-              ),
+          Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              border: Border.all(color: KurdishHeritageColors.zer, width: 2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.asset('assets/images/KGO.png', width: 50, height: 50, fit: BoxFit.cover),
             ),
           ),
-          const SizedBox(width: 12),
-          const Expanded(
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Kurdistan GO',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 15,
-                    color: Color(0xFF0B1F1E),
+                    fontSize: 20,
+                    color: isDark ? Colors.white : KurdishHeritageColors.res,
                   ),
                 ),
-                SizedBox(height: 3),
                 Text(
-                  'Explore, save, and plan',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  'Heritage Edition',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
-                    color: Color(0xFF415463),
+                    color: KurdishHeritageColors.zer,
                   ),
                 ),
               ],
             ),
           ),
-          _CircleGlassBtn(
-            icon: Icons.close_rounded,
-            onTap: onClose,
+          IconButton(
+            onPressed: onClose,
+            icon: Icon(Icons.close_rounded, color: isDark ? Colors.white54 : Colors.black54),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeritagePatternDivider extends StatelessWidget {
+  const _HeritagePatternDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 20,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (int i = 0; i < 5; i++)
+            _Diamond(color: i % 2 == 0 ? KurdishHeritageColors.sor : KurdishHeritageColors.kesk),
+        ],
+      ),
+    );
+  }
+}
+
+class _Diamond extends StatelessWidget {
+  final Color color;
+  const _Diamond({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.785,
+      child: Container(
+        width: 10,
+        height: 10,
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: Colors.white.withOpacity(0.3)),
+        ),
       ),
     );
   }
@@ -289,139 +215,67 @@ class _Tile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color accent;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _Tile({
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.accent,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: _Glass(
-        radius: 22,
-        blur: 10,
-        tint: Colors.white.withOpacity(0.26),
-        borderColor: Colors.white.withOpacity(0.34),
-        shadow: const [
-          BoxShadow(
-            blurRadius: 18,
-            offset: Offset(0, 10),
-            color: Color(0x14000000),
-          )
-        ],
-        readabilityFill: Colors.white.withOpacity(0.18),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F766E).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
-                    ),
-                    child: Icon(icon, color: const Color(0xFF0F766E)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14,
-                            color: Color(0xFF0B1F1E),
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: Color(0xFF415463),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right_rounded, color: Color(0xFF0F766E)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CityChips extends StatelessWidget {
-  final void Function(String cityId) onCityTap;
-  const _CityChips({required this.onCityTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final cities = const [
-      ('erbil', 'Erbil'),
-      ('sulaymaniyah', 'Sulaymaniyah'),
-      ('duhok', 'Duhok'),
-      ('halabja', 'Halabja'),
-    ];
-
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final c in cities)
-          _Chip(label: c.$2, onTap: () => onCityTap(c.$1)),
-      ],
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _Chip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Glass(
-      radius: 999,
-      blur: 10,
-      tint: Colors.white.withOpacity(0.22),
-      borderColor: Colors.white.withOpacity(0.32),
-      shadow: const [],
-      readabilityFill: Colors.white.withOpacity(0.14),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(20),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
-                color: Color(0xFF0F766E),
-              ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: accent, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: isDark ? Colors.white : KurdishHeritageColors.res,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24)),
+              ],
             ),
           ),
         ),
@@ -432,93 +286,56 @@ class _Chip extends StatelessWidget {
 
 class _SectionTitle extends StatelessWidget {
   final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: const TextStyle(
-        fontWeight: FontWeight.w900,
-        fontSize: 11,
-        letterSpacing: 1.2,
-        color: Color(0xFF465A6A),
-      ),
-    );
-  }
-}
-
-class _BottomBar extends StatelessWidget {
-  const _BottomBar();
+  final bool isDark;
+  const _SectionTitle(this.text, this.isDark);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _Glass(
-              radius: 18,
-              blur: 10,
-              tint: Colors.white.withOpacity(0.22),
-              borderColor: Colors.white.withOpacity(0.32),
-              shadow: const [],
-              readabilityFill: Colors.white.withOpacity(0.14),
-              child: const SizedBox(
-                height: 44,
-                child: Center(
-                  child: Text(
-                    'v1.0',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF465A6A),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          _CircleGlassBtn(
-            icon: Icons.logout_rounded,
-            onTap: () async {
-              Navigator.of(context).pop();
-              await UserSession.clear();
-              if (context.mounted) context.go('/signin');
-            },
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 11,
+          letterSpacing: 2,
+          color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3),
+        ),
       ),
     );
   }
 }
 
-class _CircleGlassBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _CircleGlassBtn({required this.icon, required this.onTap});
+class _Footer extends StatelessWidget {
+  const _Footer();
 
   @override
   Widget build(BuildContext context) {
-    return _Glass(
-      radius: 999,
-      blur: 10,
-      tint: Colors.white.withOpacity(0.22),
-      borderColor: Colors.white.withOpacity(0.32),
-      shadow: const [],
-      readabilityFill: Colors.white.withOpacity(0.14),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Icon(icon, color: const Color(0xFF0F766E)),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'v1.2 Heritage',
+                style: TextStyle(color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3), fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  await UserSession.clear();
+                  if (context.mounted) context.go('/signin');
+                },
+                child: Text(
+                  'LOGOUT',
+                  style: TextStyle(color: KurdishHeritageColors.sor, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1),
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/place_repo.dart';
-import '../../widgets/glass.dart';
 import '../../widgets/place_image.dart';
+import '../../services/theme_service.dart';
 
 class PlacesListScreen extends StatefulWidget {
   final String cityId;
@@ -21,146 +21,171 @@ class PlacesListScreen extends StatefulWidget {
 }
 
 class _PlacesListScreenState extends State<PlacesListScreen> {
-  String? _selectedFilter;
-
   @override
   Widget build(BuildContext context) {
-    final allPlaces = PlaceRepo.list(cityId: widget.cityId, categoryId: widget.categoryId);
-    
-    // Apply filtering based on selected chip
-    final places = _selectedFilter == null 
-        ? allPlaces 
-        : allPlaces.where((p) => p.highlights.contains(_selectedFilter)).toList();
-
-    final cityName = _cityTitle(widget.cityId);
-    final catName = _catTitle(widget.categoryId);
-    final filters = PlaceRepo.highlightsFor(widget.categoryId);
+    final name = _catTitle(widget.categoryId);
+    final places = PlaceRepo.list(cityId: widget.cityId, categoryId: widget.categoryId);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FFFB),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            pinned: true,
-            centerTitle: true,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: _CircleGlassBtn(
-                icon: Icons.arrow_back_ios_new_rounded,
-                onTap: () => context.pop(),
-              ),
-            ),
-            title: Glass(
-              radius: 999,
-              blur: 16,
-              opacity: 0.18,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Text(
-                '$cityName • $catName',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0B3D3B),
-                ),
-              ),
-            ),
-          ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // ── Background Glows ──────────────────────────────────────────
+          _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.1), -100, 100, 400),
+          _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.1), 300, 400, 300),
 
-          // ✅ Horizontal Filter Chips
-          if (filters.isNotEmpty)
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 50,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filters.length,
-                  itemBuilder: (context, i) {
-                    final f = filters[i];
-                    final isSelected = _selectedFilter == f;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedFilter = isSelected ? null : f;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF1F5E37) : Colors.white,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: isSelected ? const Color(0xFF1F5E37) : Colors.black.withOpacity(0.08),
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── Header ───────────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildGlassCircleBtn(Icons.arrow_back_ios_new_rounded, () => context.canPop() ? context.pop() : context.go('/home'), isDark),
+                            Text(
+                              'EXPLORE',
+                              style: TextStyle(
+                                color: KurdishHeritageColors.zer,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14,
+                                letterSpacing: 4,
+                              ),
                             ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            f,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                              color: isSelected ? Colors.white : const Color(0xFF64748B),
-                            ),
+                            _buildGlassCircleBtn(Icons.tune_rounded, () {}, isDark),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        Text(
+                          name,
+                          style: TextStyle(
+                            color: isDark ? Colors.white : KurdishHeritageColors.res,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 36,
+                            letterSpacing: -1.5,
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
-            sliver: places.isEmpty
-                ? SliverToBoxAdapter(
-              child: Glass(
-                radius: 22,
-                blur: 16,
-                opacity: 0.16,
-                padding: const EdgeInsets.all(16),
-                child: const Text(
-                  'No places added for this category yet.',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF64748B),
+                        Text(
+                          '${places.length} spectacular places to visit',
+                          style: TextStyle(
+                            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            )
-                : SliverList.separated(
-              itemCount: places.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final p = places[i];
-                return _IOSGlassPlaceCard(
-                  place: p,
-                  onTap: () => context.go('/place/${p.id}'),
-                );
-              },
-            ),
+
+              // ── Filter Chips ─────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 24),
+                  child: _buildGlassFilterRow(isDark),
+                ),
+              ),
+
+              // ── Places List ──────────────────────────────────────────────
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 30, 24, 150),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: _ProPlaceCard(
+                        place: places[i],
+                        onTap: () => context.go('/place/${places[i].id}'),
+                      ),
+                    ),
+                    childCount: places.length,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  String _cityTitle(String id) {
-    switch (id) {
-      case 'erbil': return 'Erbil';
-      case 'sulaymaniyah': return 'Sulaymaniyah';
-      case 'duhok': return 'Duhok';
-      case 'halabja': return 'Halabja';
-      default: return 'City';
-    }
+  Widget _buildGlowBlob(Color color, double left, double top, double size) {
+    return Positioned(
+      left: left,
+      top: top,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color,
+              blurRadius: 100,
+              spreadRadius: 50,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassCircleBtn(IconData icon, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+          shape: BoxShape.circle,
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        ),
+        child: Icon(icon, color: isDark ? Colors.white : KurdishHeritageColors.res, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildGlassFilterRow(bool isDark) {
+    final filters = ['All', 'Popular', 'Nearest', 'Top Rated'];
+    return SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: filters.length,
+        itemBuilder: (context, i) {
+          final isSelected = i == 0;
+          return Container(
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: isSelected ? KurdishHeritageColors.zer : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: isSelected ? Colors.white.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05))),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              filters[i],
+              style: TextStyle(
+                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   String _catTitle(String id) {
@@ -176,30 +201,27 @@ class _PlacesListScreenState extends State<PlacesListScreen> {
   }
 }
 
-class _IOSGlassPlaceCard extends StatelessWidget {
+class _ProPlaceCard extends StatelessWidget {
   final PlaceData place;
   final VoidCallback onTap;
-
-  const _IOSGlassPlaceCard({
-    required this.place,
-    required this.onTap,
-  });
+  const _ProPlaceCard({required this.place, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(26),
+      child: Container(
+        height: 380,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.1), width: 1.5),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: PlaceImage(
-                imagePath: place.coverImage,
-                title: place.title,
-                fit: BoxFit.cover,
-              ),
+            Positioned.fill(
+              child: PlaceImage(imagePath: place.coverImage, title: place.title, fit: BoxFit.cover),
             ),
             Positioned.fill(
               child: DecoratedBox(
@@ -208,120 +230,71 @@ class _IOSGlassPlaceCard extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.05),
-                      Colors.black.withOpacity(0.62),
+                      Colors.black.withOpacity(0.2),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.9),
                     ],
                   ),
                 ),
               ),
             ),
             Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: Glass(
-                radius: 22,
-                blur: 18,
-                opacity: 0.16,
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.14),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white.withOpacity(0.22)),
-                      ),
-                      child: const Icon(Icons.place_rounded, color: Colors.white),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            place.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 15,
-                            ),
+              left: 24,
+              right: 24,
+              bottom: 24,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          place.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 22,
+                            letterSpacing: -0.5,
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_rounded,
-                                  size: 14, color: Colors.white),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  place.locationText,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.88),
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, size: 14, color: KurdishHeritageColors.zer),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                place.locationText,
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
                                 ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F766E),
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 18,
-                            offset: Offset(0, 10),
-                            color: Color(0x22000000),
-                          )
-                        ],
-                      ),
-                      child: const Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
                     ),
-                  ],
-                ),
+                    child: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CircleGlassBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CircleGlassBtn({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withOpacity(0.22),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Icon(icon, color: Colors.white),
         ),
       ),
     );

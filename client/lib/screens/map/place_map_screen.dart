@@ -7,6 +7,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
+import '../../services/theme_service.dart';
+
+
 
 class PlaceMapScreen extends StatefulWidget {
   final String title;
@@ -270,16 +274,21 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.termproject',
+                  tileProvider: CancellableNetworkTileProvider(),
                 ),
 
-                // ✅ REAL ROAD polyline (glow + main)
+                // ✅ CINEMATIC HERITAGE polyline (glow + main)
                 if (_route.isNotEmpty)
                   PolylineLayer(
                     polylines: [
-                      Polyline(points: _route, strokeWidth: 12, color: const Color(0x660F766E)),
-                      Polyline(points: _route, strokeWidth: 5, color: const Color(0xFF0F766E)),
+                      // Outer glow
+                      Polyline(points: _route, strokeWidth: 14, color: KurdishHeritageColors.zer.withOpacity(0.2)),
+                      Polyline(points: _route, strokeWidth: 8, color: KurdishHeritageColors.sor.withOpacity(0.4)),
+                      // Main line
+                      Polyline(points: _route, strokeWidth: 4, color: KurdishHeritageColors.sor),
                     ],
                   ),
+
 
                 MarkerLayer(
                   markers: [
@@ -305,17 +314,39 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _GlassPill(
-                      child: Row(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.place_rounded, size: 18, color: Color(0xFF0F766E)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              widget.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.w900),
-                            ),
+                          Row(
+                            children: [
+                              const Icon(Icons.place_rounded, size: 18, color: KurdishHeritageColors.sor),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  widget.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          // Decorative heritage line
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for(int i=0; i<3; i++)
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                                  transform: Matrix4.rotationZ(0.785),
+                                  decoration: BoxDecoration(
+                                    color: KurdishHeritageColors.zer.withOpacity(0.5),
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),
@@ -359,7 +390,8 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.directions_rounded, color: Color(0xFF0F766E)),
+                          const Icon(Icons.directions_rounded, color: KurdishHeritageColors.sor),
+
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -372,7 +404,7 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                           if (_distanceKm != null)
                             Text(
                               '${_distanceKm!.toStringAsFixed(1)} km',
-                              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0B3D3B)),
+                              style: const TextStyle(fontWeight: FontWeight.w900, color: KurdishHeritageColors.sor),
                             ),
                         ],
                       ),
@@ -383,7 +415,7 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                             _etaMin == null ? 'ETA —' : 'ETA $_etaMin min',
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0B3D3B).withOpacity(0.75),
+                              color: KurdishHeritageColors.res.withOpacity(0.75),
                             ),
                           ),
                           const Spacer(),
@@ -392,7 +424,7 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
                               'GPS ${_accuracyM!.toStringAsFixed(0)}m',
                               style: TextStyle(
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0B3D3B).withOpacity(0.55),
+                                color: KurdishHeritageColors.res.withOpacity(0.55),
                               ),
                             ),
                         ],
@@ -507,7 +539,7 @@ class _GlassCircleBtn extends StatelessWidget {
             child: SizedBox(
               width: 46,
               height: 46,
-              child: Icon(icon, color: const Color(0xFF0F766E)),
+              child: Icon(icon, color: KurdishHeritageColors.sor),
             ),
           ),
         ),
@@ -530,7 +562,7 @@ class _PrimaryBtn extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0F766E),
+          backgroundColor: KurdishHeritageColors.sor,
           foregroundColor: Colors.white,
           shape: const StadiumBorder(),
           elevation: 10,
@@ -556,8 +588,8 @@ class _SecondaryBtn extends StatelessWidget {
       child: OutlinedButton.icon(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF0F766E),
-          side: BorderSide(color: const Color(0xFF0F766E).withOpacity(0.25)),
+          foregroundColor: KurdishHeritageColors.res,
+          side: BorderSide(color: KurdishHeritageColors.res.withOpacity(0.25)),
           shape: const StadiumBorder(),
           backgroundColor: Colors.white.withOpacity(0.28),
         ),
@@ -576,7 +608,7 @@ class _DestPin extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        const Icon(Icons.location_pin, size: 56, color: Color(0xFF0F766E)),
+        const Icon(Icons.location_pin, size: 56, color: KurdishHeritageColors.sor),
         Positioned(
           top: 14,
           child: Container(
@@ -585,11 +617,12 @@ class _DestPin extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: KurdishHeritageColors.zer, width: 2),
               boxShadow: const [
                 BoxShadow(blurRadius: 10, offset: Offset(0, 6), color: Color(0x22000000)),
               ],
             ),
-            child: const Icon(Icons.flag_rounded, size: 16, color: Color(0xFF0F766E)),
+            child: const Icon(Icons.flag_rounded, size: 16, color: KurdishHeritageColors.zer),
           ),
         ),
       ],
@@ -609,7 +642,7 @@ class _MeMarker extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: const Color(0x332563EB),
+            color: KurdishHeritageColors.zer.withOpacity(0.2),
             borderRadius: BorderRadius.circular(999),
           ),
         ),
@@ -617,7 +650,7 @@ class _MeMarker extends StatelessWidget {
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: const Color(0xFF2563EB),
+            color: KurdishHeritageColors.zer,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(color: Colors.white, width: 3),
           ),

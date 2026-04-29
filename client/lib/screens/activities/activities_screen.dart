@@ -15,6 +15,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   Widget build(BuildContext context) {
     const primaryGreen = Color(0xFF1F5E37);
     const backgroundLight = Color(0xFFF9FAFB);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: backgroundLight,
@@ -32,10 +33,13 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
-                          children: const [
-                            Icon(Icons.location_on_outlined, color: primaryGreen),
-                            SizedBox(width: 4),
-                            Text('Kurdistan Go', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen)),
+                          children: [
+                            GestureDetector(
+                              onTap: () => context.canPop() ? context.pop() : context.go('/home'),
+                              child: const Icon(Icons.arrow_back_ios_new_rounded, color: primaryGreen, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Kurdistan Go', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen)),
                           ],
                         ),
                         Row(
@@ -82,7 +86,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                             const SizedBox(height: 12),
                             const Text(
                               'Signature\nDolma',
-                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, fontFamily: 'serif', color: Colors.white, height: 1.1),
+                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
                             ),
                             const SizedBox(height: 8),
                             const Text(
@@ -121,10 +125,10 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text('Dish Explorer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'serif')),
-                            SizedBox(height: 2),
-                            Text('Stories behind the flavors', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          children: [
+                            Text('Dish Explorer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                            const SizedBox(height: 2),
+                            const Text('Stories behind the flavors', style: TextStyle(fontSize: 12, color: Colors.grey)),
                           ],
                         ),
                         Row(
@@ -228,9 +232,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   const SizedBox(height: 30),
 
                   // Eat Like a Local Header
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text('Eat Like a Local', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'serif')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text('Eat Like a Local', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
                   ),
                   const SizedBox(height: 16),
 
@@ -324,7 +328,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, fontFamily: 'serif')),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
           Text(desc, style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.3), maxLines: 3, overflow: TextOverflow.ellipsis),
         ],
@@ -382,7 +386,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, fontFamily: 'serif', height: 1.2)),
+                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, height: 1.2)),
                     Row(
                       children: [
                         Text(rating, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
@@ -431,7 +435,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, fontFamily: 'serif', color: Colors.white)),
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
             const SizedBox(height: 4),
             Text(subtitle, style: const TextStyle(fontSize: 10, color: Colors.white70)),
           ],

@@ -8,7 +8,7 @@ class Onboarding1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OnboardingPage(
-      backgroundAsset: 'assets/images/qallat.JPEG',
+      backgroundAsset: 'assets/images/place_citadel.png',
       icon: Icons.location_on,
       title: 'Welcome to Kurdistan',
       subtitle: 'Discover the cradle of civilization, where\nancient history meets modern beauty',

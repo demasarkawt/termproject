@@ -4,8 +4,10 @@ import 'app_router.dart';
 import 'data/favorites_store.dart';
 import 'data/favorites_scope.dart';
 import 'services/user_session.dart';
+import 'services/theme_service.dart';
 
 final favoritesStore = FavoritesStore();
+final themeService = ThemeService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +20,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FavoritesScope(
-      notifier: favoritesStore,
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: appRouter,
-      ),
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) {
+        return FavoritesScope(
+          notifier: favoritesStore,
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Kurdistan Travel',
+            theme: themeService.lightTheme,
+            darkTheme: themeService.darkTheme,
+            themeMode: themeService.themeMode,
+            routerConfig: appRouter,
+          ),
+        );
+      },
     );
   }
 }

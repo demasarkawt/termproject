@@ -1,6 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'ai_search_bottom_sheet.dart';
+import '../../services/theme_service.dart';
+import '../../services/weather_service.dart';
+import '../../data/place_repo.dart';
+
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -11,7 +16,32 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   String? _selectedFilter;
-  final _scrollCtrl = ScrollController();
+  final ScrollController _scrollCtrl = ScrollController();
+  double _scrollOffset = 0.0;
+  Map<String, CityWeather> _weatherMap = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollCtrl.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollCtrl.offset;
+      });
+    });
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    try {
+      final list = await WeatherService.fetchAll();
+      if (mounted) {
+        setState(() {
+          _weatherMap = {for (final w in list) w.city: w};
+        });
+      }
+    } catch (_) {}
+  }
+
 
   @override
   void dispose() {
@@ -21,489 +51,384 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF1F5E37);
-    const backgroundLight = Color(0xFFF9FAFB);
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, _) {
+        final isDark = ThemeService().isDark;
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => context.go('/map'),
+            backgroundColor: KurdishHeritageColors.zer,
+            icon: const Icon(Icons.map_rounded, color: Colors.white),
+            label: const Text('VIEW MAP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 2)),
+          ),
+          body: Stack(
 
-    return Scaffold(
-      backgroundColor: backgroundLight,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                // Top Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
 
-                      Row(
-                        children: const [
-                          Icon(Icons.location_on_outlined, color: primaryGreen),
-                          SizedBox(width: 4),
-                          Text(
-                            'Kurdistan Go',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: primaryGreen,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Icon(Icons.wb_sunny_outlined, color: Colors.green),
-                    ],
-                  ),
-                ),
+        children: [
+          // ── Background Glows ──────────────────────────────────────────
+          _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.05), -100, 100, 400),
+          _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.05), 300, 400, 300),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollCtrl,
+          SafeArea(
+            child: CustomScrollView(
+              controller: _scrollCtrl,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // ── Top Header ────────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Map Section
-                        SizedBox(
-                          height: 300,
-                          child: Stack(
-                            children: [
-                              // Map Background Placeholder (Topographic effect)
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  image: const DecorationImage(
-                                    image: AssetImage('assets/images/sulaymaniyah.jpg'), // using as placeholder
-                                    fit: BoxFit.cover,
-                                    colorFilter: ColorFilter.mode(Colors.grey, BlendMode.saturation),
-                                  ),
-                                ),
-                              ),
-                              Container(color: Colors.white.withOpacity(0.5)),
-
-                              // Search Bar inside map
-                              Positioned(
-                                top: 20,
-                                left: 20,
-                                right: 20,
-                                child: GestureDetector(
-                                  onTap: () => showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (_) => const AiSearchBottomSheet(),
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.fromLTRB(16, 6, 6, 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.9),
-                                      borderRadius: BorderRadius.circular(30),
-                                      boxShadow: [
-                                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.search, color: Colors.grey, size: 20),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            'Search heritage sites, waterfalls, canyons...',
-                                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.2),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () => context.go('/ai'),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Row(
-                                              children: const [
-                                                Icon(Icons.auto_awesome, color: Colors.white, size: 14),
-                                                SizedBox(width: 4),
-                                                Text('Ask AI', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Pins (tappable)
-                              _buildMapPin(context, 100, 150, 'Duhok', 'duhok'),
-                              _buildMapPin(context, 160, 220, 'Erbil Citadel', 'erbil'),
-                              _buildMapPin(context, 200, 240, 'Sulaymaniyah', 'sulaymaniyah'),
-
-                              // List View Toggle
-                              Positioned(
-                                bottom: 20,
-                                right: 20,
-                                child: GestureDetector(
-                                  onTap: () => _scrollCtrl.animateTo(
-                                    320,
-                                    duration: const Duration(milliseconds: 400),
-                                    curve: Curves.easeOut,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: const [
-                                        Icon(Icons.list, size: 16, color: primaryGreen),
-                                        SizedBox(width: 6),
-                                        Text('LIST VIEW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: primaryGreen)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                        const Text(
+                          'EXPLORE',
+                          style: TextStyle(
+                            color: KurdishHeritageColors.zer,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            letterSpacing: 4,
                           ),
                         ),
-
-                        // Chips
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => setState(() => _selectedFilter = null),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                  decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(20)),
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.tune, size: 14, color: Color(0xFF422006)),
-                                      SizedBox(width: 4),
-                                      Text('Filters', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF422006))),
-                                    ],
-                                  ),
-                                ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Discover\nKurdistan',
+                              style: TextStyle(
+                                color: isDark ? Colors.white : KurdishHeritageColors.res,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 36,
+                                height: 1.1,
+                                letterSpacing: -1.5,
                               ),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Erbil'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Sulaymaniyah'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Duhok'),
-                              const SizedBox(width: 8),
-                              _buildFilterChip('Halabja'),
-                            ],
-                          ),
-                        ),
-
-                        // List of Places
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            children: [
-                              GestureDetector(onTap: () => context.go('/place/rawanduz-canyon'), child: _buildCanyonCard()),
-                              const SizedBox(height: 20),
-                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildCitadelCard()),
-                              const SizedBox(height: 20),
-                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildBekhalCard()),
-                              const SizedBox(height: 20),
-                              GestureDetector(onTap: () => context.go('/city/erbil'), child: _buildMountCard()),
-                              const SizedBox(height: 100), // FAB padding
-                            ],
-                          ),
+                            ),
+                            const SizedBox.shrink(),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
 
-            // Floating Action Button
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => const AiSearchBottomSheet(),
-                ),
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFA726),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFFFA726).withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
-                    ],
+                // ── Search & Map Integration ──────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: _buildGlassSearch(context, isDark),
                   ),
-                  child: const Icon(Icons.qr_code_scanner, color: Color(0xFF422006)),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildMapPin(BuildContext context, double top, double left, String name, String cityId) {
-    return Positioned(
-      top: top,
-      left: left,
-      child: GestureDetector(
-        onTap: () => context.go('/city/$cityId'),
-        child: Column(
-          children: [
-            const Icon(Icons.location_on, color: Color(0xFF1F5E37), size: 30),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
-              ),
-              child: Text(name, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF1F5E37))),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label) {
-    final isSelected = _selectedFilter == label;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedFilter = isSelected ? null : label),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1F5E37) : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCanyonCard() {
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: const DecorationImage(image: AssetImage('assets/images/shanadar.JPEG'), fit: BoxFit.cover),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
-            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(12)),
-                  child: const Text('SPRING PEAK', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                // ── Filter Chips ──────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                    child: Row(
+                      children: [
+                        _buildFilterBtn(isDark),
+                        const SizedBox(width: 12),
+                        _buildFilterChip('Erbil', isDark),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Sulaymaniyah', isDark),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Duhok', isDark),
+                        const SizedBox(width: 8),
+                        _buildFilterChip('Halabja', isDark),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.blue.shade300, borderRadius: BorderRadius.circular(12)),
-                  child: const Text('NATURE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Row(
-              children: const [
-                Icon(Icons.star, color: Color(0xFFFFA726), size: 14),
-                SizedBox(width: 4),
-                Text('4.9 (1.2k reviews)  •  40 km away', style: TextStyle(color: Colors.white70, fontSize: 10)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Rawanduz\nCanyon',
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, fontFamily: 'serif', color: Colors.white, height: 1.1),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Experience the breathtaking depths\nof Kurdistan\'s most iconic\ngeological wonder, featuring\nwinding roads and emerald rivers.',
-              style: TextStyle(color: Colors.white70, fontSize: 10, height: 1.3),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildCitadelCard() {
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: const DecorationImage(image: AssetImage('assets/images/qallat.JPEG'), fit: BoxFit.cover),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.black.withOpacity(0.4),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(color: Color(0xFF1F5E37), shape: BoxShape.circle),
-                child: const Icon(Icons.bookmark_outline, color: Colors.white, size: 16),
-              ),
-            ),
-            const Spacer(),
-            Row(
-              children: const [
-                Icon(Icons.star, color: Color(0xFFFFA726), size: 14),
-                SizedBox(width: 4),
-                Text('4.8', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Erbil Citadel',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, fontFamily: 'serif', color: Colors.white),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'UNESCO World Heritage Site. One of the\noldest continuously inhabited places on\nEarth.',
-              style: TextStyle(color: Colors.white70, fontSize: 10, height: 1.3),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white30),
-              ),
-              child: const Text(
-                'VIEW HISTORY',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+                // ── Places Grid (Dynamic) ──────────────────────────────
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 150),
+                  sliver: Builder(
+                    builder: (context) {
+                      final filtered = PlaceRepo.all.where((p) {
+                        if (_selectedFilter == null) return true;
+                        return p.cityId.toLowerCase() == _selectedFilter!.toLowerCase() ||
+                               p.locationText.toLowerCase().contains(_selectedFilter!.toLowerCase());
+                      }).toList();
 
-  Widget _buildBekhalCard() {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        image: const DecorationImage(image: AssetImage('assets/images/halabja.jpg'), fit: BoxFit.cover),
-      ),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-          margin: const EdgeInsets.all(12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text('Bekhal Falls', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1F5E37))),
-                  SizedBox(height: 4),
-                  Text('Soran Region', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                ],
-              ),
-              const Text('Free Access', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFDA8A00))),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                      if (filtered.isEmpty) {
+                        return const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Text('No places found in this region.', style: TextStyle(color: Colors.grey)),
+                          ),
+                        );
+                      }
 
-  Widget _buildMountCard() {
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: const Color(0xFF1E3A4C), // Deep blue
-      ),
-      child: Stack(
-        children: [
-          // Graphic representation of cable car and mountain
-          Positioned(
-            top: 40,
-            right: 40,
-            child: Icon(Icons.cable, color: Colors.white24, size: 100), // placeholder for graphic
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4)),
-                  child: const Text('PREMIUM', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF1F5E37))),
+                      return SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.75,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final p = filtered[index];
+                            return _buildCategoryPlaceCard(
+                              title: p.title,
+                              city: p.locationText,
+                              image: p.coverImage,
+                              categoryId: p.categoryId,
+                              onTap: () => context.go('/place/${p.id}'),
+                            );
+                          },
+                          childCount: filtered.length,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                const Spacer(),
-                const Text(
-                  'Mount Korek',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'serif', color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Summer escape & Winter skiing',
-                  style: TextStyle(fontSize: 10, color: Colors.white70),
-                ),
+
+
               ],
             ),
           ),
         ],
       ),
     );
+      },
+    );
+  }
+
+  Widget _buildGlowBlob(Color color, double left, double top, double size) {
+
+    return Positioned(
+      left: left,
+      top: top,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: color, blurRadius: 100, spreadRadius: 50)],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassCircleBtn(IconData icon, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+          shape: BoxShape.circle,
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        ),
+        child: Icon(icon, color: KurdishHeritageColors.zer, size: 22),
+      ),
+    );
+  }
+
+  Widget _buildGlassSearch(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const AiSearchBottomSheet(),
+      ),
+      child: Container(
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Search heritage, nature, cities...',
+                style: TextStyle(color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3), fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: KurdishHeritageColors.zer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+                  SizedBox(width: 6),
+                  Text('AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterBtn(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: KurdishHeritageColors.sor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: KurdishHeritageColors.sor.withOpacity(0.3)),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.tune_rounded, size: 16, color: KurdishHeritageColors.sor),
+          SizedBox(width: 6),
+          Text('Filters', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: KurdishHeritageColors.sor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, bool isDark) {
+    final isSelected = _selectedFilter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = isSelected ? null : label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? KurdishHeritageColors.kesk : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03)),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? Colors.white.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05))),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+            color: isSelected ? Colors.white : (isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryPlaceCard({
+    required String title,
+    required String city,
+    required String image,
+    required VoidCallback onTap,
+    required String categoryId,
+  }) {
+    // Extract the base city name (e.g., "Erbil" from "Erbil, Kurdistan")
+    final cityName = city.split(',').first.trim();
+    final weather = _weatherMap[cityName];
+    
+    // Fallback image based on category if specific one fails
+    final fallbackImage = _getFallbackForCategory(categoryId);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: KurdishHeritageColors.res.withOpacity(0.1),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Base/Fallback Image Layer
+            Image.asset(
+              fallbackImage,
+              fit: BoxFit.cover,
+            ),
+            
+            // Primary Image Layer (with error handling)
+            Image.asset(
+              image,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            ),
+
+            // Content Overlay
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    city.toUpperCase(),
+                    style: const TextStyle(color: KurdishHeritageColors.zer, fontSize: 8, letterSpacing: 2, fontWeight: FontWeight.w900),
+                  ),
+                  Text(
+                    title,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+
+            // Subtle Weather Indicator
+            if (weather != null)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(WeatherService.iconFromCode(weather.weatherCode), color: Colors.white, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${weather.tempC.round()}°',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getFallbackForCategory(String cat) {
+    switch (cat.toLowerCase()) {
+      case 'nature': return 'assets/images/hd_mountains.jpg';
+      case 'historical': return 'assets/images/hd_ruins.jpg';
+      case 'waterfalls': return 'assets/images/hd_waterfall.jpg';
+      case 'religious': return 'assets/images/hd_mosque.jpg';
+      case 'food': return 'assets/images/hd_bazaar.jpg';
+      default: return 'assets/images/erbil.jpg';
+    }
   }
 }
+
+

@@ -8,7 +8,7 @@ class Onboarding2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OnboardingPage(
-      backgroundAsset: 'assets/images/shanadar.JPEG',
+      backgroundAsset: 'assets/images/hd_mountains.jpg',
       icon: Icons.landscape,
       title: 'Explore Hidden Gems',
       subtitle: 'From majestic mountains to stunning \nwaterfalls, find breathtaking destinations',

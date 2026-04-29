@@ -8,7 +8,7 @@ class Onboarding3 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OnboardingPage(
-      backgroundAsset: 'assets/images/cha.JPEG', // <-- add this image
+      backgroundAsset: 'assets/images/place_bekhal.png',
       icon: Icons.explore, // change icon if you want
       title: 'Start Your Journey',
       subtitle: 'Find places, maps, and favorites\nall in one app',

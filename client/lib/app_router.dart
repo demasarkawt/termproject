@@ -7,9 +7,7 @@ import 'screens/shell/app_shell.dart';
 
 // Screens (no bottom bar)
 import 'screens/splash_screen.dart';
-import 'screens/onboarding_1.dart';
-import 'screens/onboarding_2.dart';
-import 'screens/onboarding_3.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/auth/signin_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
@@ -62,21 +60,7 @@ final appRouter = GoRouter(
       path: '/onboarding1',
       pageBuilder: (context, state) => _cupertinoPage(
         state: state,
-        child: const Onboarding1(),
-      ),
-    ),
-    GoRoute(
-      path: '/onboarding2',
-      pageBuilder: (context, state) => _cupertinoPage(
-        state: state,
-        child: const Onboarding2(),
-      ),
-    ),
-    GoRoute(
-      path: '/onboarding3',
-      pageBuilder: (context, state) => _cupertinoPage(
-        state: state,
-        child: const Onboarding3(),
+        child: const OnboardingScreen(),
       ),
     ),
     GoRoute(

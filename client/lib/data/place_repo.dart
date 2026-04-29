@@ -51,6 +51,8 @@ class PlaceRepo {
   static PlaceData get(String id) =>
       _places.firstWhere((p) => p.id == id, orElse: () => _places.first);
 
+  static List<PlaceData> get all => _places;
+
   static List<PlaceData> list({required String cityId, required String categoryId}) {
     return _places
         .where((p) => p.cityId == cityId && p.categoryId == categoryId)
@@ -73,93 +75,102 @@ class PlaceRepo {
   static double _off(int i) => (i % 5) * 0.01 - 0.02;
 
   // ─── Real images available in assets/images/ ───────────────────────────
-  // ─── HD Unsplash images (500 KB – 1 MB each) ─────────────────────
-  static const _hdMountains  = 'assets/images/hd_mountains.jpg';   // mountain peaks
-  static const _hdWaterfall  = 'assets/images/hd_waterfall.jpg';   // waterfall
-  static const _hdMosque     = 'assets/images/hd_mosque.jpg';      // mosque
-  static const _hdBazaar     = 'assets/images/hd_bazaar.jpg';      // bazaar/market
-  static const _hdLake       = 'assets/images/hd_lake.jpg';        // lake
-  static const _hdValley     = 'assets/images/hd_valley.jpg';      // green valley
-  static const _hdCanyon     = 'assets/images/hd_canyon.jpg';      // canyon gorge
-  static const _hdVillage    = 'assets/images/hd_village.jpg';     // mountain village
-  static const _hdRuins      = 'assets/images/hd_ruins.jpg';       // ancient ruins
-  static const _hdPark       = 'assets/images/hd_park.jpg';        // park / nature
+  // ─── Authentic Wikipedia & High-Quality Images ─────────────────────
+  static const _imgWikiCitadel     = 'assets/images/wiki_citadel_erbil.jpg';
+  static const _imgWikiBazaar      = 'assets/images/wiki_qaysari_bazaar.jpg';
+  static const _imgWikiMinaret     = 'assets/images/wiki_mudhafaria_minaret.jpg';
+  static const _imgWikiSamiPark    = 'assets/images/wiki_sami_abdulrahman.jpg';
+  static const _imgWikiBekhal      = 'assets/images/wiki_bekhal_waterfall.jpg';
+  static const _imgWikiGaliAliBeg  = 'assets/images/wiki_gali_ali_beg.jpg';
+  static const _imgWikiAmnaSuraka  = 'assets/images/wiki_amna_suraka.jpg';
 
-  // ─── Place-specific images (AI-generated + Wikimedia) ────────────
+  static const _imgRawanduzCanyon = 'assets/images/place_rawanduz.png';
+  static const _imgAmediPlateau  = 'assets/images/place_amedi.jpg';
+  static const _imgDukanLake     = 'assets/images/place_dukan_lake.jpg';
+  static const _imgAhmadAwa      = 'assets/images/place_ahmed_awa.jpg';
+  static const _imgShanadarCave  = 'assets/images/shanadar.jpeg';
+  static const _imgCitadel       = 'assets/images/place_citadel.png';
+  static const _imgBazaar        = 'assets/images/place_bazaar.png';
+  static const _imgBekhal        = 'assets/images/place_bekhal.png';
+  static const _imgLalish        = 'assets/images/place_lalish.jpg';
+  static const _imgAmnaSuraka    = 'assets/images/place_amna_suraka.jpg';
+  static const _imgHalabjaM      = 'assets/images/place_halabja_monument.jpg';
+  static const _imgHawraman      = 'assets/images/place_hawraman.jpg';
+  static const _imgShaqlawa      = 'assets/images/place_shaqlawa.png';
+  static const _imgDuhokDam      = 'assets/images/place_duhok_dam.jpg';
+  static const _imgJalilKhayat   = 'assets/images/place_mosque.png';
+  static const _imgSulayBazaar   = 'assets/images/place_sulaymaniyah_bazaar.jpg';
+
+  // ─── HD Category Fallbacks ─────────────────────
+  static const _hdMountains  = 'assets/images/hd_mountains.jpg';
+  static const _hdWaterfall  = 'assets/images/hd_waterfall.jpg';
+  static const _hdMosque     = 'assets/images/hd_mosque.jpg';
+  static const _hdBazaar     = 'assets/images/hd_bazaar.jpg';
+  static const _hdLake       = 'assets/images/hd_lake.jpg';
+  static const _hdValley     = 'assets/images/hd_valley.jpg';
+  static const _hdCanyon     = 'assets/images/hd_canyon.jpg';
+  static const _hdVillage    = 'assets/images/hd_village.jpg';
+  static const _hdRuins      = 'assets/images/hd_ruins.jpg';
+  static const _hdPark       = 'assets/images/hd_park.jpg';
+
   static const _imgErbil       = 'assets/images/erbil.jpg';
-  static const _imgCitadel     = 'assets/images/place_citadel.png';
-  static const _imgBazaar      = 'assets/images/place_bazaar.png';
-  static const _imgBekhal      = 'assets/images/place_bekhal.png';
-  static const _imgShaqlawa    = 'assets/images/place_shaqlawa.png';
-  static const _imgRawanduz    = 'assets/images/place_rawanduz.png';
-  static const _imgMosque      = 'assets/images/place_mosque.png';
-  static const _imgCha         = 'assets/images/cha.JPEG';
-  static const _imgShanadar    = 'assets/images/shanadar.JPEG';
   static const _imgSulay       = 'assets/images/sulaymaniyah.jpg';
-  static const _imgAmnaSuraka  = 'assets/images/place_amna_suraka.jpg';
-  static const _imgDukanLake   = 'assets/images/place_dukan_lake.jpg';
-  static const _imgAhmedAwa    = 'assets/images/place_ahmed_awa.jpg';
-  static const _imgSulaybazaar = 'assets/images/place_sulaymaniyah_bazaar.jpg';
   static const _imgDuhok       = 'assets/images/duhok.jpg';
-  static const _imgAmedi       = 'assets/images/place_amedi.jpg';
-  static const _imgDuhokDam    = 'assets/images/place_duhok_dam.jpg';
-  static const _imgLalish      = 'assets/images/place_lalish.jpg';
-  static const _imgGaliAliBeg  = 'assets/images/place_gali_ali_beg.jpg';
   static const _imgHalabja     = 'assets/images/halabja.jpg';
-  static const _imgHalabjaM    = 'assets/images/place_halabja_monument.jpg';
-  static const _imgHawraman    = 'assets/images/place_hawraman.jpg';
+  static const _imgCha         = 'assets/images/cha.jpeg';
+  static const _imgShanadar    = 'assets/images/shanadar.jpeg';
 
   /// Per-place image overrides — HD first, then specific, then fallback
   static const Map<String, String> _imageByTitle = {
     // Erbil – historical
-    'Citadel of Erbil'                             : _imgCitadel,
-    'Qaysari Bazaar'                               : _hdBazaar,
-    'Mudhafaria Minaret'                           : _hdRuins,
+    'Citadel of Erbil'                             : _imgWikiCitadel,
+    'Qaysari Bazaar'                               : _imgWikiBazaar,
+    'Mudhafaria Minaret'                           : _imgWikiMinaret,
     'Erbil Textile Museum (Kurdish Textile Museum)': _imgCitadel,
     'Syriac Heritage Museum (Ankawa)'              : _hdRuins,
     // Erbil – nature
-    'Sami Abdulrahman Park'                        : _hdPark,
-    'Shaqlawa Mountain Town'                       : _hdVillage,
-    'Rawanduz Canyon Viewpoints'                   : _hdCanyon,
-    'Gali Ali Beg Gorge Viewpoints'                : _hdCanyon,
-    'Bekhal Valley Viewpoints'                     : _hdValley,
+    'Sami Abdulrahman Park'                        : _imgWikiSamiPark,
+    'Shaqlawa Mountain Town'                       : _imgShaqlawa,
+    'Rawanduz Canyon Viewpoints'                   : _imgRawanduzCanyon,
+    'Gali Ali Beg Gorge Viewpoints'                : _imgWikiGaliAliBeg,
+    'Bekhal Valley Viewpoints'                     : _imgBekhal,
     // Erbil – waterfalls
-    'Bekhal Waterfall'                             : _hdWaterfall,
-    'Gali Ali Beg Water Area'                      : _hdWaterfall,
+    'Bekhal Waterfall'                             : _imgWikiBekhal,
+    'Gali Ali Beg Water Area'                      : _imgWikiGaliAliBeg,
     'Jundiyan Waterfall'                           : _hdWaterfall,
     'Zenta Waterfall'                              : _hdWaterfall,
     // Erbil – religious
-    'Jalil Khayat Mosque'                          : _hdMosque,
+    'Jalil Khayat Mosque'                          : _imgJalilKhayat,
     'Chaldean Catholic Church (Ankawa)'            : _hdMosque,
     'Mar Elia Church (Ankawa area)'                : _hdMosque,
     // Erbil – activities
     'Erbil cafes & night walk (100m Street)'       : _imgCha,
     'Family Mall & entertainment'                  : _imgErbil,
-    'Shaqlawa weekend picnic'                      : _hdMountains,
-    'Rawanduz scenic road trip'                    : _hdCanyon,
+    'Shaqlawa weekend picnic'                      : _imgShaqlawa,
+    'Rawanduz scenic road trip'                    : _imgRawanduzCanyon,
     // Sulaymaniyah – historical
-    'Amna Suraka (Red Prison)'                     : _imgAmnaSuraka,
+    'Amna Suraka (Red Prison)'                     : _imgWikiAmnaSuraka,
     'Slemani Museum'                               : _hdRuins,
-    'Sulaimaniyah Bazaar (Old Market)'             : _hdBazaar,
+    'Sulaimaniyah Bazaar (Old Market)'             : _imgSulayBazaar,
     // Sulaymaniyah – nature
     'Azmar Mountain Viewpoint'                     : _hdMountains,
-    'Dukan Lake'                                   : _hdLake,
-    'Dukan Dam area'                               : _hdLake,
+    'Dukan Lake'                                   : _imgDukanLake,
+    'Dukan Dam area'                               : _imgDukanLake,
     'Chavi Land (viewpoint & park)'                : _hdPark,
     // Sulaymaniyah – waterfalls
-    'Ahmed Awa Waterfall'                          : _hdWaterfall,
+    'Ahmed Awa Waterfall'                          : _imgAhmadAwa,
     'Tawela (near Ahmed Awa) springs'              : _hdValley,
     // Sulaymaniyah – religious
     'Grand Mosque of Sulaymaniyah'                 : _hdMosque,
     // Sulaymaniyah – activities
     'Chavi Land amusement area'                    : _hdPark,
-    'Dukan boating / lakeside day'                 : _hdLake,
+    'Dukan boating / lakeside day'                 : _imgDukanLake,
     'Azmar sunset hike'                            : _hdMountains,
     // Duhok – historical
-    'Amedi (Amediye) old town'                     : _imgAmedi,
+    'Amedi (Amediye) old town'                     : _imgAmediPlateau,
     'Duhok Bazaar (Old Market)'                    : _hdBazaar,
     // Duhok – nature
-    'Duhok Dam'                                    : _hdLake,
+    'Duhok Dam'                                    : _imgDuhokDam,
     'Gara Mountain viewpoints'                     : _hdMountains,
     'Zakho Riverside (Khabur River)'               : _hdValley,
     // Duhok – waterfalls
@@ -168,29 +179,29 @@ class PlaceRepo {
     // Duhok – religious
     'Lalish (Yazidi Holy Temple)'                  : _imgLalish,
     // Duhok – activities
-    'Amedi day trip'                               : _hdVillage,
-    'Duhok Dam picnic'                             : _hdLake,
+    'Amedi day trip'                               : _imgAmediPlateau,
+    'Duhok Dam picnic'                             : _imgDuhokDam,
     'Zakho day trip'                               : _hdValley,
     // Halabja – historical
     'Halabja Monument & Memorial'                  : _imgHalabjaM,
     // Halabja – nature
-    'Hawraman (Kurdish mountain villages)'         : _hdVillage,
+    'Hawraman (Kurdish mountain villages)'         : _imgHawraman,
     'Byara (nature & village views)'               : _hdValley,
     // Halabja – waterfalls
-    'Ahmed Awa Waterfall (Halabja route)'          : _hdWaterfall,
+    'Ahmed Awa Waterfall (Halabja route)'          : _imgAhmadAwa,
     'Tawela springs (Halabja route)'               : _hdValley,
     // Halabja – religious
     'Local mosques & heritage sites (Halabja)'     : _hdMosque,
     // Halabja – activities
-    'Hawraman scenic drive'                        : _hdMountains,
+    'Hawraman scenic drive'                        : _imgHawraman,
     'Picnic day in Byara'                          : _hdValley,
     // Erbil – food
-    'Machko Chaikhana'                             : _hdBazaar,
+    'Machko Chaikhana'                             : _imgCha,
     'Abu Shihab Restaurant'                        : _hdBazaar,
     'Kebab Yasin'                                  : _hdBazaar,
     'Dawa 2 Restaurant'                            : _hdBazaar,
     // Sulaymaniyah – food
-    'Shaab Teahouse (Chaikhanay Shaab)'            : _imgSulaybazaar,
+    'Shaab Teahouse (Chaikhanay Shaab)'            : _imgSulayBazaar,
     'Kebab Wasta Hasan'                            : _hdBazaar,
     "Chalak's Place"                               : _hdBazaar,
     // Duhok – food
@@ -200,6 +211,18 @@ class PlaceRepo {
     // Halabja – food
     'Hawraman Traditional Restaurants'             : _imgHawraman,
     'Halabja Kebab and Fish'                       : _imgHalabja,
+
+    // --- New Places ---
+    'Shanidar Cave'                                : _imgShanadar,
+    'Korek Mountain Resort'                        : _hdMountains,
+    'Pank Tourist Resort'                          : _imgRawanduzCanyon,
+    'Kani Bast Waterfall'                          : _hdWaterfall,
+    'Darbandikhan Lake'                            : _hdLake,
+    'Qaradagh Mountain'                            : _hdMountains,
+    'Akre (Aqrah)'                                 : _hdVillage,
+    'Zanta Waterfall'                              : _hdWaterfall,
+    'Gara Mountain'                                : _hdMountains,
+    'Sartaki Bamo'                                 : _hdCanyon,
   };
 
   /// Returns the best cover image for a given title/city/category.
@@ -212,17 +235,45 @@ class PlaceRepo {
       case 'erbil':
         switch (categoryId) {
           case 'historical': return _imgCitadel;
-          case 'nature':     return _imgShanadar;
+          case 'nature':     return _imgRawanduzCanyon;
           case 'waterfalls': return _imgBekhal;
-          case 'religious':  return _imgMosque;
+          case 'religious':  return _hdMosque;
           case 'activities': return _imgCha;
           case 'food':       return _hdBazaar;
           default:           return _imgErbil;
         }
-      case 'sulaymaniyah': return _imgSulay;
-      case 'duhok':        return _imgDuhok;
-      case 'halabja':      return _imgHalabja;
-      default:             return _imgErbil;
+      case 'sulaymaniyah':
+        switch (categoryId) {
+          case 'historical': return _imgAmnaSuraka;
+          case 'nature':     return _imgDukanLake;
+          case 'waterfalls': return _imgAhmadAwa;
+          case 'religious':  return _hdMosque;
+          case 'activities': return _hdPark;
+          case 'food':       return _hdBazaar;
+          default:           return _imgSulay;
+        }
+      case 'duhok':
+        switch (categoryId) {
+          case 'historical': return _imgAmediPlateau;
+          case 'nature':     return _hdValley;
+          case 'waterfalls': return _hdWaterfall;
+          case 'religious':  return _imgLalish;
+          case 'activities': return _hdMountains;
+          case 'food':       return _hdBazaar;
+          default:           return _imgDuhok;
+        }
+      case 'halabja':
+        switch (categoryId) {
+          case 'historical': return _imgHalabjaM;
+          case 'nature':     return _imgHawraman;
+          case 'waterfalls': return _imgAhmadAwa;
+          case 'religious':  return _hdMosque;
+          case 'activities': return _hdMountains;
+          case 'food':       return _hdBazaar;
+          default:           return _imgHalabja;
+        }
+      default:
+        return _imgErbil;
     }
   }
 
@@ -462,10 +513,28 @@ class PlaceRepo {
     'Scattered throughout the Hawraman mountains and Byara, these traditional open-air restaurants serve localized Kurdish delicacies, including slow-roasted meats and dishes made with the region\'s famous fresh walnuts and pomegranates.',
     'Halabja Kebab and Fish':
     'Local eateries in Halabja are renowned for their fresh mountain river fish (masgouf style) and hearty local kebabs, offering simple, incredibly fresh, and flavorful meals.',
-  };
 
-  // ✅ REAL TITLES ONLY (any count is OK)
-  static const _titles = {
+    // --- New Places ---
+    'Shanidar Cave':
+    'An archaeological site in the Bradost Mountain where remains of ten Neanderthals were discovered. This cave is world-famous for the "flower burial" theory, providing crucial insights into prehistoric human life and empathy among Neanderthals.',
+    'Korek Mountain Resort':
+    'A year-round tourist destination featuring a 4km cable car ride, luxury villas, and recreational activities. In winter, it serves as a premier skiing destination with panoramic views of the Zagros Mountains.',
+    'Pank Tourist Resort':
+    'A popular leisure destination near Rawanduz, famous for its high-speed alpine toboggan run that winds through dramatic mountain scenery and cliffs overlooking the gorge.',
+    'Kani Bast Waterfall':
+    'One of the highest and most majestic waterfalls in the region, located in the rugged Choman area. It cascades down massive rock faces and is a favorite for adventurous hikers.',
+    'Darbandikhan Lake':
+    'A vast and scenic reservoir on the Sirwan River. The area is surrounded by dramatic limestone peaks and offers excellent opportunities for boating, fishing, and lakeside camping.',
+    'Qaradagh Mountain':
+    'Known for its lush oak forests and ancient rock carvings. It is a center for Kurdish nature conservation and offers some of the best hiking trails in the Sulaymaniyah governorate.',
+    'Akre (Aqrah)':
+    'A stunning historic town built directly into the steep mountainside. Akre is internationally famous for its spectacular Newroz (Kurdish New Year) celebrations, where thousands carry torches up the mountain peaks.',
+    'Zanta Waterfall':
+    'A hidden natural gem located in a lush valley near Akre. The waterfall is surrounded by verdant greenery and provides a cool, tranquil escape during the summer months.',
+    'Gara Mountain':
+    'A high mountain range offering breathtaking views of the Amadiya plateau. It features unique flora and is a popular spot for mountain climbing and viewing the sunset over the Duhok mountains.',
+    'Sartaki Bamo':
+    'A dramatic mountain   static const _titles = {
     'erbil': {
       'historical': [
         'Citadel of Erbil',
@@ -473,6 +542,7 @@ class PlaceRepo {
         'Mudhafaria Minaret',
         'Erbil Textile Museum (Kurdish Textile Museum)',
         'Syriac Heritage Museum (Ankawa)',
+        'Shanidar Cave',
       ],
       'nature': [
         'Sami Abdulrahman Park',
@@ -480,12 +550,14 @@ class PlaceRepo {
         'Rawanduz Canyon Viewpoints',
         'Gali Ali Beg Gorge Viewpoints',
         'Bekhal Valley Viewpoints',
+        'Dore Canyon',
       ],
       'waterfalls': [
         'Bekhal Waterfall',
         'Gali Ali Beg Water Area',
         'Jundiyan Waterfall',
         'Zenta Waterfall',
+        'Kani Bast Waterfall',
       ],
       'religious': [
         'Jalil Khayat Mosque',
@@ -497,6 +569,8 @@ class PlaceRepo {
         'Family Mall & entertainment',
         'Shaqlawa weekend picnic',
         'Rawanduz scenic road trip',
+        'Korek Mountain Resort',
+        'Pank Tourist Resort',
       ],
       'food': [
         'Machko Chaikhana',
@@ -517,6 +591,8 @@ class PlaceRepo {
         'Dukan Lake',
         'Dukan Dam area',
         'Chavi Land (viewpoint & park)',
+        'Darbandikhan Lake',
+        'Qaradagh Mountain',
       ],
       'waterfalls': [
         'Ahmed Awa Waterfall',
@@ -541,15 +617,18 @@ class PlaceRepo {
       'historical': [
         'Amedi (Amediye) old town',
         'Duhok Bazaar (Old Market)',
+        'Akre (Aqrah)',
       ],
       'nature': [
         'Duhok Dam',
         'Gara Mountain viewpoints',
         'Zakho Riverside (Khabur River)',
+        'Gara Mountain',
       ],
       'waterfalls': [
         'Gali Sheran Waterfall',
         'Sipa Waterfall',
+        'Zenta Waterfall',
       ],
       'religious': [
         'Lalish (Yazidi Holy Temple)',
@@ -573,6 +652,7 @@ class PlaceRepo {
       'nature': [
         'Hawraman (Kurdish mountain villages)',
         'Byara (nature & village views)',
+        'Sartaki Bamo',
       ],
       'waterfalls': [
         'Ahmed Awa Waterfall (Halabja route)',
@@ -581,6 +661,17 @@ class PlaceRepo {
       'religious': [
         'Local mosques & heritage sites (Halabja)',
       ],
+      'activities': [
+        'Hawraman scenic drive',
+        'Picnic day in Byara',
+      ],
+      'food': [
+        'Hawraman Traditional Restaurants',
+        'Halabja Kebab and Fish',
+      ],
+    },
+  };
+,
       'activities': [
         'Hawraman scenic drive',
         'Picnic day in Byara',

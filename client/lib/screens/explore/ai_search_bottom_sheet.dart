@@ -1,8 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 
 import '../../config/api_config.dart';
+import '../../services/theme_service.dart';
+import '../../data/place_repo.dart';
 
 class AiSearchBottomSheet extends StatefulWidget {
   const AiSearchBottomSheet({super.key});
@@ -34,84 +38,122 @@ class _AiSearchBottomSheetState extends State<AiSearchBottomSheet> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'prompt': prompt}),
-      );
+      ).timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         setState(() {
           _results = jsonDecode(response.body);
           _isLoading = false;
         });
-      } else {
-        setState(() => _isLoading = false);
-        _showError('Failed to parse AI response. Code: \${response.statusCode}');
+        return;
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      _showError('Connection error: \$e');
+      debugPrint('AI API failed, falling back to local search: $e');
     }
+
+    // ✅ LOCAL FALLBACK (Enhanced matching)
+    final query = prompt.toLowerCase();
+    
+    // If user typed "all" or similar, show everything.
+    // If the query matches nothing specific, show some top picks.
+    final localMatches = PlaceRepo.all.where((p) {
+      if (query == 'all' || query == 'everything' || query == '*' || query.isEmpty) return true;
+      
+      return p.title.toLowerCase().contains(query) || 
+             p.about.toLowerCase().contains(query) ||
+             p.cityId.toLowerCase().contains(query) ||
+             p.categoryId.toLowerCase().contains(query);
+    }).map((p) => {
+      'name': p.title,
+      'category': p.categoryId,
+      'description': p.about,
+      'id': p.id,
+    }).toList();
+
+    // Limit to top results to keep it clean
+    if (localMatches.length > 20) {
+      localMatches.shuffle();
+      localMatches.removeRange(10, localMatches.length);
+    }
+
+    setState(() {
+      _results = localMatches;
+      _isLoading = false;
+    });
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), backgroundColor: KurdishHeritageColors.sor));
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: isDark ? KurdishHeritageColors.res : KurdishHeritageColors.spi,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.24) : Colors.black12, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: const [
-                  Icon(Icons.auto_awesome, color: Colors.purple),
-                  SizedBox(width: 8),
-                  Text(
-                    'AI Mood Search',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              const Text(
+                'AI MOOD SEARCH',
+                style: TextStyle(color: KurdishHeritageColors.zer, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 2),
               ),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(Icons.close_rounded, color: isDark ? Colors.white54 : Colors.black54),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Describe how you feel or what you want to experience. Our AI will find the perfect matching locations for you.',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
+          Text(
+            'Describe your perfect journey',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : KurdishHeritageColors.res,
+              letterSpacing: -1,
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+          
+          // Search Input
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.purple.shade100, width: 2),
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g. "A quiet green place with waterfalls"',
+                    style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res),
+                    decoration: InputDecoration(
+                      hintText: 'e.g. "A calm place near waterfalls"',
                       border: InputBorder.none,
-                      hintStyle: TextStyle(fontSize: 14),
+                      hintStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24)),
                     ),
                     onSubmitted: (_) => _searchByMood(),
                   ),
@@ -120,35 +162,27 @@ class _AiSearchBottomSheetState extends State<AiSearchBottomSheet> {
                   onTap: _searchByMood,
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Colors.purple,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(color: KurdishHeritageColors.zer, shape: BoxShape.circle),
                     child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Icon(Icons.send, color: Colors.white, size: 20),
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          
+          const SizedBox(height: 32),
+          
           Expanded(
-            child: _hasSearched && !_isLoading && _results.isEmpty
-                ? const Center(child: Text('No matching places found.'))
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: KurdishHeritageColors.zer))
+              : _hasSearched && _results.isEmpty
+                ? Center(child: Text('No results found', style: TextStyle(color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24), fontWeight: FontWeight.bold)))
                 : ListView.builder(
                     itemCount: _results.length,
-                    itemBuilder: (context, index) {
-                      final place = _results[index];
-                      return _buildPlaceResult(place);
-                    },
+                    physics: const BouncingScrollPhysics(),
+                    itemBuilder: (context, index) => _buildPlaceResult(_results[index], isDark),
                   ),
           )
         ],
@@ -156,59 +190,49 @@ class _AiSearchBottomSheetState extends State<AiSearchBottomSheet> {
     );
   }
 
-  Widget _buildPlaceResult(Map<String, dynamic> place) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-        border: Border.all(color: Colors.purple.shade50),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                place['name'] ?? 'Unknown Place',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F5E37),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  place['category'] ?? '',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple.shade700,
+  Widget _buildPlaceResult(Map<String, dynamic> place, bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        if (place['id'] != null) {
+          Navigator.pop(context);
+          context.go('/place/${place['id']}');
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    place['name'] ?? '',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : KurdishHeritageColors.res),
                   ),
                 ),
-              )
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            place['description'] ?? '',
-            style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
-          ),
-        ],
+                if (place['category'] != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    child: Text(place['category'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: KurdishHeritageColors.kesk)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              place['description'] ?? '',
+              style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : Colors.black54, height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
