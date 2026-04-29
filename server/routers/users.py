@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Security
+from starlette.responses import Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List
@@ -113,12 +114,65 @@ def admin_update_user(
 @router.get("/{user_id}", response_model=schemas.UserOut)
 def get_user(
     user_id: int,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
     """Return user profile. Only the owner can access."""
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Access denied")
-    return current_user
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.patch("/{user_id}", response_model=schemas.UserOut)
+def update_self(
+    user_id: int,
+    data: schemas.UserSelfUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Update name and/or email for the authenticated user only."""
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    payload = data.model_dump(exclude_unset=True)
+    if "email" in payload:
+        taken = (
+            db.query(models.User)
+            .filter(models.User.email == payload["email"], models.User.id != user_id)
+            .first()
+        )
+        if taken:
+            raise HTTPException(status_code=400, detail="Email already in use")
+    for k, v in payload.items():
+        setattr(user, k, v)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.post("/{user_id}/password", status_code=204)
+def change_password(
+    user_id: int,
+    body: schemas.PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Change password for the authenticated user."""
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not _verify_password(body.current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    user.hashed_password = _hash_password(body.new_password)
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/{user_id}/trips", response_model=List[schemas.TripOut])

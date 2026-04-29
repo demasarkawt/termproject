@@ -91,6 +91,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           name: data['user']['name'],
           level: data['user']['level'] ?? 1,
           token: data['access_token'],
+          email: data['user']['email']?.toString(),
         );
         if (mounted) context.go('/home');
       } else {

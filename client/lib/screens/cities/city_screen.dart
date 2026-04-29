@@ -151,13 +151,13 @@ class CityScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Explore &\nwander freely',
+                              'Discover freely',
                               style: TextStyle(
                                 color: isDark ? Colors.white : KurdishHeritageColors.res,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 42,
-                                height: 1.0,
-                                letterSpacing: -1.5,
+                                fontSize: 40,
+                                height: 1.05,
+                                letterSpacing: -1.6,
                               ),
                             ),
                             const SizedBox(height: 12),

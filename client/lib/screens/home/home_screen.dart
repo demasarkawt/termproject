@@ -1,15 +1,20 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:termproject/services/user_session.dart';
+
+import '../../models/map_spot_memory.dart';
+import '../../services/map_spot_memory_store.dart';
+import '../../services/theme_service.dart';
 import '../../theme/trip_planner_theme.dart';
 import '../../widgets/immersive_city_card.dart';
 import '../../services/weather_service.dart';
-import '../../services/theme_service.dart';
 
 /// Regions strip — immersive city cards (photo + overlay + fonts).
 const List<ImmersiveCityCardData> _kHomeCityCards = [
@@ -198,7 +203,14 @@ class _HomeScreenState extends State<HomeScreen> {
             isDark ? Colors.white.withValues(alpha: 0.62) : TripPlannerTheme.bodyMuted;
         final dotActive = isDark ? KurdishHeritageColors.zer : TripPlannerTheme.brownPrimary;
 
-        return Scaffold(
+        return ValueListenableBuilder<int>(
+          valueListenable: MapSpotMemoryStore.revision,
+          builder: (context, _, __) {
+            final memories = MapSpotMemoryStore.items;
+            final sortedMemories = List<MapSpotMemory>.from(memories)
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            return Scaffold(
           backgroundColor: canvas,
           body: CustomScrollView(
             controller: _scrollController,
@@ -217,6 +229,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: muted,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        memories.isEmpty
+                            ? 'Explore cities, open the map, and pin photo memories of spots you love.'
+                            : 'You have ${memories.length} map ${memories.length == 1 ? 'memory' : 'memories'} saved on this device.',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                          color: muted.withValues(alpha: 0.92),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -248,6 +272,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 22),
+                      _HomeQuickActions(
+                        isDark: isDark,
+                        titleColor: headline,
+                        onOpenMap: () => context.go('/map'),
+                        onOpenSaved: () => context.go('/favorites'),
+                        onOpenExplore: () => context.go('/explore'),
+                        onOpenEvents: () => context.go('/events'),
+                      ),
+                      const SizedBox(height: 22),
+                      _HomeMemoriesPeek(
+                        memories: sortedMemories,
+                        isDark: isDark,
+                        titleColor: headline,
+                        muted: muted,
+                        onOpenMap: () => context.go('/map'),
+                        onOpenMemory: (id) => context.push('/map-memory/$id'),
                       ),
                       const SizedBox(height: 26),
                       Row(
@@ -442,7 +484,376 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         );
+          },
+        );
       },
+    );
+  }
+}
+
+/// Two-by-two shortcuts: map, journeys, saves, agenda.
+class _HomeQuickActions extends StatelessWidget {
+  const _HomeQuickActions({
+    required this.isDark,
+    required this.titleColor,
+    required this.onOpenMap,
+    required this.onOpenSaved,
+    required this.onOpenExplore,
+    required this.onOpenEvents,
+  });
+
+  final bool isDark;
+  final Color titleColor;
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenSaved;
+  final VoidCallback onOpenExplore;
+  final VoidCallback onOpenEvents;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = isDark ? const Color(0xFF2C2C2E) : TripPlannerTheme.cardLight;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Get started',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.15,
+            color: titleColor.withValues(alpha: 0.88),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _DashQuickTile(
+                icon: Icons.map_rounded,
+                label: 'Map',
+                subtitle: 'Pins & GPS',
+                isDark: isDark,
+                cardColor: card,
+                accent: KurdishHeritageColors.zer,
+                onTap: onOpenMap,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _DashQuickTile(
+                icon: Icons.travel_explore_rounded,
+                label: 'Explore',
+                subtitle: 'Tours',
+                isDark: isDark,
+                cardColor: card,
+                accent: TripPlannerTheme.brownPrimary,
+                onTap: onOpenExplore,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _DashQuickTile(
+                icon: Icons.favorite_rounded,
+                label: 'Saved',
+                subtitle: 'Favorites',
+                isDark: isDark,
+                cardColor: card,
+                accent: KurdishHeritageColors.sor,
+                onTap: onOpenSaved,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _DashQuickTile(
+                icon: Icons.event_rounded,
+                label: 'Events',
+                subtitle: 'What’s on',
+                isDark: isDark,
+                cardColor: card,
+                accent: KurdishHeritageColors.kesk,
+                onTap: onOpenEvents,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DashQuickTile extends StatelessWidget {
+  const _DashQuickTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.isDark,
+    required this.cardColor,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final bool isDark;
+  final Color cardColor;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = isDark ? Colors.white : TripPlannerTheme.headlineBrown;
+    final sub = isDark ? Colors.white54 : TripPlannerTheme.bodyMuted;
+
+    return Material(
+      color: cardColor,
+      elevation: isDark ? 0 : 0.5,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: accent, size: 22),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                  color: text,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: sub,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Recent photo memories or a single CTA when empty.
+class _HomeMemoriesPeek extends StatelessWidget {
+  const _HomeMemoriesPeek({
+    required this.memories,
+    required this.isDark,
+    required this.titleColor,
+    required this.muted,
+    required this.onOpenMap,
+    required this.onOpenMemory,
+  });
+
+  final List<MapSpotMemory> memories;
+  final bool isDark;
+  final Color titleColor;
+  final Color muted;
+  final VoidCallback onOpenMap;
+  final void Function(String memoryId) onOpenMemory;
+
+  @override
+  Widget build(BuildContext context) {
+    if (memories.isEmpty) {
+      return Material(
+        color: KurdishHeritageColors.zer.withValues(alpha: isDark ? 0.11 : 0.13),
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onOpenMap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: KurdishHeritageColors.zer.withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.add_a_photo_rounded, color: KurdishHeritageColors.zer, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Photo memories on the map',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: titleColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Open the map, line up the + on your spot, then tap Memory.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          height: 1.35,
+                          fontWeight: FontWeight.w500,
+                          color: muted.withValues(alpha: 0.95),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: muted.withValues(alpha: 0.8)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final preview = memories.take(10).toList(growable: false);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Text(
+                'Your map memories',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.35,
+                  color: titleColor,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onOpenMap,
+              style: TextButton.styleFrom(
+                foregroundColor: KurdishHeritageColors.zer,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Open map',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 124,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: preview.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final m = preview[i];
+              return _HomeMemoryCard(
+                memory: m,
+                isDark: isDark,
+                onTap: () => onOpenMemory(m.id),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HomeMemoryCard extends StatelessWidget {
+  const _HomeMemoryCard({
+    required this.memory,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final MapSpotMemory memory;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(14);
+
+    return Material(
+      color: isDark ? const Color(0xFF2C2C2E) : TripPlannerTheme.cardLight,
+      elevation: isDark ? 0 : 0.45,
+      shadowColor: Colors.black.withValues(alpha: 0.07),
+      borderRadius: radius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: SizedBox(
+          width: 150,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                  child: _thumb(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Text(
+                  memory.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                    color: isDark ? Colors.white : TripPlannerTheme.headlineBrown,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _thumb() {
+    if (!kIsWeb && memory.imagePaths.isNotEmpty) {
+      final f = File(memory.imagePaths.first);
+      if (f.existsSync()) {
+        return Image.file(f, fit: BoxFit.cover, width: double.infinity);
+      }
+    }
+    return ColoredBox(
+      color: KurdishHeritageColors.zer.withValues(alpha: 0.18),
+      child: const Center(
+        child: Icon(Icons.photo_camera_rounded, color: KurdishHeritageColors.zer, size: 28),
+      ),
     );
   }
 }

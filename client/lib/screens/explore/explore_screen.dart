@@ -84,31 +84,61 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'EXPLORE',
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: KurdishHeritageColors.zer.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: KurdishHeritageColors.zer.withValues(alpha: 0.28)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.directions_walk_rounded, size: 15, color: KurdishHeritageColors.zer.withValues(alpha: 0.95)),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'EXPLORE',
+                                style: TextStyle(
+                                  color: KurdishHeritageColors.zer,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 11,
+                                  letterSpacing: 3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          AppBranding.exploreHeroLine1,
                           style: TextStyle(
-                            color: KurdishHeritageColors.zer,
+                            color: isDark ? Colors.white : KurdishHeritageColors.res,
                             fontWeight: FontWeight.w900,
-                            fontSize: 14,
-                            letterSpacing: 4,
+                            fontSize: 36,
+                            height: 1.05,
+                            letterSpacing: -1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          AppBranding.exploreHeroLine2,
+                          style: TextStyle(
+                            color: isDark ? Colors.white.withValues(alpha: 0.92) : KurdishHeritageColors.res.withValues(alpha: 0.88),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 22,
+                            height: 1.15,
+                            letterSpacing: -0.4,
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              AppBranding.exploreScreenHero,
-                              style: TextStyle(
-                                color: isDark ? Colors.white : KurdishHeritageColors.res,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 36,
-                                height: 1.1,
-                                letterSpacing: -1.5,
-                              ),
-                            ),
-                            const SizedBox.shrink(),
-                          ],
+                        Text(
+                          AppBranding.exploreHeroSupporting,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.45,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? Colors.white.withValues(alpha: 0.52) : KurdishHeritageColors.textMutedLight,
+                          ),
                         ),
                       ],
                     ),

@@ -3,9 +3,13 @@ abstract final class AppBranding {
   static const String appName = 'Travelo';
 
   // Splash / Liquid Orb hero
-  static const String splashWordmarkCaps = 'TRAVEL · TOURS · ROUTES';
+  /// Used where a thin eyebrow fits; middots scan cleaner than slashes.
+  static const String splashWordmarkCaps = 'TOURS  ·  ROUTES  ·  PLACES';
   static const String splashDescription =
       'Plan trips, save tours, visit places—and wander with guides you trust.';
+  /// Sign-in/up hero band — one clear sentence (replaces cramped all-caps + chip row).
+  static const String authHeroTagline =
+      'Trip ideas, itineraries, and routes—picked for Kurdish cities and valleys.';
 
   // Auth eyebrows (Liquid Orb)
   static const String signInEyebrow = 'CONTINUE YOUR JOURNEY';
@@ -19,13 +23,18 @@ abstract final class AppBranding {
   static const String homeTileSubtitleRegions = 'Cities & scenic routes';
 
   /// Parallax hero (home hero image overlay).
-  static const String homeHeroEyebrow = 'TRAVEL · TOURS · PLACES';
+  static const String homeHeroEyebrow = 'WANDER  ·  TOURS  ·  PLACES';
 
   /// Section under hero after scroll (“Discover”).
   static const String homeDiscoverTitle = 'Discover\nplaces';
 
-  /// Explore tab hero headline.
-  static const String exploreScreenHero = 'Explore\nroutes';
+  /// Explore tab — headline line 1 (large).
+  static const String exploreHeroLine1 = 'Scenic routes';
+  /// Explore tab — headline line 2 (completes thought; avoids “Explore routes”).
+  static const String exploreHeroLine2 = '& places worth the drive';
+  /// Short line under the big title on Explore.
+  static const String exploreHeroSupporting =
+      'Search heritage sites, viewpoints, eats—then open any spot on the map.';
 
   /// Secondary line under Discover (home).
   static const String homeDiscoverBody =

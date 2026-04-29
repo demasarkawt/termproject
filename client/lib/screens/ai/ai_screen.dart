@@ -163,167 +163,407 @@ class _AiScreenState extends State<AiScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, _) {
+        final isDark = ThemeService().isDark;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // ── Background Glow Blobs ──────────────────────────────────────────
-          _buildGlowBlob(const Color(0xFF1E3A8A).withOpacity(0.1), -100, 100, 400),
-          _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.1), 300, 400, 300),
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Stack(
+            children: [
+              _buildGlowBlob(const Color(0xFF1E3A8A).withValues(alpha: 0.12), -100, 80, 420),
+              _buildGlowBlob(KurdishHeritageColors.zer.withValues(alpha: 0.08), 260, 380, 340),
 
-          SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDark
-                              ? [const Color(0xFF1E3A5F), const Color(0xFF0F1729)]
-                              : [const Color(0xFFE8EEF9), const Color(0xFFF5F0FF)],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.1)
-                              : Colors.black.withValues(alpha: 0.06),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+              SafeArea(
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildAiHeroCard(isDark)),
+
+                    // ── Mood Search Section ─────────────────────────────────────
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
+                        child: _buildMoodComposer(isDark),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 76,
-                            height: 76,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  KurdishHeritageColors.zer,
-                                  KurdishHeritageColors.zer.withValues(alpha: 0.78),
-                                ],
+                    ),
+
+                    if (_hasMoodSearched)
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) => _buildPlaceCard(_moodResults[i], isDark),
+                            childCount: _moodResults.length,
+                          ),
+                        ),
+                      ),
+
+                    // ── Trip Planner Section ─────────────────────────────────────
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader('DAY PLANNER'),
+                            const SizedBox(height: 16),
+                            _buildCityPicker(isDark),
+                            const SizedBox(height: 16),
+                            _buildInterestField(isDark),
+                            const SizedBox(height: 20),
+                            _buildPlanButton(isDark),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    if (_hasTripPlanned)
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 150),
+                        sliver: SliverToBoxAdapter(
+                          child: _buildTripResultsCard(isDark),
+                        ),
+                      ),
+
+                    if (!_hasTripPlanned) const SliverToBoxAdapter(child: SizedBox(height: 150)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAiHeroCard(bool isDark) {
+    final surfaceBorder = isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.07);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF1A2850), const Color(0xFF0D1526), const Color(0xFF121a2e)]
+                : [const Color(0xFFEEF3FB), const Color(0xFFF8F4FF), const Color(0xFFFFF9F2)],
+          ),
+          border: Border.all(color: surfaceBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.07),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: KurdishHeritageColors.zer.withValues(alpha: isDark ? 0.12 : 0.18),
+              blurRadius: 40,
+              spreadRadius: -8,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -30,
+                top: -40,
+                child: Icon(Icons.blur_on_rounded, size: 160, color: KurdishHeritageColors.zer.withValues(alpha: 0.07)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 82,
+                          height: 82,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [KurdishHeritageColors.zer, Color(0xFFD4A84B)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: KurdishHeritageColors.zer.withValues(alpha: 0.45),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: KurdishHeritageColors.zer.withValues(alpha: 0.35),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.auto_awesome_rounded, size: 40, color: Color(0xFF1A1410)),
+                            ],
                           ),
-                          const SizedBox(width: 18),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${AppBranding.appName} AI',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : KurdishHeritageColors.res,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 26,
-                                    letterSpacing: -0.6,
-                                  ),
+                          child: const Icon(Icons.auto_awesome_rounded, size: 42, color: Color(0xFF1A1410)),
+                        ),
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: KurdishHeritageColors.zer.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: KurdishHeritageColors.zer.withValues(alpha: 0.35)),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Your trip companion for mood search and day plans.',
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.65)
-                                        : KurdishHeritageColors.textMutedLight,
-                                    fontSize: 14,
-                                    height: 1.35,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.auto_awesome_rounded, size: 14, color: isDark ? Colors.white.withValues(alpha: 0.92) : KurdishHeritageColors.res),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Travel intelligence',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.6,
+                                        color: isDark ? Colors.white.withValues(alpha: 0.88) : KurdishHeritageColors.res.withValues(alpha: 0.85),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                '${AppBranding.appName} AI',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : KurdishHeritageColors.res,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 28,
+                                  letterSpacing: -0.8,
+                                  height: 1.05,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Discover places by mood and sketch full-day plans tailored to how you want to feel.',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.68) : KurdishHeritageColors.textMutedLight,
+                                  fontSize: 14,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ── Mood Search Section ─────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionHeader('SEARCH BY MOOD', isDark),
-                        const SizedBox(height: 16),
-                        _buildGlassSearchBar(isDark),
-                        const SizedBox(height: 16),
-                        _buildSuggestedPrompts(isDark),
+                        ),
                       ],
                     ),
-                  ),
-                ),
-
-                if (_hasMoodSearched)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, i) => _buildPlaceCard(_moodResults[i], isDark),
-                        childCount: _moodResults.length,
-                      ),
-                    ),
-                  ),
-
-                // ── Trip Planner Section ─────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 22),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
                       children: [
-                        _buildSectionHeader('DAY PLANNER', isDark),
-                        const SizedBox(height: 16),
-                        _buildCityPicker(isDark),
-                        const SizedBox(height: 16),
-                        _buildInterestField(isDark),
-                        const SizedBox(height: 20),
-                        _buildPlanButton(isDark),
+                        _heroMiniChip(isDark, Icons.psychology_alt_outlined, 'Mood match'),
+                        _heroMiniChip(isDark, Icons.map_outlined, 'Local picks'),
+                        _heroMiniChip(isDark, Icons.route_rounded, 'Day routes'),
                       ],
                     ),
-                  ),
+                  ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                if (_hasTripPlanned)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 150),
-                    sliver: SliverToBoxAdapter(
-                      child: _buildTripResultsCard(isDark),
-                    ),
-                  ),
-                
-                if (!_hasTripPlanned)
-                  const SliverToBoxAdapter(child: SizedBox(height: 150)),
-              ],
+  Widget _heroMiniChip(bool isDark, IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: KurdishHeritageColors.zer),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white.withValues(alpha: 0.82) : KurdishHeritageColors.res.withValues(alpha: 0.88),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMoodComposer(bool isDark) {
+    final fill = isDark ? const Color(0xFF1C1915) : Colors.white;
+    final fieldFill = isDark ? Colors.white.withValues(alpha: 0.06) : KurdishHeritageColors.surface3Light;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            KurdishHeritageColors.zer.withValues(alpha: isDark ? 0.22 : 0.28),
+            KurdishHeritageColors.kesk.withValues(alpha: isDark ? 0.14 : 0.18),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: KurdishHeritageColors.zer.withValues(alpha: isDark ? 0.08 : 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(1.5),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+        decoration: BoxDecoration(
+          color: fill,
+          borderRadius: BorderRadius.circular(26.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        KurdishHeritageColors.zer.withValues(alpha: 0.2),
+                        KurdishHeritageColors.kesk.withValues(alpha: 0.12),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Icons.draw_rounded, color: KurdishHeritageColors.zer.withValues(alpha: isDark ? 1 : 0.95), size: 26),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Search by mood',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.4,
+                          color: isDark ? Colors.white : KurdishHeritageColors.res,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Write freely — a sentence or two works best.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.35,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white.withValues(alpha: 0.52) : KurdishHeritageColors.textMutedLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: _moodController,
+              minLines: 4,
+              maxLines: 8,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white.withValues(alpha: 0.95) : KurdishHeritageColors.res,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: fieldFill,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                hintText: 'Example: I want somewhere peaceful — mountain views, tea, and not too crowded…',
+                hintStyle: TextStyle(
+                  fontSize: 15,
+                  height: 1.45,
+                  fontWeight: FontWeight.w400,
+                  color: isDark ? Colors.white.withValues(alpha: 0.28) : KurdishHeritageColors.textSubtleLight,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.08) : KurdishHeritageColors.borderLight),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.1) : KurdishHeritageColors.borderLight),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(color: KurdishHeritageColors.zer, width: 2),
+                ),
+              ),
+              onSubmitted: (_) => _searchByMood(),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Try an idea',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.6,
+                color: KurdishHeritageColors.zer.withValues(alpha: 0.85),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildSuggestedPrompts(isDark),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: KurdishHeritageColors.zer,
+                  foregroundColor: KurdishHeritageColors.res,
+                  disabledBackgroundColor: KurdishHeritageColors.zer.withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                ),
+                onPressed: _isMoodLoading ? null : _searchByMood,
+                icon: _isMoodLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: KurdishHeritageColors.res),
+                      )
+                    : const Icon(Icons.travel_explore_rounded, size: 22),
+                label: Text(
+                  _isMoodLoading ? 'Finding places…' : 'Find matching places',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.2),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -343,67 +583,42 @@ class _AiScreenState extends State<AiScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isDark) {
-    return Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2, color: KurdishHeritageColors.zer));
-  }
-
-  Widget _buildGlassSearchBar(bool isDark) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _moodController,
-              style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res),
-              decoration: InputDecoration(
-                hintText: 'Describe your mood...',
-                border: InputBorder.none,
-                hintStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24)),
-              ),
-              onSubmitted: (_) => _searchByMood(),
-            ),
-          ),
-          GestureDetector(
-            onTap: _searchByMood,
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: KurdishHeritageColors.zer, shape: BoxShape.circle),
-              child: _isMoodLoading
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildSectionHeader(String title) {
+    return Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2, color: KurdishHeritageColors.zer));
   }
 
   Widget _buildSuggestedPrompts(bool isDark) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: _suggestedPrompts.map((p) => GestureDetector(
-        onTap: () {
-          _moodController.text = p;
-          _searchByMood();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+      spacing: 8,
+      runSpacing: 8,
+      children: _suggestedPrompts.map((p) {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () {
+              _moodController.text = p;
+              _searchByMood();
+            },
+            child: Ink(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: isDark ? Colors.white.withValues(alpha: 0.06) : KurdishHeritageColors.zer.withValues(alpha: 0.08),
+                border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.12) : KurdishHeritageColors.zer.withValues(alpha: 0.2)),
+              ),
+              child: Text(
+                p,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white.withValues(alpha: 0.88) : KurdishHeritageColors.res,
+                ),
+              ),
+            ),
           ),
-          child: Text(p, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : KurdishHeritageColors.res)),
-        ),
-      )).toList(),
+        );
+      }).toList(),
     );
   }
 
@@ -412,9 +627,9 @@ class _AiScreenState extends State<AiScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,7 +641,7 @@ class _AiScreenState extends State<AiScreen> {
               if (place['category'] != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                   child: Text(place['category'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: KurdishHeritageColors.kesk)),
                 ),
             ],
@@ -447,9 +662,9 @@ class _AiScreenState extends State<AiScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: _cityController.text == city ? KurdishHeritageColors.zer : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03)),
+            color: _cityController.text == city ? KurdishHeritageColors.zer : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _cityController.text == city ? Colors.white.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05))),
+            border: Border.all(color: _cityController.text == city ? Colors.white.withValues(alpha: 0.2) : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05))),
           ),
           child: Text(city, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: _cityController.text == city ? Colors.white : (isDark ? Colors.white70 : KurdishHeritageColors.res))),
         ),
@@ -461,9 +676,9 @@ class _AiScreenState extends State<AiScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: _interestsController,
@@ -471,7 +686,7 @@ class _AiScreenState extends State<AiScreen> {
         decoration: InputDecoration(
           hintText: 'Interests (e.g. food, mountains, history)',
           border: InputBorder.none,
-          hintStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24)),
+          hintStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black.withValues(alpha: 0.24)),
         ),
       ),
     );
@@ -485,7 +700,7 @@ class _AiScreenState extends State<AiScreen> {
         decoration: BoxDecoration(
           color: KurdishHeritageColors.sor,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: KurdishHeritageColors.sor.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))],
+          boxShadow: [BoxShadow(color: KurdishHeritageColors.sor.withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 8))],
         ),
         alignment: Alignment.center,
         child: _isTripLoading
@@ -499,9 +714,9 @@ class _AiScreenState extends State<AiScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : KurdishHeritageColors.xweli.withOpacity(0.2)),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : KurdishHeritageColors.xweli.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,7 +731,7 @@ class _AiScreenState extends State<AiScreen> {
           const SizedBox(height: 20),
           Text(
             _tripItinerary ?? '',
-            style: TextStyle(fontSize: 15, color: isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.7), height: 1.7),
+            style: TextStyle(fontSize: 15, color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7), height: 1.7),
           ),
         ],
       ),

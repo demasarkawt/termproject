@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import '../../constants/app_branding.dart';
 import '../../theme/liquid_orb.dart';
@@ -132,65 +134,99 @@ class _AuthBackdrop extends StatelessWidget {
   }
 }
 
-/// Travel copy + chips above the white card (sign-in / sign-up hero band).
+/// Single branded banner above sign-in/sign-up sheet (photo hero).
 class _TravelHeroCopyBand extends StatelessWidget {
   const _TravelHeroCopyBand();
+
+  static const Color _gold = Color(0xFFD4AF37);
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              AppBranding.splashWordmarkCaps,
-              style: TextStyle(
-                color: Color(0xCCD4AF37),
-                fontSize: 11,
-                letterSpacing: 3.2,
-                fontWeight: FontWeight.w800,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.32),
+                  ],
+                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [_gold.withValues(alpha: 0.92), _gold.withValues(alpha: 0.72)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _gold.withValues(alpha: 0.35),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.explore_rounded, color: Color(0xFF1A1410), size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          AppBranding.appName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                            height: 1.05,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          AppBranding.authHeroTagline,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            height: 1.42,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.86),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          AppBranding.splashWordmarkCaps,
+                          style: TextStyle(
+                            color: _gold.withValues(alpha: 0.88),
+                            fontSize: 10.5,
+                            letterSpacing: 2.8,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: const [
-                _TravelHeroChip(label: 'Heritage'),
-                _TravelHeroChip(label: 'Tours'),
-                _TravelHeroChip(label: 'Routes'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TravelHeroChip extends StatelessWidget {
-  const _TravelHeroChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.14),
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            letterSpacing: 1.2,
-            fontWeight: FontWeight.w700,
           ),
         ),
       ),

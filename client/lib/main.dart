@@ -10,6 +10,7 @@ import 'data/favorites_store.dart';
 import 'data/favorites_scope.dart';
 import 'data/live_data.dart';
 import 'services/user_session.dart';
+import 'services/map_spot_memory_store.dart';
 import 'services/theme_service.dart';
 
 final favoritesStore = FavoritesStore();
@@ -21,6 +22,7 @@ void main() async {
     debugPrint('[${AppBranding.appName}] API base URL → $kBaseUrl');
   }
   await UserSession.load();
+  await MapSpotMemoryStore.hydrate();
   // Warm the live-data cache from the FastAPI backend in the background.
   // The bundled seed data is used until this completes (or if it fails).
   unawaited(LiveData.refresh());

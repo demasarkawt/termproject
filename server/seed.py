@@ -170,10 +170,42 @@ def run_seed():
 
     # ── Seed Events ──────────────────────────────────────────────────────────────
     events_data = [
-        {"title": "Citadel Flavors Expo",  "description": "A two-day sensory journey through Kurdish recipes at the heart of Erbil.", "event_type": "FOOD",    "location": "Erbil Citadel",      "start_date": "2024-09-20", "end_date": "2024-09-21"},
-        {"title": "Mountain Melodies",     "description": "Traditional Kurdish instruments meet modern jazz under the stars.",        "event_type": "MUSIC",   "location": "Sulaymaniyah",       "start_date": "2024-10-05", "end_date": "2024-10-06"},
-        {"title": "Pomegranate Festival",  "description": "Annual harvest celebration in the valleys of Kurdistan.",                  "event_type": "CULTURE", "location": "Halabja",            "start_date": "2024-11-01", "end_date": "2024-11-03"},
-        {"title": "Newroz Fire Festival",  "description": "Ancient fire festivals of Newroz across all regions.",                     "event_type": "CULTURE", "location": "All Cities",         "start_date": "2025-03-21", "end_date": "2025-03-22"},
+        {
+            "title": "Citadel Flavors Expo",
+            "description": "A two-day sensory journey through Kurdish recipes at the heart of Erbil.",
+            "event_type": "FOOD",
+            "location": "Erbil Citadel",
+            "start_date": "2024-09-20",
+            "end_date": "2024-09-21",
+            "image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80",
+        },
+        {
+            "title": "Mountain Melodies",
+            "description": "Traditional Kurdish instruments meet modern jazz under the stars.",
+            "event_type": "MUSIC",
+            "location": "Sulaymaniyah",
+            "start_date": "2024-10-05",
+            "end_date": "2024-10-06",
+            "image_url": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1400&q=80",
+        },
+        {
+            "title": "Pomegranate Festival",
+            "description": "Annual harvest celebration in the valleys of Kurdistan.",
+            "event_type": "CULTURE",
+            "location": "Halabja",
+            "start_date": "2024-11-01",
+            "end_date": "2024-11-03",
+            "image_url": "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1400&q=80",
+        },
+        {
+            "title": "Newroz Fire Festival",
+            "description": "Ancient fire festivals of Newroz across all regions.",
+            "event_type": "CULTURE",
+            "location": "All Cities",
+            "start_date": "2025-03-21",
+            "end_date": "2025-03-22",
+            "image_url": "https://images.unsplash.com/photo-1475483762866-c7ed9a6e4c7b?auto=format&fit=crop&w=1400&q=80",
+        },
     ]
 
     for e in events_data:
