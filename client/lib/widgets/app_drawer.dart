@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:termproject/constants/app_branding.dart';
 import '../services/user_session.dart';
 import '../services/theme_service.dart';
 
@@ -40,12 +41,12 @@ class AppDrawer extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                     children: [
-                      _SectionTitle('Main Exploration', isDark),
+                      _SectionTitle('Travel Hub', isDark),
                       const SizedBox(height: 12),
                       _Tile(
                         icon: Icons.home_rounded,
                         title: 'Home',
-                        subtitle: 'Kurdistan Cities',
+                        subtitle: AppBranding.homeTileSubtitleRegions,
                         accent: KurdishHeritageColors.sor,
                         isDark: isDark,
                         onTap: () {
@@ -56,7 +57,7 @@ class AppDrawer extends StatelessWidget {
                       _Tile(
                         icon: Icons.bookmark_rounded,
                         title: 'Saved Places',
-                        subtitle: 'Your heritage favorites',
+                        subtitle: 'Your saved tours',
                         accent: KurdishHeritageColors.kesk,
                         isDark: isDark,
                         onTap: () {
@@ -82,7 +83,7 @@ class AppDrawer extends StatelessWidget {
                       _Tile(
                         icon: Icons.auto_awesome_rounded,
                         title: 'AI Travel Guide',
-                        subtitle: 'Your personal Kurdish assistant',
+                        subtitle: 'Trip ideas & visits',
                         accent: const Color(0xFF1E3A8A),
                         isDark: isDark,
                         onTap: () {
@@ -143,7 +144,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Kurdistan GO',
+                  AppBranding.appName,
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 20,
@@ -151,7 +152,7 @@ class _Header extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Heritage Edition',
+                  AppBranding.drawerSubtitle,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
@@ -320,7 +321,7 @@ class _Footer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'v1.2 Heritage',
+                'v1.2 Travelo',
                 style: TextStyle(color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3), fontSize: 12, fontWeight: FontWeight.bold),
               ),
               GestureDetector(

@@ -151,7 +151,7 @@ class CityScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'The Soul of\nKurdistan',
+                              'Explore &\nwander freely',
                               style: TextStyle(
                                 color: isDark ? Colors.white : KurdishHeritageColors.res,
                                 fontWeight: FontWeight.w900,

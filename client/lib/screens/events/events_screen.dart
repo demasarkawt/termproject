@@ -101,7 +101,7 @@ class _EventsScreenState extends State<EventsScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Experience the heartbeat of Kurdistan',
+                          'Experience live events near your routes',
                           style: TextStyle(
                             color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
                             fontSize: 14,

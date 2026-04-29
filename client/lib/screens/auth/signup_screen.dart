@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:termproject/config/api_config.dart';
 import 'package:termproject/utils/fastapi_error.dart';
 import 'package:termproject/services/user_session.dart';
-import 'package:termproject/services/theme_service.dart';
+import 'package:termproject/constants/app_branding.dart';
+import 'package:termproject/theme/liquid_orb.dart';
+import 'package:termproject/widgets/liquid_orb/liquid_orb_auth_layout.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,6 +22,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
   bool _isLoading = false;
+  bool _agreePrivacy = false;
 
   @override
   void dispose() {
@@ -29,40 +32,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  InputDecoration _dec({
-    required String hint,
-    required IconData icon,
-    required bool isDark,
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, color: KurdishHeritageColors.zer),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: isDark ? Colors.white.withOpacity(0.05) : KurdishHeritageColors.surfaceLight,
-      hintStyle: TextStyle(
-        color: isDark ? Colors.white.withOpacity(0.24) : KurdishHeritageColors.textSubtleLight,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(
-          color: isDark ? Colors.white.withOpacity(0.12) : KurdishHeritageColors.borderLight,
-          width: 1,
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: KurdishHeritageColors.zer, width: 2),
-      ),
-    );
+  void _goBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/splash');
+    }
   }
 
   Future<void> _signUp() async {
@@ -72,17 +47,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (name.isEmpty || email.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields'), backgroundColor: KurdishHeritageColors.sor),
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: LiquidOrb.snackBarError,
+        ),
       );
       return;
     }
 
-    // Quick check so FastAPI EmailStr rejects don't look like a "network" failure.
+    if (!_agreePrivacy) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please confirm you agree to the processing of your data'),
+          backgroundColor: LiquidOrb.snackBarError,
+        ),
+      );
+      return;
+    }
+
     if (!email.contains('@') || !email.contains('.')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Enter a valid email address (e.g. name@domain.com)'),
-          backgroundColor: KurdishHeritageColors.sor,
+          backgroundColor: LiquidOrb.snackBarError,
         ),
       );
       return;
@@ -110,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         final msg = messageFromFastApiBody(response.body);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg), backgroundColor: KurdishHeritageColors.sor),
+            SnackBar(content: Text(msg), backgroundColor: LiquidOrb.snackBarError),
           );
         }
       }
@@ -123,7 +110,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ? 'Could not reach the API ($kBaseUrl). Is the server running?'
                   : 'Network error. Please try again.',
             ),
-            backgroundColor: KurdishHeritageColors.sor,
+            backgroundColor: LiquidOrb.snackBarError,
           ),
         );
       }
@@ -134,247 +121,160 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final orbTheme = Theme.of(context).copyWith(
+      colorScheme: Theme.of(context).colorScheme.copyWith(primary: LiquidOrb.accent),
+    );
 
-    return Scaffold(
-      backgroundColor: isDark ? KurdishHeritageColors.res : Colors.transparent,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: isDark ? KurdishHeritageColors.res : null,
-          gradient: isDark
-              ? null
-              : const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    KurdishHeritageColors.surfaceLight,
-                    KurdishHeritageColors.surface2Light,
-                    KurdishHeritageColors.surface3Light,
-                  ],
-                  stops: [0.0, 0.55, 1.0],
+    return Theme(
+      data: orbTheme,
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: LiquidOrbAuthLayout(
+          onBack: () => _goBack(context),
+          cardChild: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(32, 28, 32, 36),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Create account',
+                  textAlign: TextAlign.center,
+                  style: LiquidOrb.heading,
                 ),
-        ),
-        child: Stack(
-          children: [
-            _buildGlowBlob(
-              KurdishHeritageColors.kesk.withOpacity(isDark ? 0.1 : 0.14),
-              -100,
-              200,
-              400,
-            ),
-            _buildGlowBlob(
-              KurdishHeritageColors.sor.withOpacity(isDark ? 0.1 : 0.12),
-              300,
-              500,
-              300,
-            ),
-            _buildGlowBlob(
-              KurdishHeritageColors.zer.withOpacity(isDark ? 0.0 : 0.08),
-              60,
-              600,
-              260,
-            ),
-
-            SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Transform.rotate(
-                            angle: 0.785,
-                            child: Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.05)
-                                    : KurdishHeritageColors.surface3Light.withOpacity(0.6),
-                                border: Border.all(color: KurdishHeritageColors.zer.withOpacity(0.35), width: 2),
-                              ),
-                            ),
-                          ),
-                          Transform.rotate(
-                            angle: 0.785,
-                            child: Container(
-                              width: 85,
-                              height: 85,
-                              decoration: BoxDecoration(
-                                color: isDark ? KurdishHeritageColors.res : KurdishHeritageColors.surfaceLight,
-                                border: Border.all(color: KurdishHeritageColors.zer, width: 2),
-                                boxShadow: isDark
-                                    ? null
-                                    : [
-                                        BoxShadow(
-                                          color: KurdishHeritageColors.res.withOpacity(0.06),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 10),
-                                        ),
-                                      ],
-                              ),
-                              child: Transform.rotate(
-                                angle: -0.785,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Image.asset('assets/images/KGO.png', fit: BoxFit.contain),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                const SizedBox(height: 8),
+                Text(
+                  AppBranding.signUpEyebrow,
+                  textAlign: TextAlign.center,
+                  style: LiquidOrb.subtitleCaps,
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'Full name',
+                  style: LiquidOrb.labelSmall.copyWith(fontSize: 11, letterSpacing: 0.55),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _nameCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  cursorColor: LiquidOrb.accent,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: LiquidOrb.textHeading,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: LiquidOrb.orbInputDecoration(hint: 'Your name').copyWith(
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: LiquidOrb.accent, width: 1.5),
                     ),
-                    const SizedBox(height: 24),
-                    
-                    IconButton(
-                      onPressed: () => context.go('/signin'),
-                      style: IconButton.styleFrom(
-                        backgroundColor: isDark
-                            ? Colors.white.withOpacity(0.06)
-                            : KurdishHeritageColors.surfaceLight,
-                        side: BorderSide(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.1)
-                              : KurdishHeritageColors.borderLight,
-                        ),
-                      ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Email',
+                  style: LiquidOrb.labelSmall.copyWith(fontSize: 11, letterSpacing: 0.55),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  cursorColor: LiquidOrb.accent,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: LiquidOrb.textHeading,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: LiquidOrb.orbInputDecoration(hint: 'you@email.com').copyWith(
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: LiquidOrb.accent, width: 1.5),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Password',
+                  style: LiquidOrb.labelSmall.copyWith(fontSize: 11, letterSpacing: 0.55),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _passCtrl,
+                  obscureText: _obscure,
+                  cursorColor: LiquidOrb.accent,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: LiquidOrb.textHeading,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: LiquidOrb.orbInputDecoration(
+                    hint: '••••••••',
+                    suffix: IconButton(
+                      splashRadius: 20,
+                      onPressed: () => setState(() => _obscure = !_obscure),
                       icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: isDark ? Colors.white : KurdishHeritageColors.res,
-                        size: 18,
+                        _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        color: LiquidOrb.textMuted,
+                        size: 20,
                       ),
                     ),
-                  const SizedBox(height: 20),
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Join the Journey',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : KurdishHeritageColors.res,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Create an account to explore Kurdistan',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white54 : KurdishHeritageColors.textMutedLight,
-                          ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                LiquidOrbCheckboxTile(
+                  value: _agreePrivacy,
+                  onChanged: (v) => setState(() => _agreePrivacy = v ?? false),
+                  label: Text.rich(
+                    TextSpan(
+                      style: LiquidOrb.labelSmall,
+                      children: const [
+                        TextSpan(
+                          text:
+                              'I agree to the processing of my personal data in line with app policies.',
                         ),
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 48),
-                  
-                  TextField(
-                    controller: _nameCtrl,
-                    style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res),
-                    decoration: _dec(hint: 'Full Name', icon: Icons.person_rounded, isDark: isDark),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _emailCtrl,
-                    style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res),
-                    decoration: _dec(hint: 'Email Address', icon: Icons.mail_rounded, isDark: isDark),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _passCtrl,
-                    obscureText: _obscure,
-                    style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res),
-                    decoration: _dec(
-                      hint: 'Password',
-                      icon: Icons.lock_rounded,
-                      isDark: isDark,
-                      suffix: IconButton(
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(
-                          _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.3)
-                              : KurdishHeritageColors.textSubtleLight,
-                          size: 20,
-                        ),
-                      ),
+                ),
+                const SizedBox(height: 24),
+                LiquidOrbPrimaryButton(
+                  label: 'Sign up',
+                  loading: _isLoading,
+                  onPressed: _signUp,
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'OR CONTINUE WITH',
+                  textAlign: TextAlign.center,
+                  style: LiquidOrb.subtitleCaps.copyWith(fontSize: 11),
+                ),
+                const SizedBox(height: 16),
+                const LiquidOrbSocialRow(),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: LiquidOrb.labelSmall.copyWith(color: LiquidOrb.textLabel),
                     ),
-                  ),
-                  
-                  const SizedBox(height: 40),
-                  
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signUp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: KurdishHeritageColors.kesk,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        elevation: isDark ? 0 : 2,
-                        shadowColor: KurdishHeritageColors.kesk.withOpacity(0.45),
-                      ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('CREATE ACCOUNT', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account? ",
+                    GestureDetector(
+                      onTap: () => context.go('/signin'),
+                      child: const Text(
+                        'Sign in',
                         style: TextStyle(
-                          color: isDark ? Colors.white54 : KurdishHeritageColors.textMutedLight,
-                          fontWeight: FontWeight.w600,
+                          color: LiquidOrb.accent,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () => context.go('/signin'),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(color: KurdishHeritageColors.zer, fontWeight: FontWeight.w900),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlowBlob(Color color, double left, double top, double size) {
-    return Positioned(
-      left: left,
-      top: top,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: color, blurRadius: 100, spreadRadius: 50)],
+          ),
         ),
       ),
     );

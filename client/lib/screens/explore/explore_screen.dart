@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:termproject/constants/app_branding.dart';
 import 'ai_search_bottom_sheet.dart';
 import '../../services/theme_service.dart';
 import '../../services/weather_service.dart';
@@ -97,7 +98,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Discover\nKurdistan',
+                              AppBranding.exploreScreenHero,
                               style: TextStyle(
                                 color: isDark ? Colors.white : KurdishHeritageColors.res,
                                 fontWeight: FontWeight.w900,

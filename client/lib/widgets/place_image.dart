@@ -81,7 +81,7 @@ class _PlaceImageState extends State<PlaceImage> {
           'https://en.wikipedia.org/w/api.php?action=query&titles=${Uri.encodeComponent(searchTerm)}&prop=pageimages&format=json&pithumbsize=1000&origin=*');
       final response = await http.get(
         url,
-        headers: {'User-Agent': 'KurdistanTravelApp/1.0 (contact@example.com)'},
+        headers: {'User-Agent': 'Travelo/1.0 (contact@example.com)'},
       );
       String? imageUrl;
       if (response.statusCode == 200) {

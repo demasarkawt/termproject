@@ -204,7 +204,7 @@ class _AiScreenState extends State<AiScreen> {
                           ),
                         ),
                         Text(
-                          'Your intelligent Kurdish travel companion',
+                          'Your intelligent Travelo trip companion',
                           style: TextStyle(
                             color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
                             fontSize: 14,

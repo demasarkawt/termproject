@@ -1,5 +1,5 @@
 name: termproject
-description: A Flutter project.
+description: "Travelo — Flutter client for tours, maps, and trip planning."
 publish_to: 'none'
 version: 1.0.0+1
 

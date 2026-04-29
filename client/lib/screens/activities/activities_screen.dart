@@ -39,7 +39,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                               child: const Icon(Icons.arrow_back_ios_new_rounded, color: primaryGreen, size: 20),
                             ),
                             const SizedBox(width: 12),
-                            const Text('Kurdistan Go', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen)),
+                            const Text('Travelo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen)),
                           ],
                         ),
                         Row(

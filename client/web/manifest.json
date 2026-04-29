@@ -1,11 +1,11 @@
 {
-    "name": "termproject",
-    "short_name": "termproject",
+    "name": "Travelo",
+    "short_name": "Travelo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Kurdistan Go.",
+    "description": "Travelo — plan tours, visits, and itineraries.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

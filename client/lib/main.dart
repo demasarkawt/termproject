@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'app_router.dart';
 import 'config/api_config.dart';
+import 'constants/app_branding.dart';
 import 'data/favorites_store.dart';
 import 'data/favorites_scope.dart';
 import 'data/live_data.dart';
@@ -17,7 +18,7 @@ final themeService = ThemeService();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kDebugMode) {
-    debugPrint('[Kurdistan Go] API base URL → $kBaseUrl');
+    debugPrint('[${AppBranding.appName}] API base URL → $kBaseUrl');
   }
   await UserSession.load();
   // Warm the live-data cache from the FastAPI backend in the background.
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
               notifier: favoritesStore,
               child: MaterialApp.router(
                 debugShowCheckedModeBanner: false,
-                title: 'Kurdistan Travel',
+                title: AppBranding.appName,
                 theme: themeService.lightTheme,
                 darkTheme: themeService.darkTheme,
                 themeMode: themeService.themeMode,

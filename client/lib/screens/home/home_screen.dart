@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:termproject/constants/app_branding.dart';
 import 'package:termproject/services/user_session.dart';
 import '../../services/weather_service.dart';
 import '../../services/theme_service.dart';
@@ -90,11 +91,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('K UR D I S T A N', style: TextStyle(color: Color(0xCCD4AF37), fontSize: 13, letterSpacing: 12, fontWeight: FontWeight.w900)),
+                            const Text(AppBranding.homeHeroEyebrow, style: TextStyle(color: Color(0xCCD4AF37), fontSize: 13, letterSpacing: 12, fontWeight: FontWeight.w900)),
                             const SizedBox(height: 12),
-                            const Text('HERITAGE', style: TextStyle(color: Colors.white, fontSize: 54, fontWeight: FontWeight.w900, letterSpacing: 6)),
+                            Text(AppBranding.appName, style: const TextStyle(color: Colors.white, fontSize: 54, fontWeight: FontWeight.w900, letterSpacing: 6)),
                             const SizedBox(height: 14),
-                            Text('Welcome ${UserSession.userName ?? "Mohammad"} to the heart of the East', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, fontStyle: FontStyle.italic, letterSpacing: 1)),
+                            Text('Welcome ${UserSession.userName ?? "traveler"}, plan tours & visits for your next escape', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, fontStyle: FontStyle.italic, letterSpacing: 1)),
                           ],
                         ),
                       ),
@@ -152,9 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text('EXPLORE REGIONS', style: TextStyle(color: accentColor, fontSize: 10, letterSpacing: 5, fontWeight: FontWeight.w900)),
                           ]),
                           const SizedBox(height: 14),
-                          Text('Discover\nKurdistan', style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res, fontSize: 42, fontWeight: FontWeight.w900, height: 1.1)),
+                          Text(AppBranding.homeDiscoverTitle, style: TextStyle(color: isDark ? Colors.white : KurdishHeritageColors.res, fontSize: 42, fontWeight: FontWeight.w900, height: 1.1)),
                           const SizedBox(height: 12),
-                          Text('Select a region to explore its unique heritage.', style: TextStyle(color: isDark ? Colors.white54 : KurdishHeritageColors.xweli, fontSize: 14, height: 1.7)),
+                          Text(AppBranding.homeDiscoverBody, style: TextStyle(color: isDark ? Colors.white54 : KurdishHeritageColors.xweli, fontSize: 14, height: 1.7)),
                         ],
                       ),
                     ),

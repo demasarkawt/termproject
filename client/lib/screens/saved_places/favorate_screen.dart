@@ -67,7 +67,7 @@ class FavoritesScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Your curated Kurdistan journey',
+                          'Your curated Travelo tour list',
                           style: TextStyle(
                             color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
                             fontSize: 14,
