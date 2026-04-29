@@ -20,6 +20,15 @@ server/.pytest_cache/
 .vscode/
 *.iml
 
+# Dashboard (Vite / Node)
+dashboard/node_modules/
+dashboard/dist/
+dashboard/build/
+dashboard/coverage/
+dashboard/.env
+dashboard/.env.local
+!dashboard/.env.example
+
 # OS
 .DS_Store
 Thumbs.db
