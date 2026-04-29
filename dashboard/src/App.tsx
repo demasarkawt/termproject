@@ -123,10 +123,10 @@ function Shell() {
               key={item.id}
               onClick={() => setActivePage(item.id)}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                'w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border-l-[3px]',
                 activePage === item.id
-                  ? 'bg-zer-soft text-zer font-bold'
-                  : 'text-muted hover:bg-surface-2',
+                  ? 'pl-[calc(1rem-3px)] pr-4 border-zer bg-zer-soft text-zer font-bold shadow-sm'
+                  : 'pl-[calc(1rem-3px)] pr-4 border-transparent text-muted hover:bg-surface-2',
               )}
             >
               <item.icon className={cn('w-5 h-5', activePage === item.id && 'text-zer')} />

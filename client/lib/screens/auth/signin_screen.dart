@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -86,8 +85,12 @@ class _SignInScreenState extends State<SignInScreen> {
       prefixIcon: Icon(icon, color: KurdishHeritageColors.zer),
       suffixIcon: suffix,
       filled: true,
-      fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-      hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24), fontSize: 14),
+      fillColor: isDark ? Colors.white.withOpacity(0.05) : KurdishHeritageColors.surfaceLight,
+      hintStyle: TextStyle(
+        color: isDark ? Colors.white.withOpacity(0.24) : KurdishHeritageColors.textSubtleLight,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(20),
@@ -95,11 +98,14 @@ class _SignInScreenState extends State<SignInScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        borderSide: BorderSide(
+          color: isDark ? Colors.white.withOpacity(0.12) : KurdishHeritageColors.borderLight,
+          width: 1,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: KurdishHeritageColors.zer, width: 1.5),
+        borderSide: const BorderSide(color: KurdishHeritageColors.zer, width: 2),
       ),
     );
   }
@@ -109,12 +115,46 @@ class _SignInScreenState extends State<SignInScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? KurdishHeritageColors.res : KurdishHeritageColors.spi,
-      body: Stack(
-        children: [
+      backgroundColor: isDark ? KurdishHeritageColors.res : Colors.transparent,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? KurdishHeritageColors.res : null,
+          gradient: isDark
+              ? null
+              : const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    KurdishHeritageColors.surfaceLight,
+                    KurdishHeritageColors.surface2Light,
+                    KurdishHeritageColors.surface3Light,
+                  ],
+                  stops: [0.0, 0.55, 1.0],
+                ),
+        ),
+        child: Stack(
+          children: [
           // ── Background Glows ──────────────────────────────────────────
-          _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.1), -100, 100, 400),
-          _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.1), 300, 400, 300),
+          _buildGlowBlob(
+            KurdishHeritageColors.sor.withOpacity(isDark ? 0.1 : 0.14),
+            -100,
+            100,
+            400,
+          ),
+          _buildGlowBlob(
+            KurdishHeritageColors.kesk.withOpacity(isDark ? 0.1 : 0.12),
+            300,
+            400,
+            300,
+          ),
+          _buildGlowBlob(
+            KurdishHeritageColors.zer.withOpacity(isDark ? 0.0 : 0.08),
+            80,
+            520,
+            280,
+          ),
 
           SafeArea(
             child: Center(
@@ -133,8 +173,10 @@ class _SignInScreenState extends State<SignInScreen> {
                             width: 130,
                             height: 130,
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
-                              border: Border.all(color: KurdishHeritageColors.zer.withOpacity(0.3), width: 2),
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : KurdishHeritageColors.surface3Light.withOpacity(0.6),
+                              border: Border.all(color: KurdishHeritageColors.zer.withOpacity(0.35), width: 2),
                             ),
                           ),
                         ),
@@ -144,8 +186,17 @@ class _SignInScreenState extends State<SignInScreen> {
                             width: 110,
                             height: 110,
                             decoration: BoxDecoration(
-                              color: isDark ? KurdishHeritageColors.res : Colors.white,
+                              color: isDark ? KurdishHeritageColors.res : KurdishHeritageColors.surfaceLight,
                               border: Border.all(color: KurdishHeritageColors.zer, width: 2),
+                              boxShadow: isDark
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: KurdishHeritageColors.res.withOpacity(0.06),
+                                        blurRadius: 24,
+                                        offset: const Offset(0, 12),
+                                      ),
+                                    ],
                             ),
                             child: Transform.rotate(
                               angle: -0.785,
@@ -175,7 +226,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white54 : Colors.black54,
+                        color: isDark ? Colors.white54 : KurdishHeritageColors.textMutedLight,
                       ),
                     ),
                     
@@ -199,7 +250,9 @@ class _SignInScreenState extends State<SignInScreen> {
                           onPressed: () => setState(() => _obscure = !_obscure),
                           icon: Icon(
                             _obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                            color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3),
+                            color: isDark
+                                ? Colors.white.withOpacity(0.3)
+                                : KurdishHeritageColors.textSubtleLight,
                             size: 20,
                           ),
                         ),
@@ -229,7 +282,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           backgroundColor: KurdishHeritageColors.sor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          elevation: 0,
+                          elevation: isDark ? 0 : 2,
+                          shadowColor: KurdishHeritageColors.sor.withOpacity(0.45),
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
@@ -244,7 +298,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       children: [
                         Text(
                           "Don't have an account? ",
-                          style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: isDark ? Colors.white54 : KurdishHeritageColors.textMutedLight,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () => context.go('/signup'),
@@ -261,6 +318,7 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

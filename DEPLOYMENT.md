@@ -1,5 +1,7 @@
 # Deployment: R2, Railway, GitHub, Flutter & Dashboard
 
+**Secrets:** Never commit `DATABASE_URL`, `ADMIN_KEY`, API keys, or Postgres passwords to Git. If any credential was shared publicly, **rotate** it in Railway / Cloudflare / Vercel immediately.
+
 This doc ties together **Cloudflare R2** (object storage), the **FastAPI** backend on **Railway**, **GitHub** as source of truth, and the **Flutter app** + **Vite dashboard** as API clients.
 
 ## Architecture (who talks to R2)
@@ -37,7 +39,7 @@ Local template: copy `server/.env.example` → `server/.env` and fill `R2_*`.
 
 | Variable | Purpose |
 |----------|---------|
-| `DATABASE_URL` | Usually auto-set by PostgreSQL plugin |
+| `DATABASE_URL` | **Railway API service only.** Use the variable **referenced from the Postgres plugin** (`postgres.railway.internal` is normal there — never paste this into Vercel or the Flutter app). |
 | `ADMIN_KEY` | Long random string — required for `/api/seed`, admin uploads, `/api/events/sync` |
 | `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | R2 access |
 | `R2_PUBLIC_URL` | Optional; public base URL for objects |
@@ -59,24 +61,44 @@ The admin UI reads `VITE_API_URL` and `VITE_ADMIN_KEY` at **build time**.
    - `VITE_ADMIN_KEY=<same as ADMIN_KEY on Railway>`
 3. Build or dev:
    - `npm run dev` — local dashboard pointing at production API if `.env` says so.
-   - Host `dist/` on **Cloudflare Pages**, **Netlify**, **Vercel**, or a static bucket — add that origin to **`CORS_ORIGINS`** on Railway.
+   - Host `dist/` on **Cloudflare Pages**, **Netlify**, **Vercel**, or a static bucket — add that origin to **`CORS_ORIGINS`** on Railway if you use an explicit allow-list (see below).
+
+### Vercel (`termproject-dashboard` etc.)
+
+1. **Do not** put `DATABASE_URL`, `postgresql://…`, or Postgres passwords in Vercel — the browser never connects to Postgres; only your **Railway Python service** uses `DATABASE_URL` (often `postgres.railway.internal`, which only works **inside** Railway’s network).
+
+2. In Vercel → **Project → Settings → Environment Variables** → add for **Production** (and **Preview** if you want previews to hit real API):
+
+   | Name | Value |
+   |------|--------|
+   | `VITE_API_URL` | Your **public** Railway API URL, e.g. `https://YOUR-SERVICE.up.railway.app` (copy from Railway → your API service → **Networking / domain**). No trailing slash. |
+   | `VITE_ADMIN_KEY` | Exactly the same as **`ADMIN_KEY`** on the Railway backend. |
+
+3. **Redeploy** after saving variables — Vite bakes these in at **build** time (`Deployments → … → Redeploy`).
+
+4. Open the deployed dashboard → **Settings → API & Backend**: confirm **PostgreSQL (Railway)** shows OK (means Railway has `DATABASE_URL`) and **Health** is healthy.
+
+5. **CORS:** If you set **`CORS_ORIGINS`** on Railway to a strict list, include your Vercel URL(s), e.g. `https://termproject-dashboard.vercel.app`. Alternatively, when `CORS_ORIGINS` is **non-empty**, the API also allows origins matching `*.vercel.app` via regex unless you set `CORS_DISABLE_VERCEL_REGEX=true`.
 
 ---
 
 ## 4. Flutter app
 
-The API base URL is compile-time configurable (no R2 secrets in the app).
+The app never opens PostgreSQL directly — it calls **HTTPS to your FastAPI URL on Railway**, and **Railway’s backend** uses `DATABASE_URL` for Postgres.
 
-**Local (default):** `http://127.0.0.1:8000` — see `client/lib/config/api_config.dart`.
+**Defaults (`client/lib/config/api_config.dart`):**
 
-**Production build** (recommended):
+| Build mode | API URL when `API_BASE_URL` dart-define is **not** set |
+|------------|---------------------------------------------------------|
+| **Debug** (`flutter run`) | `http://127.0.0.1:8000` (local backend) |
+| **Release / profile** (`flutter build apk`, Play/TestFlight builds) | `https://termproject-production.up.railway.app` (edit constant if your Railway hostname differs) |
+
+**Optional:** Always pin your backend explicitly:
 
 ```bash
 cd client
 flutter build apk --dart-define=API_BASE_URL=https://YOUR-RAILWAY-URL.up.railway.app
-# iOS
 flutter build ipa --dart-define=API_BASE_URL=https://YOUR-RAILWAY-URL.up.railway.app
-# Web
 flutter build web --dart-define=API_BASE_URL=https://YOUR-RAILWAY-URL.up.railway.app
 ```
 
@@ -112,4 +134,4 @@ If new users or rows appear in the admin UI but **not** in Railway’s Postgres:
 
 1. **`GET /api/health`** on your Railway URL — `database_configured` must be **`true`**. If **`false`**, the service has no `DATABASE_URL` (attach the Railway **PostgreSQL** plugin or paste the plugin’s URL into Variables).
 2. **Dashboard origin:** Open DevTools → **Network** → reload Users (or any API call). The request host must be your **`*.up.railway.app`** API, **not** the dashboard dev server (e.g. `localhost:3000`). If requests stay on the dashboard host, `VITE_API_URL` was missing or blank — set `dashboard/.env` to `VITE_API_URL=https://YOUR-SERVICE.up.railway.app` (no trailing slash), restart `npm run dev`, or rebuild static hosting.
-3. **Flutter sign-ups:** Ship builds with `--dart-define=API_BASE_URL=https://YOUR-SERVICE.up.railway.app`. Otherwise registrations can hit your dev API instead of Railway.
+3. **Flutter:** In **debug**, the app defaults to **`http://127.0.0.1:8000`** — that DB is **not** Railway’s Postgres. Use **`flutter run --dart-define=API_BASE_URL=https://YOUR-SERVICE.up.railway.app`** to hit Railway while debugging, or use **release/profile** builds which default to Railway unless `API_BASE_URL` is set. Watch the console: **`[Kurdistan Go] API base URL → ...`** on startup (debug mode).

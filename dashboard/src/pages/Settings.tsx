@@ -263,6 +263,11 @@ export default function SettingsPage() {
                 <Status label="R2 configured" ok={!!health?.r2_configured} />
                 <Status label="R2 public URL" ok={!!health?.r2_public_url} hint="Optional - presigned URLs are used otherwise." />
                 <Status label="Admin key set" ok={!!health?.admin_configured} />
+                <Status
+                  label="PostgreSQL (Railway)"
+                  ok={!!health?.database_configured}
+                  hint="DATABASE_URL must be set on the Railway API service (internal postgres.* URL is OK there only)."
+                />
               </dl>
               <button
                 onClick={refresh}

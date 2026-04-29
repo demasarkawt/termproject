@@ -53,12 +53,12 @@ class _AppShellState extends State<AppShell> {
             children: [
               widget.child,
 
-              // ✅ GLOBAL ACTION OVERLAY (Theme & Map)
+              // Theme & map: top-left so profile (and other) top-right actions stay clear.
               SafeArea(
                 child: Align(
-                  alignment: Alignment.topRight,
+                  alignment: Alignment.topLeft,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 10, right: 16),
+                    padding: const EdgeInsets.only(top: 10, left: 16),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -107,7 +107,7 @@ class _GlobalActionBtn extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Material(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
           child: InkWell(
             onTap: onTap,
             child: Container(
@@ -116,7 +116,7 @@ class _GlobalActionBtn extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.12),
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
                   width: 1,
                 ),
               ),
@@ -143,11 +143,14 @@ class HeritageBottomNav extends StatelessWidget {
     required this.onChanged,
   });
 
+  /// Events accent — earth tone from the heritage palette (replaces generic blue).
+  static const Color _eventsAccent = Color(0xFF6D4C41);
+
   static const items = <_HeritageItem>[
     _HeritageItem(Icons.home_rounded, 'Home', KurdishHeritageColors.sor),
     _HeritageItem(Icons.explore_rounded, 'Explore', KurdishHeritageColors.kesk),
     _HeritageItem(Icons.auto_awesome_rounded, 'AI', KurdishHeritageColors.zer),
-    _HeritageItem(Icons.calendar_today_rounded, 'Events', Color(0xFF1E3A8A)),
+    _HeritageItem(Icons.calendar_today_rounded, 'Events', _eventsAccent),
     _HeritageItem(Icons.person_rounded, 'Profile', KurdishHeritageColors.xweli),
   ];
 
@@ -171,13 +174,16 @@ class HeritageBottomNav extends StatelessWidget {
               child: Container(
                 height: 64,
                 decoration: BoxDecoration(
-                  color: KurdishHeritageColors.xweli.withOpacity(isDark ? 0.8 : 0.9),
+                  color: KurdishHeritageColors.xweli.withValues(alpha: isDark ? 0.88 : 0.92),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.22),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 20,
+                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.14),
+                      blurRadius: isDark ? 20 : 16,
                       offset: const Offset(0, 8),
                     ),
                   ],
@@ -192,7 +198,7 @@ class HeritageBottomNav extends StatelessWidget {
             right: 50,
             child: Container(
               height: 1.5,
-              color: KurdishHeritageColors.zer.withOpacity(0.4),
+              color: KurdishHeritageColors.zer.withValues(alpha: 0.4),
             ),
           ),
 
@@ -238,8 +244,23 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
     super.initState();
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (widget.isSelected) {
+      _pulseCtrl.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_DiamondNavBtn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected && !oldWidget.isSelected) {
+      _pulseCtrl.repeat(reverse: true);
+    } else if (!widget.isSelected && oldWidget.isSelected) {
+      _pulseCtrl
+        ..stop()
+        ..reset();
+    }
   }
 
   @override
@@ -250,6 +271,8 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return AnimatedScale(
       duration: const Duration(milliseconds: 400),
       scale: widget.isSelected ? 1.1 : 1.0,
@@ -259,7 +282,7 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
         builder: (context, child) {
           // Subtle Parallax/Tilt effect when selected
           final pulseValue = widget.isSelected ? _pulseCtrl.value : 0.0;
-          final offset = Offset(0, -pulseValue * 4); // Breathe up effect
+          final offset = Offset(0, -pulseValue * 3);
 
           return Transform.translate(
             offset: offset,
@@ -281,9 +304,11 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
                           decoration: BoxDecoration(
                             boxShadow: [
                               BoxShadow(
-                                color: widget.item.color.withOpacity(0.3 * _pulseCtrl.value),
-                                blurRadius: 20 * _pulseCtrl.value,
-                                spreadRadius: 4 * _pulseCtrl.value,
+                                color: widget.item.color.withValues(
+                                  alpha: 0.28 * _pulseCtrl.value,
+                                ),
+                                blurRadius: 18 * _pulseCtrl.value,
+                                spreadRadius: 3 * _pulseCtrl.value,
                               )
                             ],
                           ),
@@ -301,7 +326,7 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: widget.isSelected ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: const Offset(4, 4),
                             )
@@ -320,11 +345,13 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
                         ),
                       ),
                     ),
-                    // Icon
+                    // Icon — dark glyphs read reliably on saturated jewel tones.
                     Icon(
                       widget.item.icon,
                       size: 20,
-                      color: widget.isSelected ? Colors.black87 : Colors.black45,
+                      color: widget.isSelected
+                          ? Colors.black.withValues(alpha: 0.87)
+                          : Colors.black.withValues(alpha: isDark ? 0.5 : 0.42),
                     ),
                   ],
                 ),

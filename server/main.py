@@ -94,6 +94,10 @@ app = FastAPI(
 )
 
 # ─── CORS ────────────────────────────────────────────────────────────────────
+# Browsers only talk to this API over HTTPS — never to Postgres directly.
+# Vercel dashboard (and *.vercel.app previews) need either:
+#   - empty CORS_ORIGINS → allow_origins ["*"] below, or
+#   - list your prod URL in CORS_ORIGINS *and* rely on allow_origin_regex for previews.
 _extra_origins = [
     o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()
 ]
@@ -103,10 +107,26 @@ _default_origins = [
     "http://localhost:5000",
     "http://127.0.0.1:5000",
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
 ]
+_disable_vercel_regex = os.getenv("CORS_DISABLE_VERCEL_REGEX", "").lower() in ("1", "true", "yes")
+_vercel_regex = os.getenv(
+    "CORS_VERCEL_REGEX",
+    r"https://([a-zA-Z0-9\-]+\.)*vercel\.app",
+)
+
+if _extra_origins:
+    _allow_origins = _extra_origins + _default_origins
+    _origin_regex = None if _disable_vercel_regex else _vercel_regex
+else:
+    _allow_origins = ["*"]
+    _origin_regex = None
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_extra_origins + _default_origins if _extra_origins else ["*"],
+    allow_origins=_allow_origins,
+    allow_origin_regex=_origin_regex,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -104,6 +104,34 @@ class ThemeService extends ChangeNotifier {
         labelLarge: TextStyle(color: KurdishHeritageColors.res.withValues(alpha: 0.8)),
       ),
       iconTheme: const IconThemeData(color: KurdishHeritageColors.res),
+      cardTheme: CardThemeData(
+        color: KurdishHeritageColors.surfaceLight,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(KurdishHeritageRadii.card),
+          side: const BorderSide(color: KurdishHeritageColors.borderLight),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: KurdishHeritageColors.surfaceLight,
+        hintStyle: const TextStyle(
+          color: KurdishHeritageColors.textSubtleLight,
+          fontWeight: FontWeight.w500,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(KurdishHeritageRadii.card),
+          borderSide: const BorderSide(color: KurdishHeritageColors.borderLight),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(KurdishHeritageRadii.card),
+          borderSide: const BorderSide(color: KurdishHeritageColors.borderLight),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(KurdishHeritageRadii.card),
+          borderSide: const BorderSide(color: KurdishHeritageColors.zer, width: 2),
+        ),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: KurdishHeritageColors.surface2Light,
         foregroundColor: KurdishHeritageColors.res,

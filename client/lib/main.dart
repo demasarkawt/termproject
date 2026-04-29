@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_router.dart';
+import 'config/api_config.dart';
 import 'data/favorites_store.dart';
 import 'data/favorites_scope.dart';
 import 'data/live_data.dart';
@@ -14,6 +16,9 @@ final themeService = ThemeService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    debugPrint('[Kurdistan Go] API base URL → $kBaseUrl');
+  }
   await UserSession.load();
   // Warm the live-data cache from the FastAPI backend in the background.
   // The bundled seed data is used until this completes (or if it fails).
