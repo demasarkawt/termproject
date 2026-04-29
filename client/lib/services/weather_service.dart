@@ -133,9 +133,9 @@ class WeatherService {
   /// Maps WMO code to a matching Flutter icon
   static IconData iconFromCode(int code) {
     if (code == 0 || code == 1) return Icons.wb_sunny_rounded;
-    if (code == 2) return Icons.wb_cloudy_outlined;
+    if (code == 2) return Icons.cloud_outlined;
     if (code == 3) return Icons.cloud_rounded;
-    if (code >= 45 && code <= 48) return Icons.foggy;
+    if (code >= 45 && code <= 48) return Icons.blur_on_rounded;
     if (code >= 51 && code <= 67) return Icons.grain_rounded;
     if (code >= 71 && code <= 77) return Icons.ac_unit_rounded;
     if (code >= 80 && code <= 82) return Icons.umbrella_rounded;

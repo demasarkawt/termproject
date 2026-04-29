@@ -1,8 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:termproject/constants/app_branding.dart';
 import '../../config/api_config.dart';
 import '../../services/theme_service.dart';
 import '../../data/place_repo.dart';
@@ -177,41 +177,88 @@ class _AiScreenState extends State<AiScreen> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // ── Header ───────────────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'AI ASSISTANT',
-                          style: TextStyle(
-                            color: KurdishHeritageColors.zer,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14,
-                            letterSpacing: 4,
-                          ),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [const Color(0xFF1E3A5F), const Color(0xFF0F1729)]
+                              : [const Color(0xFFE8EEF9), const Color(0xFFF5F0FF)],
                         ),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Curated by Mercury 2',
-                          style: TextStyle(
-                            color: isDark ? Colors.white : KurdishHeritageColors.res,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 36,
-                            letterSpacing: -1.5,
-                          ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.06),
                         ),
-                        Text(
-                          'Your intelligent Travelo trip companion',
-                          style: TextStyle(
-                            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 76,
+                            height: 76,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  KurdishHeritageColors.zer,
+                                  KurdishHeritageColors.zer.withValues(alpha: 0.78),
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: KurdishHeritageColors.zer.withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.auto_awesome_rounded, size: 40, color: Color(0xFF1A1410)),
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${AppBranding.appName} AI',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : KurdishHeritageColors.res,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 26,
+                                    letterSpacing: -0.6,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Your trip companion for mood search and day plans.',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.65)
+                                        : KurdishHeritageColors.textMutedLight,
+                                    fontSize: 14,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

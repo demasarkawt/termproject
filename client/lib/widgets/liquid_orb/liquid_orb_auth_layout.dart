@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../constants/app_branding.dart';
 import '../../theme/liquid_orb.dart';
 import 'liquid_orb_background.dart';
 
-/// Full-screen liquid gradient + optional [heroChild] in the top band, white card below.
+/// Full-screen backdrop (optional travel photo + soft orbs) + optional [heroChild] in the top band, white card below.
 class LiquidOrbAuthLayout extends StatelessWidget {
   const LiquidOrbAuthLayout({
     super.key,
@@ -11,6 +12,8 @@ class LiquidOrbAuthLayout extends StatelessWidget {
     this.onBack,
     this.heroFlex = 38,
     this.cardFlex = 62,
+    /// When set, shows a full-bleed travel image with gradient and soft liquid orbs on top (matches splash/welcome).
+    this.travelHeroAsset,
   });
 
   final Widget cardChild;
@@ -18,13 +21,14 @@ class LiquidOrbAuthLayout extends StatelessWidget {
   final VoidCallback? onBack;
   final int heroFlex;
   final int cardFlex;
+  final String? travelHeroAsset;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const LiquidOrbBackground(fillBehindCard: true),
+        _AuthBackdrop(travelHeroAsset: travelHeroAsset),
         SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,7 +60,10 @@ class LiquidOrbAuthLayout extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: heroFlex,
-                      child: heroChild ?? const SizedBox.shrink(),
+                      child: heroChild ??
+                          (travelHeroAsset != null
+                              ? const _TravelHeroCopyBand()
+                              : const SizedBox.shrink()),
                     ),
                     Expanded(
                       flex: cardFlex,
@@ -76,6 +83,117 @@ class LiquidOrbAuthLayout extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AuthBackdrop extends StatelessWidget {
+  const _AuthBackdrop({this.travelHeroAsset});
+
+  final String? travelHeroAsset;
+
+  @override
+  Widget build(BuildContext context) {
+    if (travelHeroAsset == null) {
+      return const LiquidOrbBackground(fillBehindCard: true);
+    }
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Image.asset(travelHeroAsset!, fit: BoxFit.cover),
+        ),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.18),
+                  Colors.black.withValues(alpha: 0.42),
+                  Colors.black.withValues(alpha: 0.78),
+                ],
+                stops: const [0.0, 0.42, 1.0],
+              ),
+            ),
+          ),
+        ),
+        const Positioned.fill(
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.42,
+              child: LiquidOrbBackground(fillBehindCard: true),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Travel copy + chips above the white card (sign-in / sign-up hero band).
+class _TravelHeroCopyBand extends StatelessWidget {
+  const _TravelHeroCopyBand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              AppBranding.splashWordmarkCaps,
+              style: TextStyle(
+                color: Color(0xCCD4AF37),
+                fontSize: 11,
+                letterSpacing: 3.2,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: const [
+                _TravelHeroChip(label: 'Heritage'),
+                _TravelHeroChip(label: 'Tours'),
+                _TravelHeroChip(label: 'Routes'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TravelHeroChip extends StatelessWidget {
+  const _TravelHeroChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.14),
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            letterSpacing: 1.2,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }

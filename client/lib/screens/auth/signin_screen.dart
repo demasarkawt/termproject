@@ -117,6 +117,7 @@ class _SignInScreenState extends State<SignInScreen> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: LiquidOrbAuthLayout(
+          travelHeroAsset: AppBranding.authTravelHeroAsset,
           onBack: () => _goBack(context),
           cardChild: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),

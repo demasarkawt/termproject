@@ -11,6 +11,9 @@ abstract final class AppBranding {
   static const String signInEyebrow = 'CONTINUE YOUR JOURNEY';
   static const String signUpEyebrow = 'START YOUR NEXT TRIP';
 
+  /// Hero photo behind sign-in / sign-up (matches splash / home citadel).
+  static const String authTravelHeroAsset = 'assets/images/place_citadel.png';
+
   // Main shell
   static const String drawerSubtitle = 'Travel & tours edition';
   static const String homeTileSubtitleRegions = 'Cities & scenic routes';
