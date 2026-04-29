@@ -103,3 +103,13 @@ If you ship **Flutter web** on its own domain, add that URL to **`CORS_ORIGINS`*
 2. Dashboard: open Places/Cities — images load if seed/upload populated R2-backed URLs.
 3. Flutter: sign-in and browse places — same URLs should render images.
 4. If images fail with CORS only in browser — fix `CORS_ORIGINS`; image URLs themselves are normal HTTPS GETs to R2 or presigned links.
+
+---
+
+## 7. Troubleshooting: dashboard / Flutter vs Railway PostgreSQL
+
+If new users or rows appear in the admin UI but **not** in Railway’s Postgres:
+
+1. **`GET /api/health`** on your Railway URL — `database_configured` must be **`true`**. If **`false`**, the service has no `DATABASE_URL` (attach the Railway **PostgreSQL** plugin or paste the plugin’s URL into Variables).
+2. **Dashboard origin:** Open DevTools → **Network** → reload Users (or any API call). The request host must be your **`*.up.railway.app`** API, **not** the dashboard dev server (e.g. `localhost:3000`). If requests stay on the dashboard host, `VITE_API_URL` was missing or blank — set `dashboard/.env` to `VITE_API_URL=https://YOUR-SERVICE.up.railway.app` (no trailing slash), restart `npm run dev`, or rebuild static hosting.
+3. **Flutter sign-ups:** Ship builds with `--dart-define=API_BASE_URL=https://YOUR-SERVICE.up.railway.app`. Otherwise registrations can hit your dev API instead of Railway.

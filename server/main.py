@@ -141,6 +141,7 @@ def health_check():
         "r2_configured": r2_client.is_configured(),
         "r2_public_url": bool(r2_client.R2_PUBLIC_URL),
         "admin_configured": bool((os.environ.get("ADMIN_KEY") or "").strip()),
+        "database_configured": bool((os.environ.get("DATABASE_URL") or "").strip()),
     }
 
 

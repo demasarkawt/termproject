@@ -3,13 +3,28 @@
 // Reads VITE_API_URL and VITE_ADMIN_KEY from `.env`. The admin key is
 // attached as the `X-Admin-Key` header on every write call so the backend's
 // `require_admin` dependency lets us through.
+//
+// Important: `??` does NOT fall back when VITE_API_URL is "" (empty string).
+// An empty value makes fetch("/api/...") relative — requests hit the dashboard
+// host, not Railway — so data never reaches PostgreSQL. We normalize empty → fallback.
 
-export const API_URL: string =
-  (import.meta.env.VITE_API_URL as string | undefined) ??
-  'https://termproject-production.up.railway.app';
+const DEFAULT_API_URL = 'https://termproject-production.up.railway.app';
+
+function resolveApiUrl(): string {
+  const raw = import.meta.env.VITE_API_URL as string | undefined;
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  const base = trimmed.length > 0 ? trimmed : DEFAULT_API_URL;
+  return base.replace(/\/+$/, '');
+}
+
+export const API_URL: string = resolveApiUrl();
 
 export const ADMIN_KEY: string =
-  (import.meta.env.VITE_ADMIN_KEY as string | undefined) ?? '';
+  (import.meta.env.VITE_ADMIN_KEY as string | undefined)?.trim() ?? '';
+
+if (import.meta.env.DEV) {
+  console.info('[dashboard] API_URL →', API_URL);
+}
 
 export const PLACE_CATEGORIES = ['CULTURE', 'NATURE', 'ADVENTURE', 'FOOD', 'MALL'] as const;
 export type PlaceCategory = (typeof PLACE_CATEGORIES)[number];
@@ -26,6 +41,13 @@ export class ApiError extends Error {
 }
 
 async function rawFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  if (!API_URL) {
+    throw new ApiError(
+      500,
+      'VITE_API_URL is missing',
+      'Set VITE_API_URL in dashboard/.env to your Railway API URL',
+    );
+  }
   const res = await fetch(`${API_URL}${path}`, options);
   if (!res.ok) {
     let detail: string | undefined;
@@ -207,6 +229,7 @@ export interface HealthInfo {
   r2_configured: boolean;
   r2_public_url: boolean;
   admin_configured: boolean;
+  database_configured?: boolean;
 }
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────
