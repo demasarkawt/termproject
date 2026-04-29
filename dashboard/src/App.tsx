@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard,
-  MapPin,
-  Image as ImageIcon,
-  Calendar,
-  BarChart3,
-  Users as UsersIcon,
-  Building2,
-  Map as MapIconLucide,
-  Settings,
-  Castle,
+  Gauge,
+  Compass,
+  Landmark,
+  MapPinned,
+  Ticket,
+  Images,
+  LineChart,
+  UserCircle2,
+  SlidersHorizontal,
+  Mountain,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -47,15 +47,15 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'places', label: 'Places', icon: MapPin },
-  { id: 'cities', label: 'Cities', icon: Building2 },
-  { id: 'map', label: 'Map', icon: MapIconLucide },
-  { id: 'events', label: 'Events', icon: Calendar },
-  { id: 'media', label: 'Media Library', icon: ImageIcon },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'users', label: 'Users', icon: UsersIcon },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge },
+  { id: 'places', label: 'Places', icon: Compass },
+  { id: 'cities', label: 'Cities', icon: Landmark },
+  { id: 'map', label: 'Map', icon: MapPinned },
+  { id: 'events', label: 'Events', icon: Ticket },
+  { id: 'media', label: 'Media Library', icon: Images },
+  { id: 'analytics', label: 'Analytics', icon: LineChart },
+  { id: 'users', label: 'Users', icon: UserCircle2 },
+  { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
 ];
 
 export default function App() {
@@ -107,7 +107,7 @@ function Shell() {
             className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden"
             style={{ backgroundColor: 'var(--color-kesk)' }}
           >
-            <Castle className="w-6 h-6" />
+            <Mountain className="w-6 h-6" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-zer">Kurdistan Go</h1>
