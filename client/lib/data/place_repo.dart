@@ -534,7 +534,11 @@ class PlaceRepo {
     'Gara Mountain':
     'A high mountain range offering breathtaking views of the Amadiya plateau. It features unique flora and is a popular spot for mountain climbing and viewing the sunset over the Duhok mountains.',
     'Sartaki Bamo':
-    'A dramatic mountain   static const _titles = {
+    'A dramatic mountain pass and nature reserve near the Halabja-Iran border. It is known for its steep, sheer cliffs, deep valleys, and being a habitat for rare wild mountain goats.',
+  };
+
+  // ✅ REAL TITLES ONLY (any count is OK)
+  static const _titles = {
     'erbil': {
       'historical': [
         'Citadel of Erbil',
@@ -661,17 +665,6 @@ class PlaceRepo {
       'religious': [
         'Local mosques & heritage sites (Halabja)',
       ],
-      'activities': [
-        'Hawraman scenic drive',
-        'Picnic day in Byara',
-      ],
-      'food': [
-        'Hawraman Traditional Restaurants',
-        'Halabja Kebab and Fish',
-      ],
-    },
-  };
-,
       'activities': [
         'Hawraman scenic drive',
         'Picnic day in Byara',
