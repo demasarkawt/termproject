@@ -149,22 +149,27 @@ flutter pub get
 flutter run
 ```
 
-Update `lib/config/api_config.dart` with your backend URL before running:
+Point the Flutter app at your API **without editing source** (recommended):
 
-```dart
-const String kBaseUrl = 'https://your-backend.up.railway.app';
+```bash
+flutter run --dart-define=API_BASE_URL=https://your-backend.up.railway.app
 ```
+
+See **`DEPLOYMENT.md`** for **Cloudflare R2**, **Railway**, **GitHub**, dashboard **`VITE_*`** vars, and **CORS** for hosted Flutter web / admin UI.
 
 ---
 
 ## Deployment
 
-The backend is configured for **Railway** deployment via `railway.json` and `nixpacks.toml`. Set the following environment variables in Railway:
+- **Backend:** Railway (`Dockerfile` at repo root, or `server/` + `Procfile` — see `server/README.md`).
+- **R2:** Object storage credentials live **only on the server**; the Flutter app and dashboard use HTTPS URLs returned by the API.
+- **GitHub Actions:** `.github/workflows/ci.yml` runs backend compile-check, dashboard `tsc`, and Flutter `analyze`.
 
-| Variable | Description |
+| Variable | Where |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string (auto-injected by Railway) |
-| `INCEPTION_API_KEY` | Your Inception Labs API key |
+| `DATABASE_URL`, `ADMIN_KEY`, `R2_*`, `CORS_ORIGINS`, … | Railway service (**DEPLOYMENT.md**) |
+| `VITE_API_URL`, `VITE_ADMIN_KEY` | Dashboard `.env` at build time |
+| `API_BASE_URL` | Flutter `--dart-define` at build/run time |
 
 ---
 

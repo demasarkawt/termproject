@@ -1,4 +1,6 @@
 // lib/data/place_repo.dart
+import 'live_data.dart';
+
 class PlaceData {
   final String id;
   final String cityId;       // erbil / sulaymaniyah / duhok / halabja
@@ -48,12 +50,24 @@ class PlaceData {
 }
 
 class PlaceRepo {
-  static PlaceData get(String id) =>
-      _places.firstWhere((p) => p.id == id, orElse: () => _places.first);
+  /// When the FastAPI backend has been reached at least once, prefer the
+  /// data from [LiveData]. Otherwise fall back to the bundled seed data so
+  /// the app still renders without a network connection.
+  static PlaceData get(String id) {
+    final live = LiveData.lookup(id);
+    if (live != null) return live;
+    return _places.firstWhere((p) => p.id == id, orElse: () => _places.first);
+  }
 
-  static List<PlaceData> get all => _places;
+  static List<PlaceData> get all =>
+      LiveData.hasData ? LiveData.all : _places;
 
   static List<PlaceData> list({required String cityId, required String categoryId}) {
+    if (LiveData.hasData) {
+      return LiveData.all
+          .where((p) => p.cityId == cityId && p.categoryId == categoryId)
+          .toList(growable: false);
+    }
     return _places
         .where((p) => p.cityId == cityId && p.categoryId == categoryId)
         .toList(growable: false);

@@ -1,15 +1,16 @@
-/// Central API configuration.
-/// Update [kBaseUrl] to point at your deployed backend.
+// Central API configuration for the Kurdistan Go backend.
+//
+// The dashboard and Flutter app share the same FastAPI backend.
+//
+// Default is local development. Override without editing this file:
+//
+//   flutter run --dart-define=API_BASE_URL=https://YOUR-RAILWAY-URL.up.railway.app
+//   flutter build apk --dart-define=API_BASE_URL=https://...
+//
+// Android emulator → host machine localhost:
+//   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 
-// The Railway endpoint is currently timing out, so you likely need to run the backend locally.
-// Uncomment the line that matches your currently running emulator:
-
-// For Android Emulator (uses 10.0.2.2 to refer to the host laptop's localhost):
-// For local Windows, Web, or iOS Simulator:
-// const String kBaseUrl = 'http://127.0.0.1:8000';
-
-// For Android Emulator (uses 10.0.2.2 to refer to the host laptop):
-// const String kBaseUrl = 'http://10.0.2.2:8000';
-
-// Production URL:
-const String kBaseUrl = 'https://termproject-production.up.railway.app';
+const String kBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'http://127.0.0.1:8000',
+);

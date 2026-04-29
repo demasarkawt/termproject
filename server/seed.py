@@ -3,6 +3,9 @@ seed.py — Populates the database with initial Kurdistan Go data.
 Run once after you have your DATABASE_URL set:
     python seed.py
 """
+import logging
+import os
+
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
@@ -10,6 +13,57 @@ load_dotenv()
 
 from database import engine, SessionLocal, Base
 import models
+import wiki_images
+
+_log = logging.getLogger(__name__)
+
+
+def _wiki_seed_enabled() -> bool:
+    raw = os.getenv("WIKI_SEED_IMAGES", "true").strip().lower()
+    return raw not in {"0", "false", "no", "off"}
+
+
+def _attach_wiki_image(
+    db: Session,
+    *,
+    image_model,
+    parent_attr: str,
+    parent_id: int,
+    title: str,
+    folder: str,
+    log_prefix: str,
+):
+    """Best-effort: download a Wikipedia thumbnail and persist it as the
+    cover image. Silently skips when R2 isn't configured or the lookup
+    fails — the bundled assets keep the apps usable."""
+    if not _wiki_seed_enabled():
+        return
+    existing = (
+        db.query(image_model)
+        .filter(getattr(image_model, parent_attr) == parent_id)
+        .count()
+    )
+    if existing > 0:
+        return
+    try:
+        result = wiki_images.upload_to_r2(title, folder=folder)
+    except Exception as exc:
+        _log.warning("%s wiki upload failed for %s: %s", log_prefix, title, exc)
+        return
+    if result is None:
+        return
+    public_url, key, size, content_type = result
+    db.add(
+        image_model(
+            **{parent_attr: parent_id},
+            url=public_url,
+            r2_key=key,
+            is_cover=True,
+            sort_order=0,
+            content_type=content_type,
+            size_bytes=size,
+        )
+    )
 
 def run_seed():
     Base.metadata.create_all(bind=engine)
@@ -30,12 +84,21 @@ def run_seed():
             obj = models.City(**c)
             db.add(obj)
             db.flush()
+            _attach_wiki_image(
+                db,
+                image_model=models.CityImage,
+                parent_attr="city_id",
+                parent_id=obj.id,
+                title=obj.name,
+                folder=f"cities/{obj.id}",
+                log_prefix="city",
+            )
             city_objects.append(obj)
         else:
             city_objects.append(existing)
 
     db.commit()
-    print(f"✅ Cities seeded: {[c.name for c in city_objects]}")
+    print(f"[seed] Cities seeded: {[c.name for c in city_objects]}")
 
     # ── Seed Places ──────────────────────────────────────────────────────────────
     places_data = [
@@ -73,6 +136,13 @@ def run_seed():
 
         # Duhok City Food
         {"name": "Manqal Restaurant", "description": "A frequently recommended spot in Duhok offering beautifully grilled meats and sweeping views of the city.", "category": "FOOD", "rating": 4.6, "is_premium": True, "city_id": city_objects[2].id, "latitude": 36.8600, "longitude": 42.9900},
+
+        # Malls (MALL category)
+        {"name": "Family Mall Erbil",   "description": "Anchored by Carrefour, with cinemas, an ice rink, restaurants, and a wide international fashion mix.",                       "category": "MALL", "rating": 4.6, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.2032, "longitude": 43.9706},
+        {"name": "Majidi Mall",         "description": "One of Erbil's largest shopping centers, featuring international brands, food courts, and a multiplex cinema.",                "category": "MALL", "rating": 4.5, "is_premium": False, "city_id": city_objects[0].id, "latitude": 36.2154, "longitude": 43.9909},
+        {"name": "Empire Mall",         "description": "Modern mall in Empire World with luxury fashion, dining, and family entertainment.",                                          "category": "MALL", "rating": 4.5, "is_premium": True,  "city_id": city_objects[0].id, "latitude": 36.1989, "longitude": 43.9456},
+        {"name": "Mazi Mall",           "description": "A Duhok favorite with a lively food court, cinemas, and a children's play area on the upper floors.",                          "category": "MALL", "rating": 4.4, "is_premium": False, "city_id": city_objects[2].id, "latitude": 36.8632, "longitude": 42.9876},
+        {"name": "Goran City Mall",     "description": "Sulaymaniyah's downtown shopping hub - ideal for a rainy afternoon with fashion, electronics, and casual eateries.",            "category": "MALL", "rating": 4.3, "is_premium": False, "city_id": city_objects[1].id, "latitude": 35.5635, "longitude": 45.4296},
     ]
 
     place_objects = []
@@ -82,12 +152,21 @@ def run_seed():
             obj = models.Place(**p)
             db.add(obj)
             db.flush()
+            _attach_wiki_image(
+                db,
+                image_model=models.PlaceImage,
+                parent_attr="place_id",
+                parent_id=obj.id,
+                title=obj.name,
+                folder=f"places/{obj.id}",
+                log_prefix="place",
+            )
             place_objects.append(obj)
         else:
             place_objects.append(existing)
 
     db.commit()
-    print(f"✅ Places seeded: {len(place_objects)} records")
+    print(f"[seed] Places seeded: {len(place_objects)} records")
 
     # ── Seed Events ──────────────────────────────────────────────────────────────
     events_data = [
@@ -103,7 +182,7 @@ def run_seed():
             db.add(models.Event(**e))
 
     db.commit()
-    print(f"✅ Events seeded: {len(events_data)} records")
+    print(f"[seed] Events seeded: {len(events_data)} records")
 
     # ── Mock Users, Trips, and Saved Places ──────────────────────────────────────
     from passlib.context import CryptContext
@@ -126,7 +205,7 @@ def run_seed():
             user_objects.append(existing)
 
     db.commit()
-    print(f"✅ Users seeded: {len(user_objects)} records")
+    print(f"[seed] Users seeded: {len(user_objects)} records")
 
     if user_objects and place_objects:
         # Mock Trips
@@ -151,10 +230,10 @@ def run_seed():
                 db.add(models.SavedPlace(**sp))
 
         db.commit()
-        print("✅ Mock Trips and Saved Places seeded.")
+        print("[seed] Mock Trips and Saved Places seeded.")
 
     db.close()
-    print("\n🌿 Database seeding complete! Kurdistan Go is ready.")
+    print("[seed] Database seeding complete. Kurdistan Go is ready.")
     return True
 
 if __name__ == "__main__":

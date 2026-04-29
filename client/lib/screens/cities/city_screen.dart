@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../data/live_data.dart';
 import '../../services/theme_service.dart';
+import '../../widgets/weather_chip.dart';
 
 class _CatData {
   final String id;
@@ -69,6 +71,14 @@ const List<_CatData> _categories = [
     icon: Icons.restaurant_rounded,
     accent: Color(0xFFDC2626),
     imagePath: 'assets/images/hd_bazaar.jpg',
+  ),
+  _CatData(
+    id: 'mall',
+    label: 'Malls',
+    subtitle: 'Shopping & Entertainment',
+    icon: Icons.shopping_bag_rounded,
+    accent: Color(0xFFA21CAF),
+    imagePath: 'assets/images/hd_park.jpg',
   ),
 ];
 
@@ -149,6 +159,18 @@ class CityScreen extends StatelessWidget {
                                 height: 1.0,
                                 letterSpacing: -1.5,
                               ),
+                            ),
+                            const SizedBox(height: 12),
+                            Builder(
+                              builder: (_) {
+                                final apiCity = LiveData.cityForSlug(cityId);
+                                if (apiCity?.latitude != null && apiCity?.longitude != null) {
+                                  return WeatherChip(
+                                    cityId: apiCity!.id,
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
                             ),
                           ],
                         ),

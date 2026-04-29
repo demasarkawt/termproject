@@ -1,33 +1,55 @@
-import { useEffect, useState } from 'react';
-import { apiFetch } from '@/src/lib/api';
-import { Users as UsersIcon, Search, ShieldCheck } from 'lucide-react';
-
-interface UserOut {
-  id: number;
-  name: string;
-  email: string;
-  level: number;
-  is_active: boolean;
-  created_at: string | null;
-}
+import { useEffect, useMemo, useState } from 'react';
+import {
+  apiFetch, apiPatch, ApiError, type User,
+} from '@/src/lib/api';
+import { Users as UsersIcon, Search, ShieldCheck, ChevronUp, ChevronDown, Power } from 'lucide-react';
+import { useToast } from '@/src/components/Toast';
 
 export default function Users() {
-  const [users, setUsers] = useState<UserOut[]>([]);
+  const toast = useToast();
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      setUsers(await apiFetch<User[]>('/api/users/'));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail ?? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    apiFetch<UserOut[]>('/api/users/')
-      .then(setUsers)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    refresh();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return users.filter(
+      (u) => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
+    );
+  }, [users, search]);
+
+  const patchUser = async (
+    id: number,
+    body: { level?: number; is_active?: boolean },
+    successMsg: string,
+  ) => {
+    setBusyId(id);
+    try {
+      const updated = await apiPatch<User>(`/api/users/${id}/admin`, body);
+      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+      toast.success(successMsg);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail ?? err.message : String(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
@@ -38,7 +60,6 @@ export default function Users() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative mb-6 max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
         <input
@@ -68,13 +89,14 @@ export default function Users() {
                 <th className="px-6 py-3 font-semibold">Level</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
                 <th className="px-6 py-3 font-semibold">Joined</th>
+                <th className="px-6 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((u, i) => (
                 <tr
                   key={u.id}
-                  className={`border-b border-stone-50 hover:bg-stone-50 transition-colors ${
+                  className={`border-b border-stone-50 hover:bg-stone-50 transition-colors group ${
                     i === filtered.length - 1 ? 'border-b-0' : ''
                   }`}
                 >
@@ -111,6 +133,56 @@ export default function Users() {
                           year: 'numeric',
                         })
                       : '—'}
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    <div className="inline-flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                      <button
+                        title="Promote (level +1)"
+                        disabled={busyId === u.id}
+                        onClick={() =>
+                          patchUser(
+                            u.id,
+                            { level: u.level + 1 },
+                            `${u.name} promoted to level ${u.level + 1}.`,
+                          )
+                        }
+                        className="rounded-md p-1.5 text-emerald-700 hover:bg-emerald-50 disabled:opacity-40"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        title="Demote (level -1)"
+                        disabled={busyId === u.id || u.level <= 1}
+                        onClick={() =>
+                          patchUser(
+                            u.id,
+                            { level: Math.max(1, u.level - 1) },
+                            `${u.name} demoted to level ${Math.max(1, u.level - 1)}.`,
+                          )
+                        }
+                        className="rounded-md p-1.5 text-stone-500 hover:bg-stone-100 disabled:opacity-40"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                      <button
+                        title={u.is_active ? 'Deactivate' : 'Reactivate'}
+                        disabled={busyId === u.id}
+                        onClick={() =>
+                          patchUser(
+                            u.id,
+                            { is_active: !u.is_active },
+                            `${u.name} ${u.is_active ? 'deactivated' : 'reactivated'}.`,
+                          )
+                        }
+                        className={`rounded-md p-1.5 disabled:opacity-40 ${
+                          u.is_active
+                            ? 'text-red-500 hover:bg-red-50'
+                            : 'text-emerald-700 hover:bg-emerald-50'
+                        }`}
+                      >
+                        <Power className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

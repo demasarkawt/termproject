@@ -1,7 +1,16 @@
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+/// Renders an image for a place.
+///
+/// Resolution priority:
+///   1. If `imagePath` is an http(s) URL (e.g. a Cloudflare R2 URL coming
+///      from the backend), render it directly with `CachedNetworkImage`.
+///   2. Else if it's an asset path (assets/...), render it as an asset.
+///   3. Else (legacy paths or empty), try Wikipedia's API for a thumbnail
+///      based on `title`, then fall back to a placeholder.
 class PlaceImage extends StatefulWidget {
   final String imagePath;
   final String title;
@@ -19,62 +28,49 @@ class PlaceImage extends StatefulWidget {
 }
 
 class _PlaceImageState extends State<PlaceImage> {
-  String? _networkUrl;
-  bool _isLoading = true;
-  bool _hasError = false;
+  String? _wikiUrl;
+  bool _isLoading = false;
+  bool _wikiTried = false;
 
-  // Cache to avoid duplicate network calls
-  static final Map<String, String?> _urlCache = {};
+  static final Map<String, String?> _wikiCache = {};
+
+  bool get _isNetwork =>
+      widget.imagePath.startsWith('http://') ||
+      widget.imagePath.startsWith('https://');
+
+  bool get _isAsset => widget.imagePath.startsWith('assets/');
 
   @override
   void initState() {
     super.initState();
-    _fetchWikiImage();
+    if (!_isNetwork && !_isAsset) {
+      _fetchWikiImage();
+    }
   }
 
   @override
   void didUpdateWidget(PlaceImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.title != widget.title) {
-      _fetchWikiImage();
+    if (oldWidget.imagePath != widget.imagePath ||
+        oldWidget.title != widget.title) {
+      _wikiUrl = null;
+      _wikiTried = false;
+      if (!_isNetwork && !_isAsset) {
+        _fetchWikiImage();
+      }
     }
   }
 
   Future<void> _fetchWikiImage() async {
-    // Determine a good search term for Wikipedia based on the place title
-    String searchTerm = widget.title;
-    if (searchTerm.contains('Citadel')) searchTerm = 'Citadel of Erbil';
-    else if (searchTerm.contains('Bekhal')) searchTerm = 'Bekhal Waterfall';
-    else if (searchTerm.contains('Shanadar')) searchTerm = 'Shanidar Cave';
-    else if (searchTerm.contains('Halabja Monument')) searchTerm = 'Halabja monument';
-    else if (searchTerm.contains('Amedi')) searchTerm = 'Amadiya';
-    else if (searchTerm.contains('Duhok Dam')) searchTerm = 'Duhok Dam';
-    else if (searchTerm.contains('Sulaimaniyah Bazaar')) searchTerm = 'Sulaymaniyah';
-    else if (searchTerm.contains('Dukan')) searchTerm = 'Lake Dukan';
-    else if (searchTerm.contains('Lalish')) searchTerm = 'Lalish';
-    else if (searchTerm.contains('Ahmed Awa')) searchTerm = 'Ahmad Awa';
-    else if (searchTerm.contains('Gali Ali Beg')) searchTerm = 'Gali Ali Beg Waterfall';
-    else if (searchTerm.contains('Sami Abdulrahman')) searchTerm = 'Sami Abdulrahman Park';
-    else if (searchTerm.contains('Amna Suraka')) searchTerm = 'Amna Suraka';
-    // Food & Dining – map to the city or cuisine Wikipedia page for best image
-    else if (searchTerm.contains('Machko') || searchTerm.contains('Chaikhana')) searchTerm = 'Erbil';
-    else if (searchTerm.contains('Abu Shihab')) searchTerm = 'Kurdish cuisine';
-    else if (searchTerm.contains('Kebab Yasin')) searchTerm = 'Kebab';
-    else if (searchTerm.contains('Dawa 2')) searchTerm = 'Dolma (food)';
-    else if (searchTerm.contains('Shaab Teahouse') || searchTerm.contains('Chaikhanay')) searchTerm = 'Sulaymaniyah';
-    else if (searchTerm.contains('Kebab Wasta')) searchTerm = 'Kebab';
-    else if (searchTerm.contains("Chalak")) searchTerm = 'Sulaymaniyah';
-    else if (searchTerm.contains('Kebab Kawa')) searchTerm = 'Duhok';
-    else if (searchTerm.contains('Malta Restaurant')) searchTerm = 'Duhok';
-    else if (searchTerm.contains('Mazi Mall')) searchTerm = 'Duhok';
-    else if (searchTerm.contains('Hawraman Traditional')) searchTerm = 'Hawraman';
-    else if (searchTerm.contains('Halabja Kebab')) searchTerm = 'Halabja';
+    setState(() => _isLoading = true);
+    final searchTerm = _wikipediaSearchTerm(widget.title);
 
-    if (_urlCache.containsKey(searchTerm)) {
+    if (_wikiCache.containsKey(searchTerm)) {
       if (mounted) {
         setState(() {
-          _networkUrl = _urlCache[searchTerm];
+          _wikiUrl = _wikiCache[searchTerm];
           _isLoading = false;
+          _wikiTried = true;
         });
       }
       return;
@@ -87,122 +83,109 @@ class _PlaceImageState extends State<PlaceImage> {
         url,
         headers: {'User-Agent': 'KurdistanTravelApp/1.0 (contact@example.com)'},
       );
-
+      String? imageUrl;
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
-        final queryMap = data['query'] as Map<String, dynamic>;
-        final pages = queryMap['pages'] as Map<String, dynamic>;
-        
-        String? imageUrl;
-        for (var pageValue in pages.values) {
-          if (pageValue is Map<String, dynamic>) {
-            if (pageValue.containsKey('thumbnail')) {
-              final thumbnailMap = pageValue['thumbnail'] as Map<String, dynamic>;
-              imageUrl = thumbnailMap['source'] as String?;
-              break;
-            }
+        final pages =
+            (data['query'] as Map<String, dynamic>)['pages'] as Map<String, dynamic>;
+        for (final v in pages.values) {
+          if (v is Map<String, dynamic> && v.containsKey('thumbnail')) {
+            imageUrl = (v['thumbnail'] as Map<String, dynamic>)['source'] as String?;
+            break;
           }
         }
-        
-        // If English wiki fails, try Arabic wiki for local places
-        if (imageUrl == null) {
-          final arUrl = Uri.parse(
-              'https://ar.wikipedia.org/w/api.php?action=query&titles=${Uri.encodeComponent(searchTerm)}&prop=pageimages&format=json&pithumbsize=1000&origin=*');
-          final arResponse = await http.get(
-            arUrl,
-            headers: {'User-Agent': 'KurdistanTravelApp/1.0 (contact@example.com)'},
-          );
-          if (arResponse.statusCode == 200) {
-            final arData = json.decode(arResponse.body) as Map<String, dynamic>;
-            final arQueryMap = arData['query'] as Map<String, dynamic>;
-            final arPages = arQueryMap['pages'] as Map<String, dynamic>;
-            for (var pageValue in arPages.values) {
-              if (pageValue is Map<String, dynamic>) {
-                if (pageValue.containsKey('thumbnail')) {
-                  final thumbnailMap = pageValue['thumbnail'] as Map<String, dynamic>;
-                  imageUrl = thumbnailMap['source'] as String?;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
-        _urlCache[searchTerm] = imageUrl;
-
-        if (mounted) {
-          setState(() {
-            _networkUrl = imageUrl;
-            _isLoading = false;
-          });
-        }
-      } else {
-        print('PlaceImage Error: Failed to fetch for $searchTerm with status ${response.statusCode}');
-        throw Exception('Failed to load wiki image');
       }
-    } catch (e) {
-      print('PlaceImage Exception for $searchTerm: $e');
+      _wikiCache[searchTerm] = imageUrl;
       if (mounted) {
         setState(() {
-          _hasError = true;
+          _wikiUrl = imageUrl;
           _isLoading = false;
+          _wikiTried = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _wikiTried = true;
         });
       }
     }
   }
 
+  String _wikipediaSearchTerm(String title) {
+    if (title.contains('Citadel')) return 'Citadel of Erbil';
+    if (title.contains('Bekhal')) return 'Bekhal Waterfall';
+    if (title.contains('Shanidar') || title.contains('Shanadar')) {
+      return 'Shanidar Cave';
+    }
+    if (title.contains('Halabja Monument')) return 'Halabja monument';
+    if (title.contains('Amedi') || title.contains('Amadiya')) return 'Amadiya';
+    if (title.contains('Lalish')) return 'Lalish';
+    if (title.contains('Dukan')) return 'Lake Dukan';
+    if (title.contains('Gali Ali Beg') || title.contains('Geli Ali Beg')) {
+      return 'Gali Ali Beg Waterfall';
+    }
+    if (title.contains('Hawraman')) return 'Hawraman';
+    if (title.contains('Korek')) return 'Mount Korek';
+    return title;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Container(
-        color: Colors.grey.shade200,
-        child: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1F5E37)),
-            strokeWidth: 2,
-          ),
-        ),
-      );
-    }
-
-    if (_networkUrl != null) {
-      return Image.network(
-        _networkUrl!,
+    if (_isNetwork) {
+      return CachedNetworkImage(
+        imageUrl: widget.imagePath,
         fit: widget.fit,
-        errorBuilder: (context, error, stackTrace) => _buildFallback(),
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1F5E37)),
-                strokeWidth: 2,
-              ),
-            ),
-          );
-        },
+        placeholder: (_, __) => _buildSpinner(),
+        errorWidget: (_, __, ___) => _buildFallback(),
       );
     }
-
+    if (_isAsset) {
+      return Image.asset(
+        widget.imagePath,
+        fit: widget.fit,
+        errorBuilder: (_, __, ___) => _buildFallback(),
+      );
+    }
+    if (_isLoading) {
+      return _buildSpinner();
+    }
+    if (_wikiUrl != null) {
+      return CachedNetworkImage(
+        imageUrl: _wikiUrl!,
+        fit: widget.fit,
+        placeholder: (_, __) => _buildSpinner(),
+        errorWidget: (_, __, ___) => _buildFallback(),
+      );
+    }
+    if (!_wikiTried) {
+      return _buildSpinner();
+    }
     return _buildFallback();
   }
 
+  Widget _buildSpinner() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1F5E37)),
+          strokeWidth: 2,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFallback() {
-    return Image.asset(
-      widget.imagePath,
-      fit: widget.fit,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          color: const Color(0xFFEFFCF7),
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.image_not_supported_rounded,
-            color: Color(0xFF0F766E),
-            size: 40,
-          ),
-        );
-      },
+    return Container(
+      color: const Color(0xFFEFFCF7),
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.image_not_supported_rounded,
+        color: Color(0xFF0F766E),
+        size: 40,
+      ),
     );
   }
 }

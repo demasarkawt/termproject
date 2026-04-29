@@ -7,6 +7,7 @@ from typing import List
 import jwt
 
 import models, schemas
+from auth import require_admin
 from database import get_db
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
@@ -85,6 +86,28 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
 def list_users(db: Session = Depends(get_db)):
     """Return all registered users (admin use)."""
     return db.query(models.User).order_by(models.User.created_at.desc()).all()
+
+
+@router.patch(
+    "/{user_id}/admin",
+    response_model=schemas.UserOut,
+    dependencies=[Depends(require_admin)],
+)
+def admin_update_user(
+    user_id: int,
+    data: schemas.UserAdminUpdate,
+    db: Session = Depends(get_db),
+):
+    """Admin-only: change a user's level or active status."""
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    payload = data.model_dump(exclude_unset=True)
+    for k, v in payload.items():
+        setattr(user, k, v)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @router.get("/{user_id}", response_model=schemas.UserOut)

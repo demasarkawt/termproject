@@ -85,11 +85,11 @@ class _MapTabScreenState extends State<MapTabScreen> {
                       onTap: () => _showPlaceInfo(p),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: KurdishHeritageColors.zer,
+                          color: _getCategoryColor(p.categoryId),
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4)),
                           ],
                         ),
                         child: Icon(
@@ -177,7 +177,21 @@ class _MapTabScreenState extends State<MapTabScreen> {
       case 'religious': return Icons.church_rounded;
       case 'activities': return Icons.skateboarding_rounded;
       case 'food': return Icons.restaurant_rounded;
+      case 'mall': return Icons.shopping_bag_rounded;
       default: return Icons.place_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String cat) {
+    switch (cat) {
+      case 'historical': return KurdishHeritageColors.zer;
+      case 'nature': return KurdishHeritageColors.kesk;
+      case 'waterfalls': return const Color(0xFF2C7A7B);
+      case 'religious': return KurdishHeritageColors.sor;
+      case 'activities': return const Color(0xFF6B46C1);
+      case 'food': return const Color(0xFFC53030);
+      case 'mall': return const Color(0xFFB83280);
+      default: return KurdishHeritageColors.xweli;
     }
   }
 

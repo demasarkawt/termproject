@@ -1,38 +1,112 @@
+import asyncio
+import logging
 import os
-from fastapi import FastAPI, Depends, Header, HTTPException
+from datetime import datetime, time as dtime, timedelta, timezone
+
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 
-from database import engine, get_db, Base
-from routers import cities, places, events, users, ai, media
+import r2_client
+from auth import require_admin
+from database import engine, get_db, Base, SessionLocal
+from routers import (
+    cities,
+    places,
+    events,
+    users,
+    ai,
+    media,
+    settings as settings_router,
+    weather,
+    events_sync,
+)
+
+
+def _ensure_extra_columns():
+    """
+    Lightweight forward-only migration: add columns introduced after the
+    initial schema when running against an existing DB. Both PostgreSQL and
+    SQLite support `ALTER TABLE ... ADD COLUMN`.
+    """
+    if not engine:
+        return
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+
+    def _alter(table: str, additions: dict[str, str]):
+        if table not in tables:
+            return
+        existing = {col["name"] for col in inspector.get_columns(table)}
+        sqls = [
+            f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"
+            for name, ddl in additions.items()
+            if name not in existing
+        ]
+        if not sqls:
+            return
+        with engine.begin() as conn:
+            for sql in sqls:
+                conn.execute(text(sql))
+
+    _alter(
+        "media_items",
+        {
+            "r2_key": "VARCHAR(500)",
+            "content_type": "VARCHAR(100)",
+            "size_bytes": "INTEGER",
+        },
+    )
+    _alter(
+        "events",
+        {
+            "external_uid": "VARCHAR(255)",
+            "source": "VARCHAR(20) DEFAULT 'manual'",
+            "last_synced_at": "TIMESTAMP",
+        },
+    )
+
 
 # ─── Auto-create tables on startup if engine is available ────────────────────
 if engine:
     Base.metadata.create_all(bind=engine)
+    _ensure_extra_columns()
 
 # ─── App Initialization ───────────────────────────────────────────────────────
 app = FastAPI(
     title="Kurdistan Go API",
     description="""
-    🌿 **Kurdistan Go** – Tourism backend API.
+    Kurdistan Go - Tourism backend API.
 
     Provides endpoints for:
-    - **Cities** – Erbil, Sulaymaniyah, Duhok, Halabja
-    - **Places** – Historical sites, nature spots, restaurants
-    - **Events** – Upcoming festivals and cultural events
-    - **Users** – Registration, trips, and saved places
-    - **AI Search** – Mood-based intelligent destination matching
+    - Cities (with image gallery)
+    - Places (with image gallery, MALL category supported)
+    - Events
+    - Users (registration, trips, saved places)
+    - AI Search (Mercury 2)
+    - Media library (Cloudflare R2)
+    - Site settings
     """,
-    version="1.0.0",
-    docs_url="/docs",          # Swagger UI at /docs
-    redoc_url="/redoc",        # ReDoc at /redoc
+    version="1.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# ─── CORS (allow Flutter Web + Mobile) ───────────────────────────────────────
+# ─── CORS ────────────────────────────────────────────────────────────────────
+_extra_origins = [
+    o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()
+]
+_default_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "http://localhost:5173",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_extra_origins + _default_origins if _extra_origins else ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -41,9 +115,12 @@ app.add_middleware(
 app.include_router(cities.router)
 app.include_router(places.router)
 app.include_router(events.router)
+app.include_router(events_sync.router)
 app.include_router(users.router)
 app.include_router(ai.router)
 app.include_router(media.router)
+app.include_router(settings_router.router)
+app.include_router(weather.router)
 
 
 # ─── Health & DB Check Endpoints ──────────────────────────────────────────────
@@ -58,40 +135,86 @@ def root():
 
 @app.get("/api/health", tags=["Health"])
 def health_check():
-    return {"status": "healthy", "service": "Kurdistan Go Backend"}
+    return {
+        "status": "healthy",
+        "service": "Kurdistan Go Backend",
+        "r2_configured": r2_client.is_configured(),
+        "r2_public_url": bool(r2_client.R2_PUBLIC_URL),
+        "admin_configured": bool((os.environ.get("ADMIN_KEY") or "").strip()),
+    }
 
 
 @app.get("/api/db-check", tags=["Health"])
 def db_check(db: Session = Depends(get_db)):
-    """
-    Check whether the PostgreSQL connection is established.
-    Run a simple SQL ping and return the result.
-    """
     try:
         db.execute(text("SELECT 1"))
-        return {
-            "status": "connected",
-            "database": "PostgreSQL",
-            "message": "Database connection successful ✅",
-        }
+        return {"status": "connected", "message": "Database connection successful"}
     except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Database connection failed ❌: {str(e)}",
-        }
+        return {"status": "error", "message": f"Database connection failed: {str(e)}"}
 
-@app.post("/api/seed", tags=["Admin"])
-def seed_database(x_admin_key: str = Header(...)):
-    """
-    Populates the PostgreSQL database with initial data.
-    Requires X-Admin-Key header matching the ADMIN_KEY environment variable.
-    """
-    admin_key = os.environ.get("ADMIN_KEY", "")
-    if not admin_key or x_admin_key != admin_key:
-        raise HTTPException(status_code=403, detail="Forbidden: invalid admin key")
+
+@app.post(
+    "/api/seed",
+    tags=["Admin"],
+    dependencies=[Depends(require_admin)],
+)
+def seed_database():
+    """Populate the database with initial data. Requires X-Admin-Key header."""
     try:
         import seed
         seed.run_seed()
         return {"status": "success", "message": "Database seeded successfully!"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to seed: {str(e)}")
+
+
+# ─── Nightly ICS sync ─────────────────────────────────────────────────────────
+_log = logging.getLogger("kg.events_cron")
+
+
+def _seconds_until(target: dtime, *, now: datetime | None = None) -> float:
+    now = now or datetime.now(timezone.utc)
+    today = datetime.combine(now.date(), target, tzinfo=timezone.utc)
+    if today <= now:
+        today = today + timedelta(days=1)
+    return (today - now).total_seconds()
+
+
+async def _ics_nightly_loop():
+    """Run /api/events/sync at ~03:00 UTC every night when configured."""
+    while True:
+        sleep_s = _seconds_until(dtime(hour=3, minute=0))
+        try:
+            await asyncio.sleep(sleep_s)
+        except asyncio.CancelledError:
+            return
+
+        if SessionLocal is None:
+            continue
+        if not (os.getenv("EVENTS_ICS_URL") or "").strip():
+            continue
+
+        try:
+            from routers.events_sync import sync_events  # local import for reload safety
+
+            db = SessionLocal()
+            try:
+                result = sync_events(db=db)
+            finally:
+                db.close()
+            _log.info("nightly ICS sync result: %s", result)
+        except Exception as exc:  # noqa: BLE001 - log & keep loop alive
+            _log.warning("nightly ICS sync failed: %s", exc)
+
+
+@app.on_event("startup")
+async def _start_jobs():
+    if (os.getenv("EVENTS_ICS_URL") or "").strip():
+        app.state.ics_task = asyncio.create_task(_ics_nightly_loop())
+
+
+@app.on_event("shutdown")
+async def _stop_jobs():
+    task = getattr(app.state, "ics_task", None)
+    if task:
+        task.cancel()

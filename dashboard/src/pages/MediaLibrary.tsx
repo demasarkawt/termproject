@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Search, UploadCloud, Filter, Grid, List,
-  Trash2, Download, ImageIcon, FolderPlus,
-  X, Check, MapPin, Calendar, Folder, ArrowLeft,
+  Trash2, Download, FolderPlus,
+  X, Check, MapPin, Calendar, Folder, ArrowLeft, ArrowDownToLine,
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { apiFetch, apiPost, apiDelete, type Place, type Event } from '@/src/lib/api';
-
-interface UploadedItem {
-  id: number;
-  name: string;
-  data_url: string;
-  folder: string | null;
-  created_at: string;
-}
+import {
+  apiFetch, apiPost, apiDelete, apiUpload, ApiError,
+  type Place, type Event, type MediaItem as ApiMediaItem,
+} from '@/src/lib/api';
+import { useToast } from '@/src/components/Toast';
 
 interface MediaItem {
   id: string;
@@ -22,10 +18,15 @@ interface MediaItem {
   source: 'place' | 'event' | 'upload';
   type: string;
   folder: string | null;
-  uploadedId?: number; // only for uploaded items
+  uploadedId?: number;
+  createdAt?: string | null;
+  r2?: boolean;
 }
 
+type SortKey = 'newest' | 'oldest' | 'name';
+
 export default function MediaLibrary() {
+  const toast = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -33,6 +34,10 @@ export default function MediaLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'place' | 'event' | 'upload'>('all');
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
+
+  const [showFilter, setShowFilter] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('newest');
+  const [r2Only, setR2Only] = useState(false);
 
   // Upload modal
   const [showUpload, setShowUpload] = useState(false);
@@ -52,18 +57,20 @@ export default function MediaLibrary() {
     setLoading(true);
     try {
       const [places, events, uploaded] = await Promise.all([
-        apiFetch<Place[]>('/api/places/?limit=100'),
+        apiFetch<Place[]>('/api/places/?limit=500'),
         apiFetch<Event[]>('/api/events/'),
-        apiFetch<UploadedItem[]>('/api/media/'),
+        apiFetch<ApiMediaItem[]>('/api/media/'),
       ]);
 
       const placeItems: MediaItem[] = places.map(p => ({
         id: `place-${p.id}`,
         name: p.name,
-        url: p.image_url ?? `https://picsum.photos/seed/place-${p.id}/400/400`,
+        url: p.image_url ?? p.images?.[0]?.url ?? `https://picsum.photos/seed/place-${p.id}/400/400`,
         source: 'place' as const,
         type: p.category ?? 'Place',
         folder: null,
+        createdAt: null,
+        r2: !!p.images?.[0]?.r2_key,
       }));
 
       const eventItems: MediaItem[] = events.map(e => ({
@@ -73,6 +80,8 @@ export default function MediaLibrary() {
         source: 'event' as const,
         type: e.event_type ?? 'Event',
         folder: null,
+        createdAt: null,
+        r2: false,
       }));
 
       const uploadedItems: MediaItem[] = uploaded.map(u => ({
@@ -80,14 +89,16 @@ export default function MediaLibrary() {
         name: u.name,
         url: u.data_url,
         source: 'upload' as const,
-        type: 'Uploaded',
+        type: u.content_type ?? 'Uploaded',
         folder: u.folder,
         uploadedId: u.id,
+        createdAt: u.created_at,
+        r2: !!u.r2_key,
       }));
 
       setItems([...uploadedItems, ...placeItems, ...eventItems]);
     } catch (err) {
-      console.error(err);
+      toast.error(err instanceof ApiError ? err.detail ?? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -100,62 +111,88 @@ export default function MediaLibrary() {
     new Set(items.filter(i => i.folder).map(i => i.folder as string))
   );
 
-  const filtered = items.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchSource = sourceFilter === 'all' || item.source === sourceFilter;
-    const matchFolder = activeFolder === null
-      ? true
-      : item.folder === activeFolder;
-    return matchSearch && matchSource && matchFolder;
-  });
+  const filtered = (() => {
+    const q = searchQuery.toLowerCase();
+    const list = items.filter(item => {
+      const matchSearch = !q || item.name.toLowerCase().includes(q);
+      const matchSource = sourceFilter === 'all' || item.source === sourceFilter;
+      const matchFolder = activeFolder === null ? true : item.folder === activeFolder;
+      const matchR2 = !r2Only || !!item.r2;
+      return matchSearch && matchSource && matchFolder && matchR2;
+    });
+    if (sortKey === 'name') {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list.sort((a, b) => {
+        const ad = a.createdAt ? Date.parse(a.createdAt) : 0;
+        const bd = b.createdAt ? Date.parse(b.createdAt) : 0;
+        return sortKey === 'newest' ? bd - ad : ad - bd;
+      });
+    }
+    return list;
+  })();
 
   const toggleSelect = (id: string) =>
     setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
 
-  // ── Upload file ──────────────────────────────────────────────────────────────
-  const handleFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const MAX = 5 * 1024 * 1024; // 5 MB
-    Array.from(files).forEach(file => {
-      if (file.size > MAX) { setUploadError(`"${file.name}" exceeds the 5 MB limit.`); return; }
-      const reader = new FileReader();
-      reader.onload = async () => {
-        setUploading(true);
-        setUploadError('');
-        try {
-          const created = await apiPost<UploadedItem>('/api/media/', {
-            name: file.name,
-            data_url: reader.result as string,
-            folder: activeFolder,
-          });
-          setItems(prev => [{
-            id: `upload-${created.id}`,
-            name: created.name,
-            url: created.data_url,
-            source: 'upload',
-            type: 'Uploaded',
-            folder: created.folder,
-            uploadedId: created.id,
-          }, ...prev]);
-        } catch (err: any) {
-          setUploadError(err.message ?? 'Upload failed.');
-        } finally {
-          setUploading(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-    setShowUpload(false);
+  // ── Upload file (multipart -> R2) ────────────────────────────────────────────
+  const uploadOne = async (file: File): Promise<MediaItem> => {
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    if (activeFolder) fd.append('folder', activeFolder);
+    fd.append('name', file.name);
+    const created = await apiUpload<ApiMediaItem>('/api/media/upload', fd);
+    return {
+      id: `upload-${created.id}`,
+      name: created.name,
+      url: created.data_url,
+      source: 'upload',
+      type: created.content_type ?? 'Uploaded',
+      folder: created.folder,
+      uploadedId: created.id,
+      createdAt: created.created_at,
+      r2: !!created.r2_key,
+    };
   };
 
-  const handleUrlUpload = async () => {
-    if (!urlInput.trim()) { setUploadError('Please enter a URL.'); return; }
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const MAX = 10 * 1024 * 1024;
+    const arr = Array.from(files);
+    const tooBig = arr.find(f => f.size > MAX);
+    if (tooBig) {
+      setUploadError(`"${tooBig.name}" exceeds the 10 MB limit.`);
+      return;
+    }
     setUploading(true);
     setUploadError('');
     try {
-      const created = await apiPost<UploadedItem>('/api/media/', {
-        name: urlName.trim() || urlInput.split('/').pop() || 'image',
-        data_url: urlInput.trim(),
+      for (const f of arr) {
+        const newItem = await uploadOne(f);
+        setItems(prev => [newItem, ...prev]);
+      }
+      toast.success(`Uploaded ${arr.length} file${arr.length === 1 ? '' : 's'} to R2.`);
+      setShowUpload(false);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.detail ?? err.message : String(err);
+      setUploadError(msg);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUrlUpload = async () => {
+    const url = urlInput.trim();
+    if (!url) {
+      setUploadError('Please enter a URL.');
+      return;
+    }
+    setUploading(true);
+    setUploadError('');
+    try {
+      const created = await apiPost<ApiMediaItem>('/api/media/', {
+        name: urlName.trim() || url.split('/').pop() || 'image',
+        data_url: url,
         folder: activeFolder,
       });
       setItems(prev => [{
@@ -163,15 +200,19 @@ export default function MediaLibrary() {
         name: created.name,
         url: created.data_url,
         source: 'upload',
-        type: 'Uploaded',
+        type: created.content_type ?? 'URL',
         folder: created.folder,
         uploadedId: created.id,
+        createdAt: created.created_at,
+        r2: !!created.r2_key,
       }, ...prev]);
+      toast.success('Image added.');
       setShowUpload(false);
       setUrlInput('');
       setUrlName('');
-    } catch (err: any) {
-      setUploadError(err.message ?? 'Upload failed.');
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.detail ?? err.message : String(err);
+      setUploadError(msg);
     } finally {
       setUploading(false);
     }
@@ -185,18 +226,27 @@ export default function MediaLibrary() {
       await apiDelete(`/api/media/${item.uploadedId}`);
       setItems(prev => prev.filter(i => i.id !== item.id));
       setSelectedItems(prev => prev.filter(i => i !== item.id));
-    } catch {
-      alert('Failed to delete.');
+      toast.success('Media deleted.');
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail ?? err.message : String(err));
     }
   };
 
   const handleBulkDelete = async () => {
     const toDelete = items.filter(i => selectedItems.includes(i.id) && i.source === 'upload');
-    if (toDelete.length === 0) { alert('Only uploaded images can be deleted.'); return; }
+    if (toDelete.length === 0) {
+      toast.info('Only uploaded media can be deleted.');
+      return;
+    }
     if (!confirm(`Delete ${toDelete.length} item(s)?`)) return;
-    await Promise.all(toDelete.map(i => apiDelete(`/api/media/${i.uploadedId}`)));
-    setItems(prev => prev.filter(i => !selectedItems.includes(i.id)));
-    setSelectedItems([]);
+    try {
+      await Promise.all(toDelete.map(i => apiDelete(`/api/media/${i.uploadedId}`)));
+      setItems(prev => prev.filter(i => !selectedItems.includes(i.id)));
+      setSelectedItems([]);
+      toast.success(`Deleted ${toDelete.length} item(s).`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail ?? err.message : String(err));
+    }
   };
 
   // ── Create folder ────────────────────────────────────────────────────────────
@@ -322,9 +372,46 @@ export default function MediaLibrary() {
               </button>
             </div>
           )}
-          <button className="p-2 bg-stone-50 rounded-xl hover:bg-stone-100 transition-all">
-            <Filter className="w-5 h-5 text-stone-500" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowFilter(v => !v)}
+              className={cn(
+                'p-2 rounded-xl transition-all',
+                showFilter || r2Only || sortKey !== 'newest'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-stone-50 hover:bg-stone-100 text-stone-500',
+              )}
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+            {showFilter && (
+              <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-xl border border-stone-200 bg-white p-3 shadow-lg">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1.5">Sort</p>
+                    {(['newest', 'oldest', 'name'] as SortKey[]).map(k => (
+                      <button
+                        key={k}
+                        onClick={() => setSortKey(k)}
+                        className={cn(
+                          'block w-full rounded-md px-2 py-1.5 text-left text-xs capitalize',
+                          sortKey === k ? 'bg-emerald-50 text-emerald-800 font-semibold' : 'text-stone-600 hover:bg-stone-50',
+                        )}
+                      >
+                        {k}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-stone-100 pt-3">
+                    <label className="flex items-center gap-2 text-xs text-stone-600">
+                      <input type="checkbox" checked={r2Only} onChange={e => setR2Only(e.target.checked)} />
+                      Stored on R2 only
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -493,7 +580,7 @@ export default function MediaLibrary() {
                   >
                     <UploadCloud className="w-10 h-10 text-stone-300 mx-auto mb-3" />
                     <p className="text-sm font-semibold text-stone-600">Drop images here or click to browse</p>
-                    <p className="text-xs text-stone-400 mt-1">PNG, JPG, GIF, WebP — max 5 MB each</p>
+                    <p className="text-xs text-stone-400 mt-1">PNG, JPG, GIF, WebP — max 10 MB each. Uploads to Cloudflare R2.</p>
                   </div>
                   {uploading && (
                     <div className="flex items-center justify-center gap-2 text-sm text-emerald-700">

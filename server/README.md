@@ -84,3 +84,10 @@ Visit **http://localhost:8000/docs** for the live Swagger UI.
 5. Add a **PostgreSQL** plugin from the Railway dashboard
 6. Railway will automatically set `DATABASE_URL` — no manual config needed!
 7. Once deployed, visit your Railway URL and navigate to `/docs`
+8. Add **Cloudflare R2** variables (`R2_*`) on Railway — see repo **`DEPLOYMENT.md`** (credentials stay server-side only; Flutter and dashboard never embed them).
+
+---
+
+## Environment variables (summary)
+
+See **`DEPLOYMENT.md`** for full tables. Backend-only secrets include **`DATABASE_URL`**, **`ADMIN_KEY`**, and **all `R2_*`** fields so uploads and seed Wikipedia images resolve to public or presigned URLs for apps.

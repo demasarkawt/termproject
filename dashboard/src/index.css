@@ -1,19 +1,93 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * Kurdish heritage design tokens
+ * Mirror of client/lib/services/theme_service.dart so dashboard + Flutter
+ * speak the same color language.
+ * ──────────────────────────────────────────────────────────────────────────── */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
+
+  /* Brand (constant in both modes) */
+  --color-sor: #7A1F1F;        /* Crimson */
+  --color-sor-soft: #B6444433;  /* tinted red */
+  --color-kesk: #3F4A2A;       /* Olive green */
+  --color-kesk-soft: #8FA86833;
+  --color-zer: #B8862F;        /* Aged gold */
+  --color-zer-soft: #B8862F1F;
+  --color-spi: #F5EFE2;        /* Bone paper */
+  --color-xweli: #5A3A22;      /* Earth umber */
+  --color-res: #1A1410;        /* Ink */
+
+  /* Semantic surface tokens — light defaults */
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F5EFE2;     /* spi - subtle paper */
+  --color-surface-3: #EDE6D6;     /* deeper paper */
+  --color-card: #FFFFFF;
+  --color-border: #E7E0CF;
+  --color-text: #1A1410;
+  --color-text-muted: #6B6157;
+  --color-text-subtle: #948A7E;
+
+  /* Semantic state tokens */
+  --color-success: #3F4A2A;
+  --color-warning: #B8862F;
+  --color-danger: #7A1F1F;
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+}
+
+/* Dark mode tokens — applied when html[data-theme="dark"] */
+[data-theme="dark"] {
+  --color-surface: #14110D;
+  --color-surface-2: #1A1410;
+  --color-surface-3: #221C16;
+  --color-card: #1F1A14;
+  --color-border: #3A322B;
+  --color-text: #F5EFE2;
+  --color-text-muted: #C8BFAF;
+  --color-text-subtle: #948A7E;
 }
 
 @layer base {
-  * {
-    @apply border-stone-100;
+  html {
+    background-color: var(--color-surface-2);
   }
   body {
-    @apply bg-white text-stone-900 font-sans antialiased;
+    @apply font-sans antialiased;
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+    transition: background-color 200ms ease, color 200ms ease;
   }
 }
+
+/* Convenience utility classes used in components — these all read from CSS
+ * vars so they switch automatically on the data-theme flip. */
+.bg-surface { background-color: var(--color-surface); }
+.bg-surface-2 { background-color: var(--color-surface-2); }
+.bg-surface-3 { background-color: var(--color-surface-3); }
+.bg-card { background-color: var(--color-card); }
+.border-token { border-color: var(--color-border); }
+.text-default { color: var(--color-text); }
+.text-muted { color: var(--color-text-muted); }
+.text-subtle { color: var(--color-text-subtle); }
+
+.bg-sor { background-color: var(--color-sor); }
+.bg-kesk { background-color: var(--color-kesk); }
+.bg-zer { background-color: var(--color-zer); }
+.bg-zer-soft { background-color: var(--color-zer-soft); }
+.bg-kesk-soft { background-color: var(--color-kesk-soft); }
+.bg-sor-soft { background-color: var(--color-sor-soft); }
+.text-sor { color: var(--color-sor); }
+.text-kesk { color: var(--color-kesk); }
+.text-zer { color: var(--color-zer); }
+.text-xweli { color: var(--color-xweli); }
+.text-res { color: var(--color-res); }
+.border-zer { border-color: var(--color-zer); }
+.border-kesk { border-color: var(--color-kesk); }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
@@ -22,11 +96,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-stone-200 rounded-full hover:bg-stone-300 transition-colors;
+  background-color: var(--color-border);
+  border-radius: 999px;
+  transition: background-color 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-subtle);
 }
 
 /* Animations */
@@ -48,3 +128,82 @@
 
 .fade-in { animation-name: fade-in; }
 .slide-in-from-bottom-4 { animation-name: slide-in-from-bottom; }
+
+/* Leaflet map controls in dark mode shouldn't be invisible */
+[data-theme="dark"] .leaflet-tile {
+  filter: brightness(0.85) saturate(0.9);
+}
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background: var(--color-card) !important;
+  color: var(--color-text) !important;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Dark-mode shim for legacy utility classes
+ *
+ * The pages were initially built with `bg-white`, `bg-stone-50`, `text-stone-*`,
+ * `border-stone-*`, and `emerald-*`. Re-mapping every file would be busywork;
+ * instead we intercept those utilities and re-route them through the heritage
+ * tokens, so the entire dashboard reskins consistently and switches with
+ * `data-theme="dark"`.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/* Surface mappings */
+.bg-white { background-color: var(--color-card) !important; }
+.bg-stone-50, .bg-stone-50\/50, .bg-stone-50\/30 { background-color: var(--color-surface-2) !important; }
+.bg-stone-100, .bg-stone-100\/50 { background-color: var(--color-surface-3) !important; }
+.bg-stone-200 { background-color: var(--color-border) !important; }
+
+.bg-emerald-50, .bg-emerald-50\/30 { background-color: var(--color-zer-soft) !important; }
+.bg-emerald-100 { background-color: var(--color-zer-soft) !important; }
+.bg-emerald-700, .bg-emerald-800, .bg-emerald-900 {
+  background-color: var(--color-kesk) !important;
+}
+.hover\:bg-emerald-50:hover { background-color: var(--color-zer-soft) !important; }
+.hover\:bg-emerald-100:hover { background-color: var(--color-zer-soft) !important; }
+.hover\:bg-emerald-800:hover, .hover\:bg-emerald-900:hover {
+  background-color: color-mix(in srgb, var(--color-kesk) 80%, black) !important;
+}
+
+/* Text mappings */
+.text-stone-900, .text-stone-800 { color: var(--color-text) !important; }
+.text-stone-700, .text-stone-600, .text-stone-500 { color: var(--color-text-muted) !important; }
+.text-stone-400, .text-stone-300 { color: var(--color-text-subtle) !important; }
+
+.text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-900 {
+  color: var(--color-kesk) !important;
+}
+.hover\:text-emerald-800:hover, .hover\:text-emerald-700:hover { color: var(--color-zer) !important; }
+
+/* Borders */
+.border-stone-100, .border-stone-200, .border-stone-300 {
+  border-color: var(--color-border) !important;
+}
+.border-emerald-50, .border-emerald-100, .border-emerald-200 {
+  border-color: var(--color-zer) !important;
+}
+.divide-stone-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--color-border) !important;
+}
+
+/* Shadow rings */
+.ring-emerald-500\/20 { --tw-ring-color: var(--color-zer) !important; }
+.focus\:ring-emerald-500\/20:focus { --tw-ring-color: var(--color-zer) !important; }
+.shadow-emerald-900\/10, .shadow-emerald-900\/20 {
+  --tw-shadow-color: color-mix(in srgb, var(--color-kesk) 30%, transparent) !important;
+}
+
+/* Status pills (we keep these distinct in both modes) */
+.bg-amber-50, .bg-amber-100 { background-color: var(--color-zer-soft) !important; }
+.text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900 { color: var(--color-zer) !important; }
+.bg-red-50 { background-color: color-mix(in srgb, var(--color-sor) 18%, transparent) !important; }
+.text-red-400, .text-red-500, .text-red-600, .text-red-700 { color: var(--color-sor) !important; }
+.bg-purple-100 { background-color: color-mix(in srgb, var(--color-sor) 20%, transparent) !important; }
+.text-purple-800 { color: var(--color-sor) !important; }
+.bg-blue-50, .bg-blue-100 { background-color: color-mix(in srgb, var(--color-kesk) 25%, transparent) !important; }
+.text-blue-600, .text-blue-800 { color: var(--color-kesk) !important; }
+
+/* Emerald-decorated table cells / dots stay green */
+.fill-amber-400 { fill: var(--color-zer) !important; }
+.text-amber-400 { color: var(--color-zer) !important; }
