@@ -72,94 +72,95 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white text-stone-900 font-sans">
+    <div className="flex min-h-screen bg-heritage-res text-heritage-spi font-sans">
       {/* SideNavBar */}
-      <aside className="w-[240px] h-screen sticky top-0 left-0 bg-stone-50/50 flex flex-col py-6 px-4 gap-2 border-r border-stone-100">
-        <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-emerald-800 flex items-center justify-center text-white shadow-sm overflow-hidden">
-             <Castle className="w-6 h-6" />
+      <aside className="w-[260px] h-screen sticky top-0 left-0 bg-heritage-res/80 backdrop-blur-xl flex flex-col py-8 px-6 gap-2 border-r border-heritage-xweli/30">
+        <div className="flex items-center gap-3 px-2 mb-10">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-heritage-sor to-heritage-xweli flex items-center justify-center text-heritage-spi shadow-lg shadow-heritage-sor/20 overflow-hidden border border-heritage-zer/20">
+             <Castle className="w-7 h-7 text-heritage-zer" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-emerald-900">Kurdistan Go</h1>
-            <p className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Admin Dashboard</p>
+            <h1 className="text-xl font-bold tracking-tight text-heritage-spi font-display">Kurdistan Go</h1>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-heritage-zer font-bold">Admin Portal</p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-2">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActivePage(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                "w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300 group",
                 activePage === item.id 
-                  ? "bg-emerald-50 text-emerald-900 font-bold"
-                  : "text-stone-500 hover:text-emerald-800 hover:bg-stone-100"
+                  ? "bg-heritage-zer/10 text-heritage-zer border border-heritage-zer/20 shadow-inner"
+                  : "text-heritage-spi/40 hover:text-heritage-spi hover:bg-heritage-xweli/20"
               )}
             >
-              <item.icon className={cn("w-5 h-5", activePage === item.id && "text-emerald-700")} />
+              <item.icon className={cn("w-5 h-5 transition-colors", activePage === item.id ? "text-heritage-zer" : "group-hover:text-heritage-zer")} />
               {item.label}
             </button>
           ))}
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-stone-100 flex items-center gap-3 px-2">
+        <div className="mt-auto pt-6 border-t border-heritage-xweli/30 flex items-center gap-3 px-2">
           <img 
-            className="w-8 h-8 rounded-full border border-stone-200 object-cover" 
+            className="w-10 h-10 rounded-full border-2 border-heritage-zer/30 object-cover shadow-sm" 
             src="https://picsum.photos/seed/admin/100/100" 
             alt="Admin"
             referrerPolicy="no-referrer"
           />
           <div className="overflow-hidden">
-            <p className="text-xs font-bold text-stone-800 truncate">Administrator</p>
-            <p className="text-[10px] text-stone-400 truncate">admin@kurdistango.app</p>
+            <p className="text-xs font-bold text-heritage-spi truncate">Administrator</p>
+            <p className="text-[10px] text-heritage-zer/60 truncate uppercase tracking-wider">Super Admin</p>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 bg-heritage-res">
         {/* TopNavBar */}
-        <header className="w-full h-16 sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-stone-100 flex items-center justify-between px-8">
+        <header className="w-full h-20 sticky top-0 z-40 bg-heritage-res/60 backdrop-blur-xl border-b border-heritage-xweli/20 flex items-center justify-between px-10">
           <div className="flex items-center gap-4">
-            <span className="text-xl font-medium text-emerald-900">
+            <span className="text-2xl font-bold text-heritage-spi font-display">
               {navItems.find(i => i.id === activePage)?.label}
             </span>
             {activePage === 'settings' && (
               <>
-                <span className="h-4 w-[1px] bg-stone-200"></span>
-                <span className="text-sm font-bold text-emerald-800 border-b-2 border-emerald-800 py-4">Global Config</span>
+                <span className="h-5 w-[1px] bg-heritage-xweli/30"></span>
+                <span className="text-sm font-bold text-heritage-zer border-b-2 border-heritage-zer py-6">Global Config</span>
               </>
             )}
             {activePage === 'analytics' && (
-              <span className="px-2 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-bold rounded-md tracking-wider uppercase">Live Data</span>
+              <span className="px-3 py-1 bg-heritage-sor/20 text-heritage-sor text-[10px] font-bold rounded-full tracking-widest uppercase border border-heritage-sor/30">Live Data</span>
             )}
           </div>
 
-          <div className="flex items-center gap-6">
-            <button className="text-stone-400 hover:bg-emerald-50 p-2 rounded-full transition-all">
-              <Bell className="w-5 h-5" />
+          <div className="flex items-center gap-8">
+            <button className="text-heritage-spi/40 hover:text-heritage-zer p-2.5 rounded-2xl hover:bg-heritage-xweli/10 transition-all border border-transparent hover:border-heritage-zer/20">
+              <Bell className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-3 cursor-pointer hover:bg-emerald-50 p-1 pr-3 rounded-full transition-all">
+            <div className="flex items-center gap-3 cursor-pointer hover:bg-heritage-xweli/10 p-1.5 pr-4 rounded-full transition-all border border-transparent hover:border-heritage-zer/20 group">
               <img 
-                className="w-8 h-8 rounded-full object-cover" 
+                className="w-10 h-10 rounded-full object-cover border-2 border-heritage-zer/20 group-hover:border-heritage-zer/50 transition-all" 
                 src="https://picsum.photos/seed/user/100/100" 
                 alt="User"
                 referrerPolicy="no-referrer"
               />
-              <span className="text-sm font-medium text-stone-600">Kurdistan Go</span>
+              <span className="text-sm font-bold text-heritage-spi/70 group-hover:text-heritage-spi">Kurdistan Go</span>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto bg-stone-50/30">
+        <div className="flex-1 overflow-y-auto bg-heritage-res/50">
           <AnimatePresence mode="wait">
             <motion.div
               key={activePage}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="min-h-full"
             >
               {renderPage()}
             </motion.div>

@@ -4,14 +4,22 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
+
+  /* Kurdish Heritage Color Palette */
+  --color-heritage-sor: #7A1F1F;   /* Crimson */
+  --color-heritage-kesk: #3F4A2A;  /* Olive */
+  --color-heritage-zer: #B8862F;   /* Aged gold */
+  --color-heritage-spi: #F5EFE2;   /* Bone paper */
+  --color-heritage-xweli: #5A3A22; /* Earth umber */
+  --color-heritage-res: #1A1410;   /* Ink */
 }
 
 @layer base {
   * {
-    @apply border-stone-100;
+    @apply border-heritage-xweli/20;
   }
   body {
-    @apply bg-white text-stone-900 font-sans antialiased;
+    @apply bg-heritage-res text-heritage-spi font-sans antialiased;
   }
 }
 
