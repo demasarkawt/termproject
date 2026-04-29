@@ -61,13 +61,33 @@ The admin UI reads `VITE_API_URL` and `VITE_ADMIN_KEY` at **build time**.
    - `npm run dev` — local dashboard pointing at production API if `.env` says so.
    - Host `dist/` on **Cloudflare Pages**, **Netlify**, **Vercel**, or a static bucket — add that origin to **`CORS_ORIGINS`** on Railway.
 
+### 3b. Vercel (repo root)
+
+Deploy the **dashboard** (`dashboard/`), not the Flutter `client/`. This repo includes a root **`vercel.json`** so Git deployments run `npm ci` / `npm run build` inside **`dashboard`** and publish **`dashboard/dist`**.
+
+In [Vercel](https://vercel.com/) → Project **kurdistan-go** (or your project):
+
+1. **Settings → Git → Root Directory:** use **empty / `.`** (repo root) so the root `vercel.json` runs the dashboard build — **or** set Root Directory to **`dashboard`** (then Vite builds from that folder; do **not** point at `client/`).
+2. **Settings → Environment Variables** (Production, and Preview if needed):
+
+   | Name | Value |
+   |------|--------|
+   | `VITE_API_URL` | `https://termproject-production.up.railway.app` (your Railway API, no trailing slash) |
+   | `VITE_ADMIN_KEY` | Same secret as Railway **`ADMIN_KEY`** |
+
+4. Add your **Vercel production URL** to Railway **`CORS_ORIGINS`** (e.g. `https://kurdistan-xxxxx.vercel.app`) if browsers block cookies/fetch to Railway.
+
 ---
 
 ## 4. Flutter app
 
 The API base URL is compile-time configurable (no R2 secrets in the app).
 
-**Local (default):** `http://127.0.0.1:8000` — see `client/lib/config/api_config.dart`.
+**Default (matches production):** Railway URL from `client/lib/config/api_config.dart`. For **local backend only**:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
 
 **Production build** (recommended):
 
