@@ -175,3 +175,5 @@ class ThemeService extends ChangeNotifier {
     );
   }
 }
+
+final themeService = ThemeService();

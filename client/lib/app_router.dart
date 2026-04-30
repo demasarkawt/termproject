@@ -21,20 +21,13 @@ import 'screens/places/place_detail_screen.dart';
 
 // Map
 import 'screens/map/map_tab_screen.dart';
-import 'screens/map/map_spot_memory_capture_screen.dart';
-import 'screens/map/map_spot_memory_detail_screen.dart';
 import 'screens/map/place_map_screen.dart';
 
 // Tabs
 import 'screens/profile/profile_screen.dart';
-import 'screens/profile/personal_info_screen.dart';
-import 'screens/profile/privacy_policy_screen.dart';
-import 'screens/profile/security_center_screen.dart';
-import 'screens/profile/support_center_screen.dart';
 import 'screens/explore/explore_screen.dart';
 import 'screens/activities/activities_screen.dart';
 import 'screens/events/events_screen.dart';
-import 'screens/events/event_detail_screen.dart';
 import 'screens/ai/ai_screen.dart';
 
 // Favorites & Map (saved screen alias)
@@ -143,47 +136,10 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: '/events/:eventId',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: EventDetailScreen(
-              eventId: state.pathParameters['eventId']!,
-            ),
-          ),
-        ),
-        GoRoute(
           path: '/profile',
           pageBuilder: (context, state) => _cupertinoPage(
             state: state,
             child: const ProfileScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/personal-info',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: const PersonalInfoScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/privacy-policy',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: const PrivacyPolicyScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/security-center',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: const SecurityCenterScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/support-center',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: const SupportCenterScreen(),
           ),
         ),
 
@@ -242,25 +198,6 @@ final appRouter = GoRouter(
               title: state.uri.queryParameters['title'] ?? 'Directions',
               lat: double.tryParse(state.uri.queryParameters['lat'] ?? '') ?? 0,
               lng: double.tryParse(state.uri.queryParameters['lng'] ?? '') ?? 0,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/map-memory/new',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: MapSpotMemoryCaptureScreen(
-              lat: double.tryParse(state.uri.queryParameters['lat'] ?? '') ?? 36.1911,
-              lng: double.tryParse(state.uri.queryParameters['lng'] ?? '') ?? 44.0092,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/map-memory/:memoryId',
-          pageBuilder: (context, state) => _cupertinoPage(
-            state: state,
-            child: MapSpotMemoryDetailScreen(
-              memoryId: state.pathParameters['memoryId']!,
             ),
           ),
         ),

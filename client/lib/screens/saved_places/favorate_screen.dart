@@ -1,163 +1,172 @@
+// Polished cinematic Favorites (Saved Places) screen.
+// Drop into: lib/screens/saved_places/favorate_screen.dart
+ 
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+ 
 import '../../data/favorites_scope.dart';
 import '../../data/place_repo.dart';
 import '../../services/theme_service.dart';
-
+import '../../widgets/cinematic.dart';
+ 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
-
+ 
   @override
   Widget build(BuildContext context) {
     final fav = FavoritesScope.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // ── Background Glows ──────────────────────────────────────────
-          _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.1), -100, 100, 400),
-          _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.1), 300, 400, 300),
-
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // ── Header ───────────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) {
+        final isDark = themeService.isDark;
+        final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Stack(
+            children: [
+              _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.08), -100, 100, 400),
+              _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.08), 300, 400, 300),
+ 
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // ── Header ──
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'COLLECTIONS',
-                              style: TextStyle(
-                                color: KurdishHeritageColors.zer,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14,
-                                letterSpacing: 4,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'COLLECTIONS',
+                                  style: TextStyle(
+                                    color: KurdishHeritageColors.zer,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    letterSpacing: 4,
+                                  ),
+                                ),
+                                if (fav.ids.isNotEmpty)
+                                  PressScale(
+                                    onTap: fav.clear,
+                                    child: Glass(
+                                      radius: 999,
+                                      padding: const EdgeInsets.all(8),
+                                      child: Icon(Icons.delete_sweep_rounded, color: ink.withOpacity(0.4), size: 20),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            AnimatedBuilder(
+                              animation: fav,
+                              builder: (context, _) => RevealText(
+                                'Saved Places (${fav.ids.length})',
+                                style: TextStyle(
+                                  color: ink,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 38,
+                                  height: 1.1,
+                                  letterSpacing: -1.5,
+                                ),
                               ),
                             ),
-                            if (fav.ids.isNotEmpty)
-                              IconButton(
-                                onPressed: fav.clear,
-                                icon: Icon(Icons.delete_sweep_rounded, color: isDark ? Colors.white54 : Colors.black54),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Your curated Travelo tour list',
+                              style: TextStyle(
+                                color: ink.withOpacity(0.5),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 32),
-                        AnimatedBuilder(
-                          animation: fav,
-                          builder: (context, _) => Text(
-                            'Saved Places (${fav.ids.length})',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : KurdishHeritageColors.res,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 36,
-                              letterSpacing: -1.5,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'Your curated Travelo tour list',
-                          style: TextStyle(
-                            color: isDark ? Colors.white.withOpacity(0.5) : Colors.black.withOpacity(0.5),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-
-              // ── List ──────────────────────────────────────────────────────
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 30, 24, 150),
-                sliver: AnimatedBuilder(
-                  animation: fav,
-                  builder: (context, _) {
-                    final savedPlaces = fav.ids
-                        .map((id) => PlaceRepo.get(id))
-                        .toList(growable: false);
-
-                    if (savedPlaces.isEmpty) {
-                      return SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Transform.rotate(
-                                angle: 0.785,
-                                child: Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    color: KurdishHeritageColors.xweli.withOpacity(0.05),
-                                    border: Border.all(color: KurdishHeritageColors.xweli.withOpacity(0.1)),
+ 
+                  // ── List ──
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 150),
+                    sliver: AnimatedBuilder(
+                      animation: fav,
+                      builder: (context, _) {
+                        final savedPlaces = fav.ids
+                            .map((id) => PlaceRepo.get(id))
+                            .toList(growable: false);
+ 
+                        if (savedPlaces.isEmpty) {
+                          return SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  GoldRingSweep(
+                                    size: 100,
+                                    thickness: 1,
+                                    child: Icon(Icons.favorite_border_rounded, size: 40, color: ink.withOpacity(0.15)),
                                   ),
-                                  child: Transform.rotate(
-                                    angle: -0.785,
-                                    child: Icon(Icons.favorite_border_rounded, size: 40, color: KurdishHeritageColors.xweli.withOpacity(0.2)),
+                                  const SizedBox(height: 32),
+                                  Text(
+                                    'Your collection is empty',
+                                    style: TextStyle(
+                                      color: ink.withOpacity(0.3),
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap ❤️ on any place to save it here',
+                                    style: TextStyle(
+                                      color: ink.withOpacity(0.24),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 32),
-                              Text(
-                                'Your collection is empty',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.3),
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 18,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Tap ❤️ on any place to save it here',
-                                style: TextStyle(
-                                  color: isDark ? Colors.white.withOpacity(0.24) : Colors.black.withOpacity(0.24),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, i) {
-                          final p = savedPlaces[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _ProSavedCard(place: p, isDark: isDark, onToggle: () => fav.toggle(p.id)),
+                            ),
                           );
-                        },
-                        childCount: savedPlaces.length,
-                      ),
-                    );
-                  },
-                ),
+                        }
+ 
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, i) {
+                              final p = savedPlaces[i];
+                              return ScrollReveal(
+                                duration: Duration(milliseconds: Motion.md.inMilliseconds + (i.clamp(0, 8) * 40)),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(bottom: 16),
+                                  child: _ProSavedCard(place: p, isDark: isDark, onToggle: () => fav.toggle(p.id)),
+                                ),
+                              );
+                            },
+                            childCount: savedPlaces.length,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
-
+ 
   Widget _buildGlowBlob(Color color, double left, double top, double size) {
     return Positioned(
       left: left,
@@ -173,29 +182,30 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 }
-
+ 
 class _ProSavedCard extends StatelessWidget {
   final dynamic place;
   final bool isDark;
   final VoidCallback onToggle;
   const _ProSavedCard({required this.place, required this.isDark, required this.onToggle});
-
+ 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return PressScale(
       onTap: () => context.push('/place/${place.id}'),
-      child: Container(
+      child: Glass(
+        radius: 28,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
-        ),
+        opacity: isDark ? 0.05 : 0.03,
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(place.coverImage, width: 80, height: 80, fit: BoxFit.cover),
+            Hero(
+              tag: 'place-${place.id}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset(place.coverImage, width: 85, height: 85, fit: BoxFit.cover),
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -206,19 +216,19 @@ class _ProSavedCard extends StatelessWidget {
                     place.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: isDark ? Colors.white : KurdishHeritageColors.res),
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: ink),
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, size: 12, color: KurdishHeritageColors.zer),
+                      const Icon(Icons.location_on_rounded, size: 13, color: KurdishHeritageColors.zer),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           place.locationText,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white54 : Colors.black54),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ink.withOpacity(0.4)),
                         ),
                       ),
                     ],
@@ -226,9 +236,12 @@ class _ProSavedCard extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              onPressed: onToggle,
-              icon: const Icon(Icons.favorite_rounded, color: KurdishHeritageColors.sor),
+            PressScale(
+              onTap: onToggle,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: const Icon(Icons.favorite_rounded, color: KurdishHeritageColors.sor, size: 22),
+              ),
             ),
           ],
         ),

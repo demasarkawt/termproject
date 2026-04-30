@@ -1,13 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:termproject/config/api_config.dart';
-import 'package:termproject/utils/fastapi_error.dart';
-import 'package:termproject/services/user_session.dart';
-import 'package:termproject/constants/app_branding.dart';
-import 'package:termproject/theme/liquid_orb.dart';
-import 'package:termproject/widgets/liquid_orb/liquid_orb_auth_layout.dart';
+import '../../services/theme_service.dart';
+import '../../services/user_session.dart';
+import '../../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -17,237 +12,226 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _emailCtrl = TextEditingController();
-  final _passCtrl = TextEditingController();
-  bool _obscure = true;
-  bool _isLoading = false;
-  bool _rememberMe = false;
+  final _email = TextEditingController();
+  final _pass = TextEditingController();
+  bool _loading = false;
 
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passCtrl.dispose();
-    super.dispose();
-  }
-
-  void _goBack(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/splash');
-    }
-  }
-
-  Future<void> _signIn() async {
-    final email = _emailCtrl.text.trim();
-    final pass = _passCtrl.text;
+  void _onSignIn() async {
+    final email = _email.text.trim();
+    final pass = _pass.text.trim();
 
     if (email.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: LiquidOrb.snackBarError,
-        ),
+        const SnackBar(content: Text('Please enter email and password')),
       );
       return;
     }
 
-    if (!email.contains('@') || !email.contains('.')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter a valid email address (e.g. name@domain.com)'),
-          backgroundColor: LiquidOrb.snackBarError,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
+    setState(() => _loading = true);
     try {
-      final response = await http.post(
-        Uri.parse('$kBaseUrl/api/users/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': pass}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await UserSession.save(
-          id: data['user']['id'],
-          name: data['user']['name'],
-          level: data['user']['level'] ?? 1,
-          token: data['access_token'],
-          email: data['user']['email']?.toString(),
-        );
-        if (mounted) context.go('/home');
-      } else {
-        final msg = messageFromFastApiBody(response.body);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg), backgroundColor: LiquidOrb.snackBarError),
-          );
-        }
-      }
+      await AuthService.login(email, pass);
+      if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              kBaseUrl.startsWith('http://127.') || kBaseUrl.startsWith('http://localhost')
-                  ? 'Could not reach the API ($kBaseUrl). Is the server running?'
-                  : 'Network error. Please try again.',
-            ),
-            backgroundColor: LiquidOrb.snackBarError,
-          ),
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final orbTheme = Theme.of(context).copyWith(
-      colorScheme: Theme.of(context).colorScheme.copyWith(primary: LiquidOrb.accent),
-    );
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Ambient BG
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.4,
+              child: Image.asset('assets/images/place_citadel.png', fit: BoxFit.cover),
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Colors.black],
+              ),
+            ),
+          ),
 
-    return Theme(
-      data: orbTheme,
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        body: LiquidOrbAuthLayout(
-          travelHeroAsset: AppBranding.authTravelHeroAsset,
-          onBack: () => _goBack(context),
-          cardChild: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(32, 28, 32, 36),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Sign in',
-                  textAlign: TextAlign.center,
-                  style: LiquidOrb.heading,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppBranding.signInEyebrow,
-                  textAlign: TextAlign.center,
-                  style: LiquidOrb.subtitleCaps,
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'Email',
-                  style: LiquidOrb.labelSmall.copyWith(fontSize: 11, letterSpacing: 0.55),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  autocorrect: false,
-                  cursorColor: LiquidOrb.accent,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: LiquidOrb.textHeading,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: LiquidOrb.orbInputDecoration(hint: 'you@email.com').copyWith(
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: LiquidOrb.accent, width: 1.5),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 80),
+                  const Text(
+                    'WELCOME BACK',
+                    style: TextStyle(
+                      color: KurdishHeritageColors.zer,
+                      fontSize: 12,
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Password',
-                  style: LiquidOrb.labelSmall.copyWith(fontSize: 11, letterSpacing: 0.55),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passCtrl,
-                  obscureText: _obscure,
-                  cursorColor: LiquidOrb.accent,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: LiquidOrb.textHeading,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: LiquidOrb.orbInputDecoration(
-                    hint: '••••••••',
-                    suffix: IconButton(
-                      splashRadius: 20,
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                      icon: Icon(
-                        _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: LiquidOrb.textMuted,
-                        size: 20,
-                      ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Sign in to\nyour journey',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: LiquidOrbCheckboxTile(
-                        value: _rememberMe,
-                        onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                        label: const Text('Remember me'),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.go('/forgot'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: LiquidOrb.accent,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: const Text(
-                        'Forgot password?',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                LiquidOrbPrimaryButton(
-                  label: 'Sign in',
-                  loading: _isLoading,
-                  onPressed: _signIn,
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  'OR CONTINUE WITH',
-                  textAlign: TextAlign.center,
-                  style: LiquidOrb.subtitleCaps.copyWith(fontSize: 11),
-                ),
-                const SizedBox(height: 16),
-                const LiquidOrbSocialRow(),
-                const SizedBox(height: 28),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: LiquidOrb.labelSmall.copyWith(color: LiquidOrb.textLabel),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/signup'),
-                      child: const Text(
-                        'Sign up',
+                  const SizedBox(height: 48),
+
+                  _Field(label: 'EMAIL', controller: _email, icon: Icons.email_outlined),
+                  const SizedBox(height: 20),
+                  _Field(label: 'PASSWORD', controller: _pass, icon: Icons.lock_outline, isPass: true),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/forgot'),
+                      child: Text(
+                        'FORGOT PASSWORD?',
                         style: TextStyle(
-                          color: LiquidOrb.accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                          color: KurdishHeritageColors.zer.withOpacity(0.7),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  _PrimaryBtn(
+                    label: _loading ? 'VERIFYING...' : 'SIGN IN',
+                    onTap: _loading ? null : _onSignIn,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => context.push('/signup'),
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 13, letterSpacing: 0.5),
+                          children: [
+                            TextSpan(
+                                text: "Don't have an account? ",
+                                style: TextStyle(color: Colors.white.withOpacity(0.5))),
+                            const TextSpan(
+                              text: 'SIGN UP',
+                              style: TextStyle(
+                                color: KurdishHeritageColors.zer,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final IconData icon;
+  final bool isPass;
+
+  const _Field({
+    required this.label,
+    required this.controller,
+    required this.icon,
+    this.isPass = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.4),
+            fontSize: 10,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          obscureText: isPass,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: KurdishHeritageColors.zer, size: 20),
+            filled: true,
+            fillColor: Colors.white.withOpacity(0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: KurdishHeritageColors.zer),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PrimaryBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  const _PrimaryBtn({required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(
+          color: KurdishHeritageColors.zer,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 3,
           ),
         ),
       ),

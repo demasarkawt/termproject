@@ -98,4 +98,5 @@ class UserSession {
         'Content-Type': 'application/json',
         if (_token != null) 'Authorization': 'Bearer $_token',
       };
+
 }

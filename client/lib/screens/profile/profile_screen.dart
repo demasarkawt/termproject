@@ -1,30 +1,35 @@
+// Polished cinematic Profile screen.
+// Drop into: lib/screens/profile/profile_screen.dart
+ 
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import 'package:termproject/config/api_config.dart';
-import 'package:termproject/services/user_session.dart';
-import 'package:termproject/services/theme_service.dart';
-
+ 
+import '../../config/api_config.dart';
+import '../../services/user_session.dart';
+import '../../services/theme_service.dart';
+import '../../widgets/cinematic.dart';
+ 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
+ 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
-
+ 
 class _ProfileScreenState extends State<ProfileScreen> {
   List<dynamic> _trips = [];
   List<dynamic> _savedPlaces = [];
   bool _loading = true;
-
+ 
   @override
   void initState() {
     super.initState();
     _fetchData();
   }
-
+ 
   Future<void> _fetchData() async {
     final id = UserSession.userId;
     if (id == null) return;
@@ -52,12 +57,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
-
+ 
   Future<void> _logout() async {
     await UserSession.clear();
     if (mounted) context.go('/signin');
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     final name = UserSession.userName ?? 'Explorer';
@@ -65,25 +70,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = UserSession.userEmail;
     final avatarPath = UserSession.avatarLocalPath;
     final hasAvatar = avatarPath != null && File(avatarPath).existsSync();
-
+ 
     return ListenableBuilder(
-      listenable: ThemeService(),
+      listenable: themeService,
       builder: (context, _) {
-        final isDark = ThemeService().isDark;
-
+        final isDark = themeService.isDark;
+        final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Stack(
             children: [
-              _buildGlowBlob(KurdishHeritageColors.sor.withValues(alpha: 0.1), -100, 100, 400),
-              _buildGlowBlob(KurdishHeritageColors.kesk.withValues(alpha: 0.1), 300, 400, 300),
-
+              _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.08), -100, 100, 400),
+              _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.08), 300, 400, 300),
+ 
               SafeArea(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator(color: KurdishHeritageColors.zer))
                     : CustomScrollView(
                         physics: const BouncingScrollPhysics(),
                         slivers: [
+                          // ── Header & Identity ──
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -101,127 +108,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ),
                                       const Spacer(),
-                                      IconButton(
-                                        tooltip: 'Light / dark mode',
-                                        onPressed: () => ThemeService().toggleTheme(),
-                                        icon: Icon(
-                                          isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                                          color: isDark ? Colors.white : KurdishHeritageColors.res,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        tooltip: 'Map',
-                                        onPressed: () => context.go('/map'),
-                                        icon: Icon(
-                                          Icons.map_rounded,
-                                          color: isDark ? Colors.white : KurdishHeritageColors.res,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 30),
-
-                                  Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Transform.rotate(
-                                        angle: 0.785,
-                                        child: Container(
-                                          width: 120,
-                                          height: 120,
-                                          decoration: BoxDecoration(
-                                            color: KurdishHeritageColors.xweli.withValues(alpha: 0.1),
-                                            border: Border.all(
-                                              color: KurdishHeritageColors.zer.withValues(alpha: 0.5),
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Transform.rotate(
-                                        angle: 0.785,
-                                        child: Container(
-                                          width: 100,
-                                          height: 100,
-                                          decoration: BoxDecoration(
-                                            color: isDark ? KurdishHeritageColors.res : Colors.white,
-                                            border: Border.all(color: KurdishHeritageColors.zer, width: 2),
-                                          ),
-                                          child: Transform.rotate(
-                                            angle: -0.785,
-                                            child: hasAvatar
-                                                ? ClipRRect(
-                                                    borderRadius: BorderRadius.circular(10),
-                                                    child: Image.file(
-                                                      File(avatarPath),
-                                                      width: 100,
-                                                      height: 100,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  )
-                                                : Icon(
-                                                    Icons.person_rounded,
-                                                    size: 50,
-                                                    color: isDark ? Colors.white70 : KurdishHeritageColors.res,
-                                                  ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 0,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: KurdishHeritageColors.sor,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Text(
-                                            'LEVEL $level',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.white,
-                                              letterSpacing: 1,
-                                            ),
+                                      PressScale(
+                                        onTap: () => themeService.toggleTheme(),
+                                        child: Glass(
+                                          radius: 999,
+                                          padding: const EdgeInsets.all(8),
+                                          child: Icon(
+                                            isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                            size: 20,
+                                            color: ink,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-
-                                  const SizedBox(height: 24),
-                                  Text(
+                                  const SizedBox(height: 40),
+ 
+                                  // Avatar with Sweep Ring
+                                  GoldRingSweep(
+                                    size: 130,
+                                    thickness: 2,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: ink.withOpacity(0.05),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: KurdishHeritageColors.zer.withOpacity(0.3), width: 1.5),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(999),
+                                        child: hasAvatar
+                                            ? Image.file(File(avatarPath), fit: BoxFit.cover)
+                                            : Icon(Icons.person_rounded, size: 50, color: ink.withOpacity(0.2)),
+                                      ),
+                                    ),
+                                  ),
+ 
+                                  const SizedBox(height: 28),
+                                  RevealText(
                                     name,
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 32,
+                                      fontSize: 34,
                                       fontWeight: FontWeight.w900,
-                                      color: isDark ? Colors.white : KurdishHeritageColors.res,
+                                      color: ink,
                                       letterSpacing: -1,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'TRAVELER',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 2,
-                                      color: KurdishHeritageColors.zer.withValues(alpha: 0.8),
+                                  const SizedBox(height: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: KurdishHeritageColors.sor,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      'LEVEL $level TRAVELER',
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 2),
                                     ),
                                   ),
-                                  if (email != null && email.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
+                                  if (email != null) ...[
+                                    const SizedBox(height: 12),
                                     Text(
                                       email,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark ? Colors.white70 : KurdishHeritageColors.res.withValues(alpha: 0.75),
-                                      ),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ink.withOpacity(0.5)),
                                     ),
                                   ],
-
-                                  const SizedBox(height: 32),
+ 
+                                  const SizedBox(height: 40),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -234,58 +189,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
-
+ 
+                          // ── My Trips ──
                           SliverPadding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
                             sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildSectionHeader('MY TRIPS', isDark),
+                                  _buildSectionHeader('MY JOURNEYS', isDark),
                                   const SizedBox(height: 16),
                                   if (_trips.isEmpty)
-                                    _buildGlassEmptyCard('No trips planned yet.', isDark)
+                                    _buildEmptyCard('No trips planned yet.', isDark)
                                   else
-                                    ..._trips.map((trip) => _buildTripCard(trip, isDark)),
+                                    ...List.generate(_trips.length, (i) => ScrollReveal(
+                                      duration: Duration(milliseconds: Motion.md.inMilliseconds + (i * 40)),
+                                      child: _TripCard(trip: _trips[i], isDark: isDark),
+                                    )),
                                 ],
                               ),
                             ),
                           ),
-
+ 
+                          // ── Menu Options ──
                           SliverPadding(
                             padding: const EdgeInsets.fromLTRB(24, 40, 24, 150),
                             sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildSectionHeader('ACCOUNT', isDark),
+                                  _buildSectionHeader('SETTINGS', isDark),
                                   const SizedBox(height: 16),
-                                  _buildMenuItem(
-                                    Icons.person_outline_rounded,
-                                    'Personal information',
-                                    isDark,
-                                    () => context.push('/personal-info').then((_) => setState(() {})),
+                                  _MenuItem(Icons.person_outline_rounded, 'Personal information', isDark, () => context.push('/personal-info')),
+                                  _MenuItem(Icons.privacy_tip_outlined, 'Privacy policy', isDark, () => context.push('/privacy-policy')),
+                                  _MenuItem(Icons.lock_outline_rounded, 'Security center', isDark, () => context.push('/security-center')),
+                                  _MenuItem(Icons.support_agent_rounded, 'Help & Support', isDark, () => context.push('/support-center')),
+                                  const SizedBox(height: 32),
+                                  PressScale(
+                                    onTap: _logout,
+                                    child: Container(
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: KurdishHeritageColors.sor.withOpacity(0.4)),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const Text('LOGOUT', style: TextStyle(color: KurdishHeritageColors.sor, fontWeight: FontWeight.w900, letterSpacing: 3)),
+                                    ),
                                   ),
-                                  _buildMenuItem(
-                                    Icons.privacy_tip_outlined,
-                                    'Privacy policy',
-                                    isDark,
-                                    () => context.push('/privacy-policy'),
-                                  ),
-                                  _buildMenuItem(
-                                    Icons.lock_outline_rounded,
-                                    'Security',
-                                    isDark,
-                                    () => context.push('/security-center'),
-                                  ),
-                                  _buildMenuItem(
-                                    Icons.support_agent_rounded,
-                                    'Support center',
-                                    isDark,
-                                    () => context.push('/support-center'),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _buildLogoutButton(),
                                 ],
                               ),
                             ),
@@ -299,7 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
+ 
   Widget _buildGlowBlob(Color color, double left, double top, double size) {
     return Positioned(
       left: left,
@@ -314,102 +265,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
+ 
   Widget _buildStatItem(String val, String label, bool isDark) {
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
     return Column(
       children: [
-        Text(val, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : KurdishHeritageColors.res)),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: KurdishHeritageColors.zer)),
+        CountUp(int.tryParse(val) ?? 0, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ink)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2, color: KurdishHeritageColors.zer)),
       ],
     );
   }
-
+ 
   Widget _buildDivider(bool isDark) {
-    return Container(width: 1, height: 30, color: isDark ? Colors.white12 : Colors.black12, margin: const EdgeInsets.symmetric(horizontal: 32));
+    return Container(width: 1, height: 36, color: isDark ? Colors.white12 : Colors.black12, margin: const EdgeInsets.symmetric(horizontal: 40));
   }
-
+ 
   Widget _buildSectionHeader(String title, bool isDark) {
-    return Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2, color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.3)));
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 3, color: ink.withOpacity(0.3)));
   }
-
-  Widget _buildTripCard(Map<String, dynamic> trip, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.luggage_rounded, color: KurdishHeritageColors.kesk),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(trip['title'] ?? '', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : KurdishHeritageColors.res)),
-                Text('${trip['start_date']} — ${trip['end_date'] ?? ''}', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(color: KurdishHeritageColors.sor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: Text(trip['status']?.toUpperCase() ?? 'UPCOMING', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: KurdishHeritageColors.sor)),
-          ),
-        ],
-      ),
+ 
+  Widget _buildEmptyCard(String msg, bool isDark) {
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return Glass(
+      radius: 24,
+      padding: const EdgeInsets.all(40),
+      opacity: 0.03,
+      child: Center(child: Text(msg, style: TextStyle(color: ink.withOpacity(0.3), fontWeight: FontWeight.bold))),
     );
   }
-
-  Widget _buildMenuItem(IconData icon, String title, bool isDark, VoidCallback onTap) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03)),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: isDark ? Colors.white70 : KurdishHeritageColors.res),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isDark ? Colors.white : KurdishHeritageColors.res)),
-        trailing: Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black.withValues(alpha: 0.24)),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildGlassEmptyCard(String msg, bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03), style: BorderStyle.none),
-      ),
-      child: Center(child: Text(msg, style: TextStyle(color: isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black.withValues(alpha: 0.24), fontWeight: FontWeight.bold))),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return GestureDetector(
-      onTap: _logout,
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          color: KurdishHeritageColors.sor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: KurdishHeritageColors.sor.withValues(alpha: 0.3)),
+}
+ 
+class _TripCard extends StatelessWidget {
+  final Map<String, dynamic> trip;
+  final bool isDark;
+  const _TripCard({required this.trip, required this.isDark});
+ 
+  @override
+  Widget build(BuildContext context) {
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PressScale(
+        child: Glass(
+          radius: 24,
+          padding: const EdgeInsets.all(18),
+          opacity: isDark ? 0.05 : 0.03,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withOpacity(0.12), borderRadius: BorderRadius.circular(16)),
+                child: const Icon(Icons.luggage_rounded, color: KurdishHeritageColors.kesk, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(trip['title'] ?? '', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                    const SizedBox(height: 2),
+                    Text('${trip['start_date']} — ${trip['end_date'] ?? ''}', style: TextStyle(fontSize: 12, color: ink.withOpacity(0.4))),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: KurdishHeritageColors.sor.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+                child: Text(trip['status']?.toUpperCase() ?? 'UPCOMING', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: KurdishHeritageColors.sor, letterSpacing: 0.5)),
+              ),
+            ],
+          ),
         ),
-        alignment: Alignment.center,
-        child: const Text('LOGOUT', style: TextStyle(color: KurdishHeritageColors.sor, fontWeight: FontWeight.w900, letterSpacing: 2)),
+      ),
+    );
+  }
+}
+ 
+class _MenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isDark;
+  final VoidCallback onTap;
+  const _MenuItem(this.icon, this.title, this.isDark, this.onTap);
+ 
+  @override
+  Widget build(BuildContext context) {
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: PressScale(
+        onTap: onTap,
+        child: Glass(
+          radius: 20,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          opacity: isDark ? 0.04 : 0.02,
+          child: ListTile(
+            leading: Icon(icon, color: ink.withOpacity(0.6), size: 22),
+            title: Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: ink)),
+            trailing: Icon(Icons.chevron_right_rounded, color: ink.withOpacity(0.2)),
+          ),
+        ),
       ),
     );
   }

@@ -1,65 +1,77 @@
+// Polished cinematic Events screen.
+// Drop into: lib/screens/events/events_screen.dart
+ 
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
-import 'package:termproject/config/api_config.dart';
-import 'package:termproject/services/theme_service.dart';
-
+ 
+import '../../config/api_config.dart';
+import '../../services/theme_service.dart';
+import '../../widgets/cinematic.dart';
+ 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
-
+ 
   @override
   State<EventsScreen> createState() => _EventsScreenState();
 }
-
+ 
 class _EventsScreenState extends State<EventsScreen> {
   List<dynamic> _events = [];
   bool _loading = true;
   String? _error;
-
+ 
   @override
   void initState() {
     super.initState();
     _fetchEvents();
   }
-
+ 
   Future<void> _fetchEvents() async {
     try {
-      final response = await http.get(Uri.parse('$kBaseUrl/api/events/'));
+      final response = await http.get(Uri.parse('$kBaseUrl/api/events/')).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
-        setState(() {
-          _events = jsonDecode(response.body);
-          _loading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _events = jsonDecode(response.body);
+            _loading = false;
+          });
+        }
       } else {
-        setState(() {
-          _loading = false;
-          _error = 'Failed to load events.';
-        });
+        if (mounted) {
+          setState(() {
+            _loading = false;
+            _error = 'Failed to load events.';
+          });
+        }
       }
     } catch (_) {
-      setState(() {
-        _loading = false;
-        _error = 'Connection error.';
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Connection error.';
+        });
+      }
     }
   }
-
+ 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService(),
+      listenable: themeService,
       builder: (context, _) {
-        final isDark = ThemeService().isDark;
-
+        final isDark = themeService.isDark;
+        final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Stack(
             children: [
-              _buildGlowBlob(KurdishHeritageColors.sor.withValues(alpha: 0.1), -100, 100, 400),
-              _buildGlowBlob(KurdishHeritageColors.kesk.withValues(alpha: 0.1), 300, 400, 300),
-
+              _buildGlowBlob(KurdishHeritageColors.sor.withOpacity(0.08), -100, 100, 400),
+              _buildGlowBlob(KurdishHeritageColors.kesk.withOpacity(0.08), 300, 400, 300),
+ 
               SafeArea(
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -73,15 +85,12 @@ class _EventsScreenState extends State<EventsScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                GestureDetector(
+                                PressScale(
                                   onTap: () => context.canPop() ? context.pop() : context.go('/home'),
-                                  child: Container(
+                                  child: Glass(
+                                    radius: 999,
                                     padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.arrow_back_ios_new_rounded, color: KurdishHeritageColors.zer, size: 18),
+                                    child: Icon(Icons.arrow_back_ios_new_rounded, color: KurdishHeritageColors.zer, size: 18),
                                   ),
                                 ),
                                 const Text(
@@ -96,21 +105,21 @@ class _EventsScreenState extends State<EventsScreen> {
                               ],
                             ),
                             const SizedBox(height: 32),
-                            Text(
+                            RevealText(
                               'Upcoming\nEvents',
                               style: TextStyle(
-                                color: isDark ? Colors.white : KurdishHeritageColors.res,
+                                color: ink,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 36,
-                                height: 1.1,
+                                fontSize: 44,
+                                height: 1.05,
                                 letterSpacing: -1.5,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             Text(
-                              'Experience live events near your routes',
+                              'Experience live cultural festivals and events',
                               style: TextStyle(
-                                color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black.withValues(alpha: 0.5),
+                                color: ink.withOpacity(0.5),
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -119,18 +128,21 @@ class _EventsScreenState extends State<EventsScreen> {
                         ),
                       ),
                     ),
-
+ 
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(24, 40, 24, 150),
                       sliver: _loading
                           ? const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: KurdishHeritageColors.zer)))
                           : _error != null
-                              ? SliverFillRemaining(child: Center(child: Text(_error!, style: const TextStyle(color: Colors.grey))))
+                              ? SliverFillRemaining(child: Center(child: Text(_error!, style: TextStyle(color: ink.withOpacity(0.4)))) )
                               : _events.isEmpty
-                                  ? const SliverFillRemaining(child: Center(child: Text('No cultural events scheduled.', style: TextStyle(color: Colors.grey))))
+                                  ? SliverFillRemaining(child: Center(child: Text('No cultural events scheduled.', style: TextStyle(color: ink.withOpacity(0.4)))))
                                   : SliverList(
                                       delegate: SliverChildBuilderDelegate(
-                                        (context, i) => _buildEventCard(_events[i], isDark),
+                                        (context, i) => ScrollReveal(
+                                          duration: Duration(milliseconds: Motion.md.inMilliseconds + (i.clamp(0, 8) * 40)),
+                                          child: _EventCard(event: _events[i], isDark: isDark),
+                                        ),
                                         childCount: _events.length,
                                       ),
                                     ),
@@ -144,7 +156,7 @@ class _EventsScreenState extends State<EventsScreen> {
       },
     );
   }
-
+ 
   Widget _buildGlowBlob(Color color, double left, double top, double size) {
     return Positioned(
       left: left,
@@ -159,168 +171,175 @@ class _EventsScreenState extends State<EventsScreen> {
       ),
     );
   }
-
-  Widget _buildEventCard(Map<String, dynamic> event, bool isDark) {
+}
+ 
+class _EventCard extends StatelessWidget {
+  final Map<String, dynamic> event;
+  final bool isDark;
+  const _EventCard({required this.event, required this.isDark});
+ 
+  @override
+  Widget build(BuildContext context) {
     final type = (event['event_type'] ?? 'CULTURE').toString().toUpperCase();
     final typeColor = _getTypeColor(type);
     final id = event['id'];
     final imageUrl = event['image_url'] as String?;
     final hasUrl = imageUrl != null && imageUrl.trim().isNotEmpty;
-
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(30),
-          onTap: id == null ? null : () => context.push('/events/$id'),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(29)),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: Hero(
-                      tag: 'event-cover-$id',
-                      child: hasUrl
-                          ? CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              fit: BoxFit.cover,
-                              fadeInDuration: const Duration(milliseconds: 240),
-                              placeholder: (_, __) => _CardImagePlaceholder(type: type, typeColor: typeColor),
-                              errorWidget: (_, __, ___) => _CardImagePlaceholder(type: type, typeColor: typeColor),
-                            )
-                          : _CardImagePlaceholder(type: type, typeColor: typeColor),
-                    ),
+      padding: const EdgeInsets.only(bottom: 24),
+      child: PressScale(
+        onTap: id == null ? null : () => context.push('/events/$id'),
+        child: Glass(
+          radius: 30,
+          opacity: isDark ? 0.05 : 0.03,
+          borderOpacity: isDark ? 0.1 : 0.05,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(29)),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Hero(
+                    tag: 'event-cover-$id',
+                    child: hasUrl
+                        ? CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            fadeInDuration: Motion.sm,
+                            placeholder: (_, __) => _Placeholder(type: type, color: typeColor),
+                            errorWidget: (_, __, ___) => _Placeholder(type: type, color: typeColor),
+                          )
+                        : _Placeholder(type: type, color: typeColor),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: typeColor.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(10)),
-                            child: Text(type, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: typeColor, letterSpacing: 1)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: typeColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          if (event['location'] != null)
-                            Flexible(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.location_on_rounded, size: 14, color: isDark ? Colors.white.withValues(alpha: 0.35) : Colors.black.withValues(alpha: 0.35)),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      '${event['location']}',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark ? Colors.white.withValues(alpha: 0.38) : Colors.black.withValues(alpha: 0.38),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: typeColor,
+                              letterSpacing: 2,
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        event['title']?.toString() ?? '',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: isDark ? Colors.white : KurdishHeritageColors.res, letterSpacing: -0.5),
-                      ),
-                      if (event['description'] != null && event['description'].toString().trim().isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          event['description'].toString(),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : Colors.black54, height: 1.55),
+                          ),
                         ),
-                      ],
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today_rounded, size: 14, color: KurdishHeritageColors.zer),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              event['end_date'] != null ? '${event['start_date']} — ${event['end_date']}' : '${event['start_date']}',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : KurdishHeritageColors.res.withValues(alpha: 0.75)),
-                            ),
+                        if (event['location'] != null)
+                          Row(
+                            children: [
+                              Icon(Icons.location_on_rounded, size: 14, color: ink.withOpacity(0.35)),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${event['location']}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: ink.withOpacity(0.4),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: KurdishHeritageColors.zer),
-                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      event['title']?.toString() ?? '',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: ink,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    if (event['description'] != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        event['description'].toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: ink.withOpacity(0.6),
+                          height: 1.5,
+                        ),
                       ),
                     ],
-                  ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded, size: 14, color: KurdishHeritageColors.zer),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            event['end_date'] != null 
+                              ? '${event['start_date']} — ${event['end_date']}' 
+                              : '${event['start_date']}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: ink.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios_rounded, size: 14, color: ink.withOpacity(0.2)),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-
+ 
   Color _getTypeColor(String type) {
     switch (type) {
-      case 'FOOD':
-        return KurdishHeritageColors.sor;
-      case 'MUSIC':
-        return const Color(0xFF1E3A8A);
-      case 'CULTURE':
-        return KurdishHeritageColors.kesk;
-      default:
-        return KurdishHeritageColors.zer;
+      case 'FOOD': return KurdishHeritageColors.sor;
+      case 'MUSIC': return const Color(0xFF1E3A8A);
+      case 'CULTURE': return KurdishHeritageColors.kesk;
+      default: return KurdishHeritageColors.zer;
     }
   }
 }
-
-class _CardImagePlaceholder extends StatelessWidget {
-  const _CardImagePlaceholder({required this.type, required this.typeColor});
-
+ 
+class _Placeholder extends StatelessWidget {
   final String type;
-  final Color typeColor;
-
+  final Color color;
+  const _Placeholder({required this.type, required this.color});
+ 
   @override
   Widget build(BuildContext context) {
-    IconData ic;
-    switch (type) {
-      case 'FOOD':
-        ic = Icons.restaurant_rounded;
-        break;
-      case 'MUSIC':
-        ic = Icons.music_note_rounded;
-        break;
-      default:
-        ic = Icons.celebration_rounded;
-    }
-    return DecoratedBox(
+    IconData ic = Icons.celebration_rounded;
+    if (type == 'FOOD') ic = Icons.restaurant_rounded;
+    if (type == 'MUSIC') ic = Icons.music_note_rounded;
+ 
+    return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            KurdishHeritageColors.res.withValues(alpha: 0.92),
-            typeColor.withValues(alpha: 0.82),
-          ],
+          colors: [KurdishHeritageColors.res, color.withOpacity(0.8)],
         ),
       ),
-      child: Center(child: Icon(ic, size: 56, color: Colors.white.withValues(alpha: 0.88))),
+      child: Center(child: Icon(ic, size: 48, color: Colors.white.withOpacity(0.8))),
     );
   }
 }

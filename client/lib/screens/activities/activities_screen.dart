@@ -1,112 +1,61 @@
+// Polished cinematic Activities screen — Focused on Kurdish Cuisine & Gastronomy.
+// Drop into: lib/screens/activities/activities_screen.dart
+ 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+ 
+import '../../services/theme_service.dart';
+import '../../widgets/cinematic.dart';
+ 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
-
+ 
   @override
   State<ActivitiesScreen> createState() => _ActivitiesScreenState();
 }
-
+ 
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   String _activeFilter = 'Open Now';
-
+ 
   @override
   Widget build(BuildContext context) {
-    const primaryGreen = Color(0xFF1F5E37);
-    const backgroundLight = Color(0xFFF9FAFB);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: backgroundLight,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top Bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+    return ListenableBuilder(
+      listenable: themeService,
+      builder: (context, _) {
+        final isDark = themeService.isDark;
+        final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
+        return Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Stack(
+            children: [
+              CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // ── Top Bar ──
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            GestureDetector(
+                            PressScale(
                               onTap: () => context.canPop() ? context.pop() : context.go('/home'),
-                              child: const Icon(Icons.arrow_back_ios_new_rounded, color: primaryGreen, size: 20),
+                              child: Glass(
+                                radius: 999,
+                                padding: const EdgeInsets.all(10),
+                                child: Icon(Icons.arrow_back_ios_new_rounded, color: KurdishHeritageColors.zer, size: 18),
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            const Text('Travelo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryGreen)),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => context.go('/explore'),
-                              child: const Icon(Icons.search, color: Colors.black54),
-                            ),
-                            const SizedBox(width: 16),
-                            const Icon(Icons.wb_sunny_outlined, color: Colors.green),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Signature Dolma Banner
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      height: 240,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        image: const DecorationImage(
-                          image: AssetImage('assets/images/cha.JPEG'), // using cha.JPEG as placeholder
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          color: Colors.black.withOpacity(0.4),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: const Color(0xFFFFA726), borderRadius: BorderRadius.circular(12)),
-                              child: const Text('DISH OF THE DAY', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(height: 12),
                             const Text(
-                              'Signature\nDolma',
-                              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'The heart of every Kurdish feast,\nslow-cooked for twelve hours with\naromatic spices and sumac.',
-                              style: TextStyle(color: Colors.white70, fontSize: 10, height: 1.3),
-                            ),
-                            const SizedBox(height: 16),
-                            GestureDetector(
-                              onTap: () => context.go('/explore'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(color: primaryGreen, borderRadius: BorderRadius.circular(20)),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Text('Where to try it', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward, color: Colors.white, size: 16),
-                                  ],
-                                ),
+                              'GASTRONOMY',
+                              style: TextStyle(
+                                color: KurdishHeritageColors.zer,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                letterSpacing: 4,
                               ),
                             ),
                           ],
@@ -114,330 +63,366 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 30),
-
-                  // Dish Explorer Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Dish Explorer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-                            const SizedBox(height: 2),
-                            const Text('Stories behind the flavors', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          ],
+ 
+                  // ── Dish of the Day Banner ──
+                  SliverToBoxAdapter(
+                    child: ScrollReveal(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: PressScale(
+                          onTap: () => context.push('/explore'),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(32),
+                            child: Container(
+                              height: 300,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.asset('assets/images/cha.JPEG', fit: BoxFit.cover),
+                                  const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [Colors.transparent, Color(0xDD000000)],
+                                        stops: [0.3, 1],
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(28),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: KurdishHeritageColors.zer,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Text(
+                                            'DISH OF THE DAY',
+                                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.5),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const RevealText(
+                                          'Signature\nDolma',
+                                          style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: Colors.white, height: 1.05),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          'Slow-cooked grape leaves stuffed with spiced rice\nand herbs, the heart of Kurdish hospitality.',
+                                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13, height: 1.4),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            const Text('EXPLORE FLAVORS', style: TextStyle(color: KurdishHeritageColors.zer, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                                            const SizedBox(width: 10),
+                                            Container(width: 30, height: 1.5, color: KurdishHeritageColors.zer),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(color: Colors.grey.shade200, shape: BoxShape.circle),
-                              child: const Icon(Icons.chevron_left, size: 16),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(color: Colors.grey.shade200, shape: BoxShape.circle),
-                              child: const Icon(Icons.chevron_right, size: 16),
-                            ),
-                          ],
-                        )
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Horizontal Dish Cards
-                  SizedBox(
-                    height: 250,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      clipBehavior: Clip.none,
-                      children: [
-                        _buildDishCard('Mastawa', 'A refreshing mountain yogurt soup\ninfused with dried mint and wild mountain\nherbs.', 'assets/images/erbil.jpg'),
-                        const SizedBox(width: 16),
-                        _buildDishCard('Tea Culture', 'More than a drink, it\'s a symbol of Kurdish\nhospitality served after every meal.', 'assets/images/sulaymaniyah.jpg'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Filters
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        _buildFilterPill('Open Now'),
-                        const SizedBox(width: 8),
-                        _buildFilterPill('Erbil'),
-                        const SizedBox(width: 8),
-                        _buildFilterPill('Sulaymaniyah'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Switch to Map Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: GestureDetector(
-                      onTap: () => context.go('/map'),
-                      child: Row(
-                        children: const [
-                          Icon(Icons.map_outlined, color: primaryGreen, size: 16),
-                          SizedBox(width: 4),
-                          Text('Switch to Map', style: TextStyle(color: primaryGreen, fontWeight: FontWeight.bold, fontSize: 12)),
+ 
+                  // ── Dish Explorer Horizontal ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 40, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Dish Explorer', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: ink)),
+                          Text('Stories behind the mountain flavors', style: TextStyle(fontSize: 14, color: ink.withOpacity(0.5))),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Restaurant List
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () => context.go('/city/erbil'),
-                          child: _buildRestaurantCard(
-                            'Citadel View\nDining',
-                            'Fine Dining • Erbil',
-                            'Traditional Oven',
-                            '\$\$\$',
-                            '4.9',
-                            'assets/images/qallat.JPEG',
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 260,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          _DishCard(
+                            title: 'Mastawa', 
+                            desc: 'Refreshing mountain yogurt soup with dried mint and herbs.', 
+                            img: 'assets/images/erbil.jpg',
+                            stagger: 0,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        GestureDetector(
-                          onTap: () => context.go('/city/sulaymaniyah'),
-                          child: _buildRestaurantCard(
-                            'Lali Tea House',
-                            'Tea & Snacks • Sulaymaniyah',
-                            'Outdoor Seating',
-                            '\$\$',
-                            '4.7',
-                            'assets/images/cha.JPEG',
+                          _DishCard(
+                            title: 'Tea Culture', 
+                            desc: 'A symbol of Kurdish hospitality served in traditional glasses.', 
+                            img: 'assets/images/sulaymaniyah.jpg',
+                            stagger: 1,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 30),
-
-                  // Eat Like a Local Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text('Eat Like a Local', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Eat Like a Local Cards
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildLocalCard('Morning Markets', 'Best breakfast spots in the Bazaar', 'assets/images/shanadar.JPEG'),
-                        const SizedBox(height: 16),
-                        _buildLocalCard('Riverside Grills', 'Where locals go for summer weekends', 'assets/images/duhok.jpg'),
-                      ],
+ 
+                  // ── Filters & Map Toggle ──
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
+                      child: Row(
+                        children: [
+                          _buildFilterPill('Open Now', isDark),
+                          const SizedBox(width: 10),
+                          _buildFilterPill('Erbil', isDark),
+                          const SizedBox(width: 10),
+                          PressScale(
+                            onTap: () => context.go('/map'),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.map_outlined, color: KurdishHeritageColors.kesk, size: 16),
+                                const SizedBox(width: 6),
+                                const Text('MAP', style: TextStyle(color: KurdishHeritageColors.kesk, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.5)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 100), // padding for FAB
+ 
+                  // ── Restaurant List ──
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        const SizedBox(height: 12),
+                        _RestaurantCard(
+                          title: 'Citadel View Dining',
+                          subtitle: 'Fine Dining • Erbil',
+                          tag: 'Traditional Oven',
+                          price: '\$\$\$',
+                          rating: '4.9',
+                          img: 'assets/images/qallat.JPEG',
+                          route: '/city/erbil',
+                        ),
+                        const SizedBox(height: 16),
+                        _RestaurantCard(
+                          title: 'Lali Tea House',
+                          subtitle: 'Tea & Snacks • Sulaymaniyah',
+                          tag: 'Outdoor Seating',
+                          price: '\$\$',
+                          rating: '4.7',
+                          img: 'assets/images/cha.JPEG',
+                          route: '/city/sulaymaniyah',
+                        ),
+                      ]),
+                    ),
+                  ),
+ 
+                  const SliverToBoxAdapter(child: SizedBox(height: 120)),
                 ],
               ),
-            ),
-            
-            // FAB
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: GestureDetector(
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (_) => Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Filter Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          children: ['Open Now', 'Erbil', 'Sulaymaniyah', 'Duhok', 'Budget', 'Premium']
-                              .map((f) => FilterChip(
-                                    label: Text(f),
-                                    selected: _activeFilter == f,
-                                    onSelected: (_) {
-                                      setState(() => _activeFilter = f);
-                                      Navigator.pop(context);
-                                    },
-                                  ))
-                              .toList(),
-                        ),
-                        const SizedBox(height: 16),
+ 
+              // ── Floating Filter Button ──
+              Positioned(
+                bottom: 30,
+                right: 24,
+                child: PressScale(
+                  onTap: () => _showFilterSheet(context),
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: KurdishHeritageColors.res,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 18, offset: const Offset(0, 8)),
                       ],
                     ),
+                    child: const Icon(Icons.filter_list_rounded, color: KurdishHeritageColors.zer),
                   ),
-                ),
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: const BoxDecoration(
-                    color: primaryGreen,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.filter_list, color: Colors.white),
                 ),
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+ 
+  Widget _buildFilterPill(String label, bool isDark) {
+    final active = _activeFilter == label;
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+    return PressScale(
+      onTap: () => setState(() => _activeFilter = label),
+      child: AnimatedContainer(
+        duration: Motion.sm,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: active ? KurdishHeritageColors.zer : ink.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: active ? Colors.white : ink.withOpacity(0.6),
+            letterSpacing: 1,
+          ),
+        ),
+      ),
+    );
+  }
+ 
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Glass(
+        radius: 32,
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('REFINE SEARCH', style: TextStyle(color: KurdishHeritageColors.zer, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 3)),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: ['Open Now', 'Erbil', 'Sulaymaniyah', 'Duhok', 'Budget', 'Premium']
+                  .map((f) => PressScale(
+                        onTap: () {
+                          setState(() => _activeFilter = f);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: KurdishHeritageColors.zer.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(f, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                      ))
+                  .toList(),
             ),
+            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildDishCard(String title, String desc, String img) {
-    return SizedBox(
-      width: 220,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 160,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              image: DecorationImage(image: AssetImage(img), fit: BoxFit.cover),
-            ),
-            alignment: Alignment.topRight,
-            padding: const EdgeInsets.all(10),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), shape: BoxShape.circle),
-              child: const Icon(Icons.bookmark_border, size: 16, color: Colors.white),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4),
-          Text(desc, style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.3), maxLines: 3, overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterPill(String label) {
-    final isSelected = _activeFilter == label;
-    return GestureDetector(
-      onTap: () => setState(() => _activeFilter = label),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFA726) : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? const Color(0xFF422006) : Colors.black87,
+}
+ 
+class _DishCard extends StatelessWidget {
+  final String title;
+  final String desc;
+  final String img;
+  final int stagger;
+  const _DishCard({required this.title, required this.desc, required this.img, required this.stagger});
+ 
+  @override
+  Widget build(BuildContext context) {
+    return ScrollReveal(
+      duration: Duration(milliseconds: Motion.md.inMilliseconds + stagger * 40),
+      child: PressScale(
+        child: Container(
+          width: 220,
+          margin: const EdgeInsets.only(right: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.asset(img, height: 160, width: 220, fit: BoxFit.cover),
+              ),
+              const SizedBox(height: 14),
+              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 4),
+              Text(desc, style: const TextStyle(fontSize: 12, color: Colors.grey, height: 1.4), maxLines: 2, overflow: TextOverflow.ellipsis),
+            ],
           ),
         ),
       ),
     );
   }
-
-  Widget _buildRestaurantCard(String title, String subtitle, String tag, String price, String rating, String img) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              image: DecorationImage(image: AssetImage(img), fit: BoxFit.cover),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, height: 1.2)),
-                    Row(
-                      children: [
-                        Text(rating, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                        const Icon(Icons.star, color: Color(0xFFFFA726), size: 12),
-                      ],
-                    )
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(4)),
-                      child: Text(tag, style: const TextStyle(fontSize: 9, color: Color(0xFF1F5E37), fontWeight: FontWeight.bold)),
-                    ),
-                    Text(price, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocalCard(String title, String subtitle, String img) {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        image: DecorationImage(image: AssetImage(img), fit: BoxFit.cover),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.black.withOpacity(0.4),
-        ),
-        alignment: Alignment.bottomLeft,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+}
+ 
+class _RestaurantCard extends StatelessWidget {
+  final String title, subtitle, tag, price, rating, img, route;
+  const _RestaurantCard({
+    required this.title, required this.subtitle, required this.tag,
+    required this.price, required this.rating, required this.img, required this.route,
+  });
+ 
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = isDark ? Colors.white : KurdishHeritageColors.res;
+ 
+    return PressScale(
+      onTap: () => context.push(route),
+      child: Glass(
+        radius: 24,
+        padding: const EdgeInsets.all(12),
+        opacity: isDark ? 0.05 : 0.03,
+        child: Row(
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 10, color: Colors.white70)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(img, width: 90, height: 90, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, height: 1.2)),
+                      ),
+                      Row(
+                        children: [
+                          Text(rating, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.star_rounded, color: KurdishHeritageColors.zer, size: 14),
+                        ],
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: ink.withOpacity(0.5))),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: KurdishHeritageColors.kesk.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: const Text(
+                          'LOCAL FAVORITE', 
+                          style: TextStyle(fontSize: 9, color: KurdishHeritageColors.kesk, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        ),
+                      ),
+                      Text(price, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: ink.withOpacity(0.4))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
