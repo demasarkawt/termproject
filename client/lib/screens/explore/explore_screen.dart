@@ -139,7 +139,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         ),
                         const SizedBox(height: 14),
                         RevealText(
-                          'Discover\nKurdistan',
+                          'Travelo\nDiscovery',
                           style: TextStyle(
                             color: ink,
                             fontSize: 38,

@@ -14,6 +14,7 @@ import {
   Landmark,
   Ticket,
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import {
   apiFetch, apiDelete, ApiError, type Place, type Event, type City,
 } from '@/src/lib/api';
@@ -55,38 +56,40 @@ export default function Dashboard({
 
   const maxRating = topPlaces[0]?.rating ?? 5;
 
+  const COLORS = ['#3F4A2A', '#B8862F', '#7A1F1F', '#5A3A22', '#1A1410', '#F5EFE2'];
+
   const kpiData = [
     {
       label: 'Total Places',
       value: loading ? '—' : places.length.toString(),
       change: 'Live',
       icon: Compass,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      color: 'text-kesk',
+      bgColor: 'bg-kesk-soft',
     },
     {
       label: 'Total Cities',
       value: loading ? '—' : cities.length.toString(),
       change: 'Live',
       icon: Landmark,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-xweli',
+      bgColor: 'bg-surface-3',
     },
     {
       label: 'Total Events',
       value: loading ? '—' : events.length.toString(),
       change: 'Live',
       icon: Ticket,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
+      color: 'text-zer',
+      bgColor: 'bg-zer-soft',
     },
     {
       label: 'Premium Places',
       value: loading ? '—' : places.filter((p) => p.is_premium).length.toString(),
       change: 'Live',
       icon: Sparkles,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-sor',
+      bgColor: 'bg-sor-soft',
     },
   ];
 
@@ -114,54 +117,66 @@ export default function Dashboard({
         <div className="flex gap-3">
           <button
             onClick={() => onNavigate?.('places')}
-            className="bg-emerald-800 text-white px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-emerald-900 transition-all shadow-lg shadow-emerald-900/10"
+            className="bg-kesk text-white px-6 py-3 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-kesk/90 transition-all shadow-xl shadow-kesk/20"
           >
-            <Plus className="w-5 h-5" /> Add Place
+            <Plus className="w-5 h-5" /> ADD PLACE
           </button>
           <button
             onClick={() => {
               sessionStorage.setItem('kg_events_open', 'create');
               onNavigate?.('events');
             }}
-            className="bg-white text-emerald-800 border border-emerald-800/10 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-emerald-50 transition-all"
+            className="bg-white text-kesk border-2 border-kesk/20 px-6 py-3 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-kesk-soft transition-all"
           >
-            <Plus className="w-5 h-5" /> Add Event
+            <Plus className="w-5 h-5" /> ADD EVENT
           </button>
           <button
             onClick={() => onNavigate?.('cities')}
-            className="bg-white text-emerald-800 border border-emerald-800/10 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-emerald-50 transition-all"
+            className="bg-white text-kesk border-2 border-kesk/20 px-6 py-3 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-kesk-soft transition-all"
           >
-            <Plus className="w-5 h-5" /> Add City
+            <Plus className="w-5 h-5" /> ADD CITY
           </button>
         </div>
         <button
           onClick={() => onNavigate?.('media')}
-          className="bg-amber-100 text-amber-900 px-5 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-amber-200 transition-all"
+          className="bg-zer-soft text-zer px-6 py-3 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-zer-soft/80 transition-all border-2 border-zer/10"
         >
-          <UploadCloud className="w-5 h-5" /> Upload Media
+          <UploadCloud className="w-5 h-5" /> UPLOAD MEDIA
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiData.map((kpi, i) => (
-          <div key={i} className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            whileHover={{ scale: 1.02, y: -4 }}
+            transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
+            className="bg-card p-6 rounded-2xl border-2 border-token shadow-sm group hover:border-zer/30 transition-all cursor-pointer"
+          >
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-2 rounded-lg ${kpi.bgColor} ${kpi.color}`}>
-                <kpi.icon className="w-5 h-5" />
+              <div className={`p-3 rounded-xl transition-transform duration-500 group-hover:rotate-[360deg] ${kpi.bgColor} ${kpi.color}`}>
+                <kpi.icon className="w-6 h-6" />
               </div>
-              <span className="text-xs font-semibold text-emerald-600">{kpi.change}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black text-kesk tracking-widest uppercase">{kpi.change}</span>
+                <div className="w-8 h-1 bg-kesk/10 rounded-full mt-1 overflow-hidden">
+                   <div className="w-1/2 h-full bg-kesk" />
+                </div>
+              </div>
             </div>
-            <h3 className="text-stone-500 text-xs font-medium uppercase tracking-wider mb-1">
+            <h3 className="text-subtle text-[10px] font-black uppercase tracking-[0.2em] mb-1">
               {kpi.label}
             </h3>
-            <p className="text-2xl font-semibold text-stone-900">
+            <p className="text-3xl font-black text-default tracking-tight">
               {loading ? (
-                <span className="animate-pulse bg-stone-100 rounded w-12 h-7 inline-block" />
+                <span className="animate-pulse bg-surface-3 rounded w-16 h-8 inline-block" />
               ) : (
                 kpi.value
               )}
             </p>
-          </div>
+          </motion.div>
         ))}
       </div>
 

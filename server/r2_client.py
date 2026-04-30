@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import os
 import uuid
+import shutil
+from pathlib import Path
 from typing import Optional
 
 import boto3
@@ -44,6 +46,10 @@ R2_ENDPOINT = (
     if R2_ACCOUNT_ID
     else ""
 )
+
+# Local storage fallback settings
+LOCAL_STORAGE_DIR = Path("uploads")
+LOCAL_STORAGE_BASE_URL = _env("LOCAL_STORAGE_BASE_URL", "/api/media/file")
 
 
 def is_configured() -> bool:
@@ -99,54 +105,79 @@ def upload_fileobj(
     key: str,
     content_type: Optional[str] = None,
 ) -> str:
-    """Upload a file-like object to R2 under the given key. Returns the key."""
-    client = get_client()
-    extra = {}
-    if content_type:
-        extra["ContentType"] = content_type
-    try:
-        client.upload_fileobj(
-            Fileobj=fileobj,
-            Bucket=R2_BUCKET_NAME,
-            Key=key,
-            ExtraArgs=extra or None,
-        )
-    except (BotoCoreError, ClientError) as exc:
-        raise RuntimeError(f"R2 upload failed: {exc}") from exc
-    return key
+    """Upload a file-like object to R2 (or local disk fallback)."""
+    if is_configured():
+        client = get_client()
+        extra = {}
+        if content_type:
+            extra["ContentType"] = content_type
+        try:
+            client.upload_fileobj(
+                Fileobj=fileobj,
+                Bucket=R2_BUCKET_NAME,
+                Key=key,
+                ExtraArgs=extra or None,
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise RuntimeError(f"R2 upload failed: {exc}") from exc
+        return key
+    else:
+        # Local fallback
+        dest = LOCAL_STORAGE_DIR / key
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            fileobj.seek(0)
+            with open(dest, "wb") as f:
+                shutil.copyfileobj(fileobj, f)
+        except Exception as e:
+            raise RuntimeError(f"Local upload failed: {e}") from e
+        return key
 
 
 def delete_object(key: str) -> None:
-    """Best-effort delete; raises RuntimeError on transport failure."""
+    """Best-effort delete; handles both R2 and local storage."""
     if not key:
         return
-    client = get_client()
-    try:
-        client.delete_object(Bucket=R2_BUCKET_NAME, Key=key)
-    except (BotoCoreError, ClientError) as exc:
-        raise RuntimeError(f"R2 delete failed: {exc}") from exc
+    if is_configured():
+        client = get_client()
+        try:
+            client.delete_object(Bucket=R2_BUCKET_NAME, Key=key)
+        except (BotoCoreError, ClientError) as exc:
+            raise RuntimeError(f"R2 delete failed: {exc}") from exc
+    else:
+        dest = LOCAL_STORAGE_DIR / key
+        if dest.exists():
+            dest.unlink()
 
 
 def public_url(key: str) -> Optional[str]:
-    """Return a public URL if R2_PUBLIC_URL is configured, else None."""
-    if not R2_PUBLIC_URL or not key:
-        return None
-    return f"{R2_PUBLIC_URL}/{key.lstrip('/')}"
+    """Return a public URL if R2_PUBLIC_URL is configured, else local URL."""
+    if is_configured():
+        if not R2_PUBLIC_URL or not key:
+            return None
+        return f"{R2_PUBLIC_URL}/{key.lstrip('/')}"
+    else:
+        if not key:
+            return None
+        return f"{LOCAL_STORAGE_BASE_URL}/{key.lstrip('/')}"
 
 
 def presigned_get_url(key: str, expires: Optional[int] = None) -> str:
-    """Presigned GET URL valid for `expires` seconds (default R2_PRESIGN_EXPIRES)."""
-    client = get_client()
-    try:
-        return client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": R2_BUCKET_NAME, "Key": key},
-            ExpiresIn=expires or R2_PRESIGN_EXPIRES,
-        )
-    except (BotoCoreError, ClientError) as exc:
-        raise RuntimeError(f"R2 presign failed: {exc}") from exc
+    """Presigned GET URL (R2) or public local URL."""
+    if is_configured():
+        client = get_client()
+        try:
+            return client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": R2_BUCKET_NAME, "Key": key},
+                ExpiresIn=expires or R2_PRESIGN_EXPIRES,
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise RuntimeError(f"R2 presign failed: {exc}") from exc
+    else:
+        return public_url(key) or ""
 
 
 def url_for(key: str) -> str:
-    """Public URL when configured, otherwise a presigned URL."""
+    """Public URL when configured, otherwise a presigned or local URL."""
     return public_url(key) or presigned_get_url(key)

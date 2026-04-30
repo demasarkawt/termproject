@@ -62,6 +62,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await UserSession.clear();
     if (mounted) context.go('/signin');
   }
+
+  void _showStub(BuildContext context, String title) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$title is coming soon in Travelo Pro!'),
+        backgroundColor: KurdishHeritageColors.sor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
  
   @override
   Widget build(BuildContext context) {
@@ -99,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Row(
                                     children: [
                                       const Text(
-                                        'PROFILE',
+                                        'TRAVELO',
                                         style: TextStyle(
                                           color: KurdishHeritageColors.zer,
                                           fontWeight: FontWeight.w900,
@@ -220,10 +230,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   _buildSectionHeader('SETTINGS', isDark),
                                   const SizedBox(height: 16),
-                                  _MenuItem(Icons.person_outline_rounded, 'Personal information', isDark, () => context.push('/personal-info')),
-                                  _MenuItem(Icons.privacy_tip_outlined, 'Privacy policy', isDark, () => context.push('/privacy-policy')),
-                                  _MenuItem(Icons.lock_outline_rounded, 'Security center', isDark, () => context.push('/security-center')),
-                                  _MenuItem(Icons.support_agent_rounded, 'Help & Support', isDark, () => context.push('/support-center')),
+                                  _MenuItem(Icons.person_outline_rounded, 'Personal information', isDark, () => _showStub(context, 'Personal Information')),
+                                  _MenuItem(Icons.privacy_tip_outlined, 'Privacy policy', isDark, () => _showStub(context, 'Privacy Policy')),
+                                  _MenuItem(Icons.lock_outline_rounded, 'Security center', isDark, () => _showStub(context, 'Security Center')),
+                                  _MenuItem(Icons.support_agent_rounded, 'Help & Support', isDark, () => _showStub(context, 'Help & Support')),
                                   const SizedBox(height: 32),
                                   PressScale(
                                     onTap: _logout,

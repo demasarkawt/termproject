@@ -39,10 +39,10 @@ class _HomeScreenState extends State<HomeScreen>
     _Featured(
       heroTag: 'place-citadel',
       title: 'Erbil Citadel',
-      subtitle: 'UNESCO Heritage Site',
+      subtitle: 'UNESCO Historical Site',
       desc:
           'One of the oldest continuously inhabited settlements on Earth — rising above the city for over 6,000 years.',
-      img: 'assets/images/place_citadel.png',
+      img: 'assets/images/place_citadel_premium.jpg',
       icon: Icons.account_balance_rounded,
       city: 'Erbil',
       route: '/city/erbil',
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
       subtitle: 'Cultural Heartbeat',
       desc:
           'The vibrant soul of Sulaymaniyah, where history and modern commerce blend seamlessly.',
-      img: 'assets/images/place_sulaymaniyah_bazaar.jpg',
+      img: 'assets/images/place_suli_bazaar_premium.jpg',
       icon: Icons.storefront_rounded,
       city: 'Sulaymaniyah',
       route: '/city/sulaymaniyah',
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen>
       subtitle: 'City in the Clouds',
       desc:
           'An ancient fortress city perched on a mountaintop, overlooking spectacular valleys.',
-      img: 'assets/images/place_amedi.jpg',
+      img: 'assets/images/place_amedi_premium.jpg',
       icon: Icons.fort_rounded,
       city: 'Duhok',
       route: '/city/duhok',
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen>
       subtitle: 'Terraced Beauty',
       desc:
           'Stone-stepped villages and ancient traditions in the heart of the mountains.',
-      img: 'assets/images/place_hawraman.jpg',
+      img: 'assets/images/place_hawraman_premium.jpg',
       icon: Icons.terrain_rounded,
       city: 'Halabja',
       route: '/city/halabja',
@@ -253,127 +253,164 @@ class _HomeScreenState extends State<HomeScreen>
           // Centered tilt: cards on the edges tilt slightly toward center.
           final tilt = (i - (_cities.length - 1) / 2).toDouble() /
               ((_cities.length - 1) / 2);
-          return _CityNavCard(item: _cities[i], tilt: tilt);
+          final weather = _weather[_cities[i].name];
+          return _CityNavCard(item: _cities[i], tilt: tilt, weather: weather);
         },
       ),
     );
   }
- 
+
   // ─────────── Featured card ───────────
- 
+
   Widget _buildFeaturedCard(_Featured f, int index, double scrH) {
-    final cardStart = scrH * 0.55 + index * 360.0;
-    final rel = (_offset - cardStart + 500).clamp(-500.0, 500.0);
-    final imgOffset = rel * 0.22;
+    final cardStart = scrH * 0.55 + index * 380.0;
+    final rel = (_offset - cardStart + 600).clamp(-600.0, 600.0);
+    final imgOffset = rel * 0.28; 
     final w = _weather[f.city];
- 
+
     return ScrollReveal(
+      duration: Motion.md,
+      offset: 40,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: PressScale(
           onTap: () => context.push(f.route),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: SizedBox(
-              height: 340,
+          child: Container(
+            height: 380,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Image with parallax + hero tag.
+                  // Image with deeper parallax
                   Positioned.fill(
                     child: Hero(
                       tag: f.heroTag,
                       child: Transform.translate(
-                        offset: Offset(0, imgOffset - 30),
-                        child: Image.asset(f.img, fit: BoxFit.cover),
+                        offset: Offset(0, imgOffset - 40),
+                        child: Transform.scale(
+                          scale: 1.25,
+                          child: Image.asset(
+                            f.img, 
+                            fit: BoxFit.cover,
+                            alignment: const Alignment(0, -0.2), 
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                  // Two gradient passes for legibility.
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerRight,
-                        end: Alignment.centerLeft,
-                        colors: [
-                          Colors.transparent,
-                          Color(0x77000000),
-                          Color(0xCC000000),
-                        ],
-                        stops: [0, 0.45, 1],
-                      ),
-                    ),
-                  ),
+                  
+                  // Premium Gradient Overlay
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Color(0xBB000000)],
-                        stops: [0.45, 1],
+                        colors: [
+                          Color(0x22000000),
+                          Colors.transparent,
+                          Color(0xCC000000),
+                        ],
+                        stops: [0, 0.4, 1],
                       ),
                     ),
                   ),
- 
-                  // Weather chip (glass).
+
+                  // Integrated Weather inside card (Top Right)
                   if (w != null)
-                    Positioned(top: 18, right: 18, child: _WeatherChip(w: w)),
- 
-                  // Body.
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: _WeatherChip(w: w),
+                    ),
+
+                  // Category Badge (Top Left)
                   Positioned(
-                    left: 24,
-                    right: 24,
-                    bottom: 22,
+                    top: 20,
+                    left: 20,
+                    child: Glass(
+                      radius: 999,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      opacity: 0.1,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(f.icon, color: _accent, size: 14),
+                          const SizedBox(width: 8),
+                          Text(
+                            f.city.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Content Area
+                  Positioned(
+                    left: 28,
+                    right: 28,
+                    bottom: 28,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(f.icon, color: _accent, size: 24),
-                        const SizedBox(height: 8),
-                        Text(
-                          f.subtitle.toUpperCase(),
-                          style: const TextStyle(
-                            color: _accent,
-                            fontSize: 10,
-                            letterSpacing: 4,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
+                        const ShimmerLine(width: 40, height: 2),
+                        const SizedBox(height: 16),
                         Text(
                           f.title,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 30,
+                            fontSize: 34,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
+                            letterSpacing: -0.5,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           f.desc,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.72),
-                            fontSize: 13.5,
-                            height: 1.5,
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                            height: 1.6,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 20),
                         Row(
                           children: [
                             const Text(
-                              'EXPLORE',
+                              'EXPLORE JOURNEY',
                               style: TextStyle(
                                 color: _accent,
                                 fontSize: 11,
-                                letterSpacing: 4,
+                                letterSpacing: 3,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             Container(
-                                width: 36, height: 1.5, color: _accent),
+                              width: 40,
+                              height: 1.5,
+                              color: _accent.withOpacity(0.8),
+                            ),
                           ],
                         ),
                       ],
@@ -396,10 +433,34 @@ class _HeroTitleBlock extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    final name = UserSession.userName ?? 'traveller';
+    final name = UserSession.userName ?? 'Traveler';
+    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Premium Glass Badge for Welcome
+        Glass(
+          radius: 999,
+          opacity: 0.1,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.stars_rounded, color: KurdishHeritageColors.zer, size: 14),
+              const SizedBox(width: 8),
+              Text(
+                'WELCOME BACK, ${name.toUpperCase()}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
         const Text(
           'T R A V E L O',
           style: TextStyle(
@@ -409,29 +470,20 @@ class _HeroTitleBlock extends StatelessWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         const RevealText(
           'ADVENTURE',
           duration: Motion.lg,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 56,
+            fontSize: 64,
             fontWeight: FontWeight.w900,
-            letterSpacing: 4,
+            letterSpacing: 2,
+            height: 1,
           ),
         ),
         const SizedBox(height: 16),
-        const ShimmerLine(width: 100, height: 2),
-        const SizedBox(height: 24),
-        Text(
-          'Discover $name, your journey begins here',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
-            fontSize: 14,
-            fontStyle: FontStyle.italic,
-            letterSpacing: 0.5,
-          ),
-        ),
+        const ShimmerLine(width: 60, height: 2.5),
       ],
     );
   }
@@ -513,8 +565,14 @@ class _CityNav {
  
 class _CityNavCard extends StatelessWidget {
   final _CityNav item;
-  final double tilt; // -1..1
-  const _CityNavCard({required this.item, required this.tilt});
+  final double tilt;
+  final CityWeather? weather;
+
+  const _CityNavCard({
+    required this.item,
+    required this.tilt,
+    this.weather,
+  });
  
   @override
   Widget build(BuildContext context) {
@@ -553,6 +611,37 @@ class _CityNavCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Weather Overlay (Top Right)
+                if (weather != null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Glass(
+                      radius: 8,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      opacity: 0.15,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            WeatherService.iconFromCode(weather!.weatherCode),
+                            color: Colors.white,
+                            size: 10,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${weather!.tempC.toStringAsFixed(0)}°',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 Padding(
                   padding: const EdgeInsets.all(14),
                   child: Column(
@@ -568,11 +657,8 @@ class _CityNavCard extends StatelessWidget {
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Container(
-                          width: 22,
-                          height: 2,
-                          color: KurdishHeritageColors.zer),
+                      const SizedBox(height: 6),
+                      const ShimmerLine(width: 20, height: 1.2),
                     ],
                   ),
                 ),

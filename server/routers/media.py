@@ -57,12 +57,6 @@ async def upload_media(
       - folder: optional folder/prefix in the bucket (e.g. "places")
       - name:   optional display name; defaults to the uploaded filename
     """
-    if not r2_client.is_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="R2 is not configured on the server. Set R2_* env vars.",
-        )
-
     key = r2_client.build_key(file.filename or "file", folder)
 
     try:

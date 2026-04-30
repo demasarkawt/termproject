@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../widgets/app_drawer.dart';
 import '../../services/theme_service.dart';
+import '../../services/weather_service.dart';
+import '../../widgets/cinematic.dart';
 
 final GlobalKey<ScaffoldState> rootScaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -58,7 +60,7 @@ class _AppShellState extends State<AppShell> {
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 10, left: 16),
+                    padding: const EdgeInsets.only(top: 12, left: 16),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -67,12 +69,15 @@ class _AppShellState extends State<AppShell> {
                           onTap: () => ThemeService().toggleTheme(),
                           isDark: isDark,
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         _GlobalActionBtn(
                           icon: Icons.map_rounded,
                           onTap: () => context.go('/map'),
                           isDark: isDark,
                         ),
+                        const SizedBox(width: 12),
+                        // Weather Icon at the top
+                        _TopWeatherBtn(isDark: isDark),
                       ],
                     ),
                   ),
@@ -80,7 +85,7 @@ class _AppShellState extends State<AppShell> {
               ),
             ],
           ),
-          bottomNavigationBar: HeritageBottomNav(
+          bottomNavigationBar: TraveloBottomNav(
             index: index,
             onChanged: _goIndex,
           ),
@@ -90,40 +95,104 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
+    );
+  }
+}
+
+class _TopWeatherBtn extends StatefulWidget {
+  final bool isDark;
+  const _TopWeatherBtn({required this.isDark});
+
+  @override
+  State<_TopWeatherBtn> createState() => _TopWeatherBtnState();
+}
+
+class _TopWeatherBtnState extends State<_TopWeatherBtn> {
+  CityWeather? _weather;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final list = await WeatherService.fetchAll();
+      if (mounted && list.isNotEmpty) {
+        setState(() => _weather = list.first);
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_weather == null) return const SizedBox.shrink();
+    
+    return _GlobalActionBtn(
+      icon: WeatherService.iconFromCode(_weather!.weatherCode),
+      onTap: () {}, // Could show a weather dialog
+      isDark: widget.isDark,
+      label: '${_weather!.tempC.toStringAsFixed(0)}°',
+    );
+  }
+}
+
 class _GlobalActionBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool isDark;
+  final String? label;
 
   const _GlobalActionBtn({
     required this.icon,
     required this.onTap,
     required this.isDark,
+    this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipOval(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Material(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.1),
           child: InkWell(
             onTap: onTap,
             child: Container(
-              width: 44,
+              padding: EdgeInsets.symmetric(horizontal: label != null ? 10 : 0),
+              width: label != null ? null : 44,
               height: 44,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
                   width: 1,
                 ),
               ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: KurdishHeritageColors.zer,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 18,
+                    color: KurdishHeritageColors.zer,
+                  ),
+                  if (label != null) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      label!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
@@ -133,11 +202,11 @@ class _GlobalActionBtn extends StatelessWidget {
   }
 }
 
-class HeritageBottomNav extends StatelessWidget {
+class TraveloBottomNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
-  const HeritageBottomNav({
+  const TraveloBottomNav({
     super.key,
     required this.index,
     required this.onChanged,
@@ -146,12 +215,12 @@ class HeritageBottomNav extends StatelessWidget {
   /// Events accent — earth tone from the heritage palette (replaces generic blue).
   static const Color _eventsAccent = Color(0xFF6D4C41);
 
-  static const items = <_HeritageItem>[
-    _HeritageItem(Icons.home_rounded, 'Home', KurdishHeritageColors.sor),
-    _HeritageItem(Icons.explore_rounded, 'Explore', KurdishHeritageColors.kesk),
-    _HeritageItem(Icons.auto_awesome_rounded, 'AI', KurdishHeritageColors.zer),
-    _HeritageItem(Icons.calendar_today_rounded, 'Events', _eventsAccent),
-    _HeritageItem(Icons.person_rounded, 'Profile', KurdishHeritageColors.xweli),
+  static const items = <_TraveloNavItem>[
+    _TraveloNavItem(Icons.home_rounded, 'Home', KurdishHeritageColors.sor),
+    _TraveloNavItem(Icons.explore_rounded, 'Explore', KurdishHeritageColors.kesk),
+    _TraveloNavItem(Icons.auto_awesome_rounded, 'AI', KurdishHeritageColors.zer),
+    _TraveloNavItem(Icons.calendar_today_rounded, 'Events', _eventsAccent),
+    _TraveloNavItem(Icons.person_rounded, 'Profile', KurdishHeritageColors.xweli),
   ];
 
   @override
@@ -227,7 +296,7 @@ class HeritageBottomNav extends StatelessWidget {
 }
 
 class _DiamondNavBtn extends StatefulWidget {
-  final _HeritageItem item;
+  final _TraveloNavItem item;
   final bool isSelected;
   final int index;
 
@@ -393,9 +462,9 @@ class _DiamondNavBtnState extends State<_DiamondNavBtn> with SingleTickerProvide
   }
 }
 
-class _HeritageItem {
+class _TraveloNavItem {
   final IconData icon;
   final String label;
   final Color color;
-  const _HeritageItem(this.icon, this.label, this.color);
+  const _TraveloNavItem(this.icon, this.label, this.color);
 }

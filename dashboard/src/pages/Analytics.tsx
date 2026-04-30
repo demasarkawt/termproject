@@ -33,7 +33,7 @@ import {
 } from '@/src/lib/api';
 import { useToast } from '@/src/components/Toast';
 
-const COLORS = ['#065f46', '#059669', '#34d399', '#a7f3d0', '#6ee7b7', '#d1fae5'];
+const COLORS = ['#3F4A2A', '#B8862F', '#7A1F1F', '#5A3A22', '#1A1410', '#C8BFAF'];
 
 /** Last `days` calendar days ending today; count items whose `created_at` falls on that day (UTC date). */
 function seriesByCalendarDay<T extends { created_at: string | null }>(

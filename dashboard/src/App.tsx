@@ -44,18 +44,19 @@ interface NavItem {
   id: PageId;
   label: string;
   icon: any;
+  color: string;
 }
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Gauge },
-  { id: 'places', label: 'Places', icon: Compass },
-  { id: 'cities', label: 'Cities', icon: Landmark },
-  { id: 'map', label: 'Map', icon: MapPinned },
-  { id: 'events', label: 'Events', icon: Ticket },
-  { id: 'media', label: 'Media Library', icon: Images },
-  { id: 'analytics', label: 'Analytics', icon: LineChart },
-  { id: 'users', label: 'Users', icon: UserCircle2 },
-  { id: 'settings', label: 'Settings', icon: SlidersHorizontal },
+  { id: 'dashboard', label: 'Dashboard', icon: Gauge, color: 'var(--color-sor)' },
+  { id: 'places', label: 'Places', icon: Compass, color: 'var(--color-kesk)' },
+  { id: 'cities', label: 'Cities', icon: Landmark, color: 'var(--color-zer)' },
+  { id: 'map', label: 'Map', icon: MapPinned, color: 'var(--color-zer)' },
+  { id: 'events', label: 'Events', icon: Ticket, color: 'var(--color-events)' },
+  { id: 'media', label: 'Media', icon: Images, color: 'var(--color-xweli)' },
+  { id: 'analytics', label: 'Analytics', icon: LineChart, color: 'var(--color-xweli)' },
+  { id: 'users', label: 'Users', icon: UserCircle2, color: 'var(--color-xweli)' },
+  { id: 'settings', label: 'Settings', icon: SlidersHorizontal, color: 'var(--color-xweli)' },
 ];
 
 export default function App() {
@@ -102,49 +103,110 @@ function Shell() {
   return (
     <div className="flex min-h-screen text-default font-sans">
       <aside className="w-[240px] h-screen sticky top-0 left-0 bg-surface flex flex-col py-6 px-4 gap-2 border-r border-token">
-        <div className="flex items-center gap-3 px-2 mb-8">
+        <div className="flex items-center gap-4 px-2 mb-10">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm overflow-hidden"
-            style={{ backgroundColor: 'var(--color-kesk)' }}
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg overflow-hidden border-2 border-zer"
+            style={{ backgroundColor: 'var(--color-res)' }}
           >
-            <Mountain className="w-6 h-6" />
+            <img src="/KGO.png" alt="Travelo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-zer">Travelo</h1>
-            <p className="text-[10px] uppercase tracking-widest text-subtle font-bold">
-              Admin
+            <h1 className="text-xl font-black tracking-tight text-default leading-none">TRAVELO</h1>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-zer font-black mt-1">
+              Command
             </p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActivePage(item.id)}
-              className={cn(
-                'w-full flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border-l-[3px]',
-                activePage === item.id
-                  ? 'pl-[calc(1rem-3px)] pr-4 border-zer bg-zer-soft text-zer font-bold shadow-sm'
-                  : 'pl-[calc(1rem-3px)] pr-4 border-transparent text-muted hover:bg-surface-2',
-              )}
-            >
-              <item.icon className={cn('w-5 h-5', activePage === item.id && 'text-zer')} />
-              {item.label}
-            </button>
-          ))}
+        <div className="px-2 mb-6">
+          <HeritagePatternDivider />
+        </div>
+
+        <nav className="flex-1 space-y-3">
+          {navItems.map((item) => {
+            const isActive = activePage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
+                className={cn(
+                  'w-full flex items-center gap-2 py-2 px-3 rounded-2xl text-sm transition-all duration-300 group relative overflow-visible',
+                  isActive
+                    ? 'font-bold bg-surface-3/30'
+                    : 'text-muted hover:bg-surface-3/50'
+                )}
+              >
+                <div className="relative z-10 flex items-center gap-4 w-full">
+                  <div className="relative w-10 h-10 flex items-center justify-center">
+                    {/* Parallax Glow */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-glow"
+                        className="absolute inset-1 rotate-45 blur-md"
+                        style={{ backgroundColor: item.color, opacity: 0.4 }}
+                      />
+                    )}
+                    
+                    {/* Main Diamond */}
+                    <div 
+                      className={cn(
+                        "absolute w-8 h-8 rotate-45 transition-all duration-500 border-2",
+                        isActive 
+                          ? "border-white shadow-lg" 
+                          : "border-transparent group-hover:border-token group-hover:bg-surface-3"
+                      )}
+                      style={{ 
+                        backgroundColor: isActive ? item.color : 'transparent',
+                        boxShadow: isActive ? '4px 4px 12px rgba(0,0,0,0.25)' : 'none'
+                      }}
+                    />
+                    
+                    {/* Inner White Diamond */}
+                    <div 
+                      className={cn(
+                        "absolute rotate-45 transition-all duration-300 bg-white",
+                        isActive ? "w-0 h-0 opacity-0" : "w-2.5 h-2.5 opacity-0 group-hover:opacity-100"
+                      )}
+                    />
+
+                    {/* Icon */}
+                    <item.icon 
+                      className={cn(
+                        'relative z-10 w-4 h-4 transition-all duration-300',
+                        isActive ? "text-white scale-110" : "text-muted group-hover:scale-110"
+                      )} 
+                    />
+                  </div>
+                  <span className={cn(
+                    "tracking-wide transition-all duration-300",
+                    isActive ? "text-default" : "text-muted group-hover:text-default"
+                  )}>
+                    {item.label}
+                  </span>
+                </div>
+                
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-pill"
+                    className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-1.5 h-8 rounded-l-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="mt-auto pt-6 border-t border-token flex items-center gap-3 px-2">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style={{ backgroundColor: 'var(--color-kesk)' }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold border-2 border-zer shadow-md"
+            style={{ backgroundColor: 'var(--color-res)' }}
           >
-            T
+            AD
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-bold text-default truncate">Administrator</p>
-            <p className="text-[10px] text-subtle truncate">admin@travelo.app</p>
+            <p className="text-xs font-black text-default truncate">ADMINISTRATOR</p>
+            <p className="text-[10px] text-subtle truncate uppercase tracking-tighter">admin@travelo.app</p>
           </div>
         </div>
       </aside>
@@ -155,7 +217,7 @@ function Shell() {
           style={{ backgroundColor: 'color-mix(in srgb, var(--color-surface) 80%, transparent)' }}
         >
           <div className="flex items-center gap-4">
-            <span className="text-xl font-medium text-zer">
+            <span className="text-xl font-black tracking-tight text-default uppercase">
               {navItems.find((i) => i.id === activePage)?.label}
             </span>
             {activePage === 'analytics' && (
@@ -200,6 +262,21 @@ function Shell() {
           </AnimatePresence>
         </div>
       </main>
+    </div>
+  );
+}
+function HeritagePatternDivider() {
+  return (
+    <div className="flex items-center gap-2 justify-center">
+      {[...Array(5)].map((_, i) => (
+        <div 
+          key={i}
+          className={cn(
+            "w-2 h-2 rotate-45 border border-white/20",
+            i % 2 === 0 ? "bg-sor" : "bg-kesk"
+          )}
+        />
+      ))}
     </div>
   );
 }

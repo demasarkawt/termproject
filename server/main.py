@@ -7,6 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect
+from fastapi.staticfiles import StaticFiles
 
 import r2_client
 from auth import require_admin
@@ -137,6 +138,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─── Serve Local Uploads ──────────────────────────────────────────────────────
+# When R2 is not configured, we store and serve files from the /uploads folder.
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/api/media/file", StaticFiles(directory="uploads"), name="uploads")
 
 # ─── Include Routers ──────────────────────────────────────────────────────────
 app.include_router(cities.router)
