@@ -204,7 +204,7 @@ class CityScreen extends StatelessWidget {
               // Custom Top Bar.
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

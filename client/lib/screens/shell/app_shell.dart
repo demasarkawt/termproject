@@ -95,9 +95,7 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
-    );
-  }
-}
+
 
 class _TopWeatherBtn extends StatefulWidget {
   final bool isDark;

@@ -114,7 +114,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 // Header.
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                    padding: const EdgeInsets.fromLTRB(24, 80, 24, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -243,7 +243,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
  
                 // Mosaic grid (Visit Kurdistan style).
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 140),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,

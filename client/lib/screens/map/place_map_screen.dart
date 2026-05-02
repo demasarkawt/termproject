@@ -304,7 +304,7 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
           SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+              padding: const EdgeInsets.fromLTRB(14, 80, 14, 0),
               child: Row(
                 children: [
                   _GlassCircleBtn(
@@ -381,7 +381,7 @@ class _PlaceMapScreenState extends State<PlaceMapScreen> {
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 130),
                 child: _GlassPill(
                   radius: 24,
                   padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),

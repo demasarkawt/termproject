@@ -37,7 +37,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                     child: SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                        padding: const EdgeInsets.fromLTRB(24, 80, 24, 24),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -228,7 +228,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                     ),
                   ),
  
-                  const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
                 ],
               ),
  

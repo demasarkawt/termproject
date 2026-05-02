@@ -519,7 +519,7 @@ class _MapTabScreenState extends State<MapTabScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                  padding: const EdgeInsets.fromLTRB(10, 80, 10, 0),
                   child: Row(
                     children: [
                       _RoundGlassBtn(
@@ -623,7 +623,7 @@ class _MapTabScreenState extends State<MapTabScreen> {
 
           Positioned(
             right: 14,
-            bottom: bottomInset + 76,
+            bottom: bottomInset + 120,
             child: FloatingActionButton.extended(
               heroTag: 'map_spot_memory_fab',
               elevation: 6,

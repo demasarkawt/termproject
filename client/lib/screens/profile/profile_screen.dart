@@ -103,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // ── Header & Identity ──
                           SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                              padding: const EdgeInsets.fromLTRB(24, 80, 24, 20),
                               child: Column(
                                 children: [
                                   Row(

@@ -78,7 +78,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                        padding: const EdgeInsets.fromLTRB(24, 80, 24, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

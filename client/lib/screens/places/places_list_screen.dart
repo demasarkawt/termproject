@@ -80,7 +80,7 @@ class _PlacesListScreenState extends State<PlacesListScreen> {
                     child: SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                        padding: const EdgeInsets.fromLTRB(24, 80, 24, 0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

@@ -136,7 +136,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
  
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 180),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 200),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -215,7 +215,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               // Custom Floating Header Actions.
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -248,7 +248,7 @@ class _PlaceDetailScreenState extends State<PlaceDetailScreen> {
               Positioned(
                 left: 24,
                 right: 24,
-                bottom: 36,
+                bottom: 120,
                 child: PressScale(
                   onTap: () => context.push('/place-map?lat=${place.lat}&lng=${place.lng}&title=${Uri.encodeComponent(place.title)}'),
                   child: Container(

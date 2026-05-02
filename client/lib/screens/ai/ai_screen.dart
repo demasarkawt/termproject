@@ -159,15 +159,12 @@ class _AiScreenState extends State<AiScreen>
           body: SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+              padding: const EdgeInsets.fromLTRB(24, 80, 24, 140),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Row(children: [
-                    SizedBox(
-                        width: 26,
-                        height: 1.5,
-                        child: ColoredBox(color: KurdishHeritageColors.zer)),
+                    Icon(Icons.auto_awesome_rounded, color: KurdishHeritageColors.zer, size: 20),
                     SizedBox(width: 10),
                     Text('AI ASSISTANT',
                         style: TextStyle(
